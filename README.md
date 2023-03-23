@@ -1,5 +1,5 @@
 # sqlThunder
-Data Warehouse, Migration Tool. SQL and scripting execution engine and report builder
+Data Warehouse, Migration Tool. SQL, scripting execution engine, report builder
 
 Download from http://infinite-loop.ca/
 
