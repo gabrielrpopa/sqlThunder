@@ -16,6 +16,13 @@ Distributed SQL execution by mixing and matching various data sources.
 
 Easy to use web user interface.
 
+Potential Uses: 
+1) Codeless programming. 
+2) Sql Client to a variety of databases.
+3) Data Migration Tool. Moving data on the fly from/to various databases.
+4) Scripting Interface with capturing stdin/stdout/stderr and push notofications in a distrubuted manner
+5) Inter-team collaboration, by sending/receving/ingesting/uploading/downloading files
+
 
 Download from http://infinite-loop.ca/
 
