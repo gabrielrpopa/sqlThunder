@@ -17,7 +17,7 @@ Distributed SQL execution by mixing and matching various data sources.
 Easy to use web user interface.
 
 Potential Uses: 
-1) Codeless programming. 
+1) Codeless programming. API available via swagger-ui. 
 2) Sql Client to a variety of databases.
 3) Data Migration Tool. Moving data on the fly from/to various databases.
 4) Scripting Interface with capturing stdin/stdout/stderr and push notofications in a distrubuted manner
