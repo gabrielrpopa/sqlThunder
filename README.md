@@ -1,4 +1,4 @@
-# sqlThunder
+# SqlThunder
 
 An Integrated Data Warehouse System with SQL and Scripting Repository
 
