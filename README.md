@@ -8,7 +8,7 @@ CSV ingestion (no schema required), into any rdbms tables, Elasticsearch index, 
 
 Exporting any rdbms, Elasticsearch, Mongodb dataset or CSV to in-mem SQL DBs for instant query in SQL language.
 
-Sending/receiving files (embedded dbs or CSV) to/from other SqlThunder instances.
+Sending/receiving files (embedded dbs or CSV) between SqlThunder instances.
 
 Distributed scripting execution.
 
