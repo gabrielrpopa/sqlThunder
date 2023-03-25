@@ -2,11 +2,9 @@
 
 An End-To-End, Integrated Data Warehouse System with SQL and Scripting Repository
 
-Data migration from/to Mongodb collections, Elasticsearch indexes, rdbms tables (Oracle, Sqlserver, Postgres, Embedded DBs), via SQL statements.
+Data migration from Mongodb collections, Elasticsearch indexes, rdbms tables (Oracle, Sqlserver, Postgres, Embedded DBs)
 
-CSV ingestion (no schema required), into any rdbms tables, Elasticsearch index, Mongodb collection, or in-mem Sql DBs
-
-Exporting any rdbms, Elasticsearch, Mongodb dataset or CSV to in-mem SQL DBs for instant query in SQL language.
+CSV ingestion into any rdbms tables, Elasticsearch index, Mongodb collection, or in-mem Sql DBs
 
 Sending/receiving files (embedded dbs or CSV) between SqlThunder instances.
 
