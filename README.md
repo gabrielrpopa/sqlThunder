@@ -8,7 +8,7 @@ CSV ingestion (no schema required), into any rdbms tables, Elasticsearch index, 
 
 Exporting any rdbms, Elasticsearch, Mongodb dataset or CSV to in-mem SQL DBs for instant query in SQL language.
 
-Inter-team, inter-company collaboration by sending/receiving files (embedded dbs or CSV) to/from SqlThunder instances.
+Sending/receiving files (embedded dbs or CSV) to/from other SqlThunder instances.
 
 Distributed scripting execution.
 
@@ -20,7 +20,7 @@ Potential Uses:
 1) Codeless programming. API available via swagger-ui. 
 2) Sql Client to a variety of databases.
 3) Data Migration Tool. Moving data on the fly from/to various databases.
-4) Scripting Interface with capturing stdin/stdout/stderr and push notofications in a distrubuted manner
+4) Scripting Interface with capturing stdin/stdout/stderr and push notifications in a distrubuted manner
 5) Inter-team collaboration, by sending/receving/ingesting/uploading/downloading files
 
 
