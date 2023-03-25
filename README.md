@@ -16,9 +16,9 @@ Easy to use web user interface.
 
 Potential Uses: 
 1) Codeless programming. API available via swagger-ui. 
-2) Sql Client to a variety of databases.
-3) Data Migration Tool. Moving data on the fly from/to various databases.
-4) Scripting Interface with capturing stdin/stdout/stderr and push notifications in a distrubuted manner
+2) Sql Client to a variety of databases or data sources.
+3) Data Migration Tool. Moving data on the fly from database/datasource to another atabase/datasource.
+4) Scripting Interface with capturing output and push notifications in a distrubuted manner
 5) Inter-team collaboration, by sending/receving/ingesting/uploading/downloading files
 
 
