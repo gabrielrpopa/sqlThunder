@@ -3,7 +3,7 @@
 An End-To-End, Integrated Data Warehouse System with SQL and Scripting Repository 
 
 
-Data migration from MongoDB collections, Elasticsearch indexes, RDBMS tables (Oracle, SQL server, Postgres, Embedded DBs)
+Data migration from MongoDB collections, Elasticsearch indexes, RDBMS tables (Oracle, SQL Server, Postgres, Embedded DBs)
 
 CSV ingestion into any RDBMS tables, Elasticsearch index, MongoDB collection, or in-mem SQL DBs
 
@@ -24,6 +24,7 @@ Potential Uses:
 
 
 Download from http://infinite-loop.ca/
+Experiment by login using your google account at https://sqlthunder.ca
 
 Instructions on how to install and run.
 
