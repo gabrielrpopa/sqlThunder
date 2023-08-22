@@ -24,7 +24,8 @@ Potential Uses:
 
 
 Download from http://infinite-loop.ca/
-Experiment by login using your google account at https://sqlthunder.ca
+
+Experiment by logging in using your Google account at https://sqlthunder.ca
 
 Instructions on how to install and run.
 
