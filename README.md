@@ -23,17 +23,6 @@ Potential Uses:
 5) Inter-team collaboration, by sending/receiving/ingesting/uploading/downloading files
 
 
-Download from http://infinite-loop.ca/
-
 Experiment by logging in using your Google account at https://sqlthunder.ca
-
-Instructions on how to install and run.
-
-![image](https://user-images.githubusercontent.com/80181538/227396130-3b945f80-5f61-4af2-9baa-590bf37e5ad1.png)
-
-
-
-Also, watch training videos here:
-![image](https://user-images.githubusercontent.com/80181538/227396305-76d3d5ff-febe-4ebc-a040-d59c729c9e54.png)
 
 
