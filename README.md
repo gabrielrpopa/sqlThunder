@@ -31,8 +31,6 @@ Integrate SQL queries, embedded databases, MongoDB collections, Elasticsearch in
 4. Download [Python API](http://209.15.130.226/assets/downloads/sqlThunderRestClientLib-1.0.0-py3-none-any.whl)
 
 #### How to install and run SQL Thunders Java API (requires Java 11+)
-=======
-Experiment by logging in using your Google account at https://sqlthunder.ca
 
 Instructions on how to install and run.
 
@@ -43,7 +41,7 @@ Instructions on how to install and run.
 - Deploy to Apache Tomcat: https://tomcat.apache.org/tomcat-9.0-doc/deployer-howto.html.
 
 - API contains locally installed preset configurations (localhost where API is running) Postgres database, MongoDB and Elasticsearch.
-=======
+
 Also, watch training videos here:
 ![image](https://user-images.githubusercontent.com/80181538/227396305-76d3d5ff-febe-4ebc-a040-d59c729c9e54.png)
 
