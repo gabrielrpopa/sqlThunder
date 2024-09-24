@@ -1,0 +1,7 @@
+{
+    "baseUrl": "https://209.15.130.226:9094/sqlThunder",
+    "webSocketsUrl": "wss://209.15.130.226:7071/streaming",
+    "sqlThunderHttp": [],
+    "security":"GOOGLE",
+    "googleClientId":"461543356180-tkf1ai1polfijgikh6c05nkdne3jn7pu.apps.googleusercontent.com"
+}
