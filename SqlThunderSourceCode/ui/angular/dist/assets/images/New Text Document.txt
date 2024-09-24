@@ -1,0 +1,7 @@
+Data warehouse and SQL repository with the following features:
+- Data migration from/to Mongodb collections, Elasticsearch indexes, Rdbms tables (Oracle, Sqlserver, Postgres, embedded DBs), via SQL statements
+- CSV ingestion (no schema required), into any RDBMS tables, Elasticsearch index, Mongodb collection, or in-mem sql db.
+- Exporting any Rdbms dataset, Elasticsearch, Mongodb, CSV to in-mem sql db for instant query in Sql language.
+- Inter-team, inter-company collaboration by sending/receiving files (such as embedded dbs or CSV) to/from instances of other SqlThunder
+- Low code development with on-the-fly deployment to create new functionality
+- Out of the box analytics.
