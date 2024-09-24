@@ -1,0 +1,32 @@
+{
+	"serverCounterpartyList":[
+								{
+									"id":1,
+									"baseUrl":"http://aliendesk:9094/sqlThunder",
+									"type":"GATE",
+									"isReachable":"N",
+									"isAccepted":"Y",
+									"isRegistered":"Y",
+									"totalMemory":0,
+									"freeMemory":0,
+									"cpuUsed":0,
+									"noScripts":0,
+									"lastTimeUpdated":0,
+									"ipList":[]
+								},
+								{
+									"id":22,
+									"baseUrl":"http://lapdel1:9094/sqlThunder",
+									"type":"SHARD",
+									"isReachable":"N",
+									"isAccepted":"Y",
+									"isRegistered":"Y",
+									"totalMemory":0,
+									"freeMemory":0,
+									"cpuUsed":0,
+									"noScripts":0,
+									"lastTimeUpdated":0,
+									"ipList":[]
+								}
+							]
+}
