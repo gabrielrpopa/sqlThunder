@@ -26,6 +26,6 @@ Potential Uses:
 Experiment by logging in using your Google account at https://sqlthunder.ca
 
 
-NOTE: in order to successfully build and run the Java project, update firebase-service-account.json with your own private key
+NOTE: in order to successfully build and run the Java project, update firebase-service-account.json with your own private key obtained from settings in https://console.firebase.google.com/
 
 
