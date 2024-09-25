@@ -3,7 +3,7 @@
  * 
  * 
 The file app-config.json stores the initial SqlThunder nodes available in the cluster
-sqlThunderHttp must be an array of SqlThunderHttp objects. Pls take a look at the object layout to add more machine 
+sqlThunderHttp must be an array of SqlThunderHttp objects. Pls take a look at the object layout to add more machines 
 
 {
     "baseUrl": "http://aliendesk:9094/sqlThunder",
@@ -38,17 +38,17 @@ Example
 
 GOOGLE
 {
-    "baseUrl": "https://209.15.130.226:9099/sqlThunder",
-    "webSocketsUrl": "wss://209.15.130.226:9099/sqlThunder/websocket",
+    "baseUrl": "https://XXX.XX.XXX.XXX:9094/sqlThunder",
+    "webSocketsUrl": "wss://XXX.XX.XXX.XXX:7071/streaming",
     "sqlThunderHttp": [],
     "security":"GOOGLE",
-    "googleClientId":"461543356180-tkf1ai1polfijgikh6c05nkdne3jn7pu.apps.googleusercontent.com"
+    "googleClientId":"ADD_YOUR_CLIENT_ID_HERE.apps.googleusercontent.com"
 }
 
 
 NATIVE
 {
-    "baseUrl": "http://aliendesk:9099/sqlThunder",
+    "baseUrl": "http://localhost:9099/sqlThunder",
     "webSocketsUrl": "ws://localhost:9099/sqlThunder/websocket",
     "sqlThunderHttp": [],
     "security":"NATIVE",
