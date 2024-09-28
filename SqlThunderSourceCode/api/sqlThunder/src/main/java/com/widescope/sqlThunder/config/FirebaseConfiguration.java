@@ -2,11 +2,6 @@ package com.widescope.sqlThunder.config;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
-
-import com.google.firebase.IncomingHttpResponse;
-import com.google.firebase.auth.AuthErrorCode;
-import com.google.firebase.auth.FirebaseAuth;
 
 import com.google.firebase.messaging.*;
 import com.widescope.logging.AppLogger;
