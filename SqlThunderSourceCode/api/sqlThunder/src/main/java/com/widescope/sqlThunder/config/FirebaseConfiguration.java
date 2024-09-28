@@ -44,7 +44,8 @@ public class FirebaseConfiguration {
             }
         }
         catch (IOException ex) {
-            throw new Exception(AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.obj)) ;
+            String errorMessage = "#### Please update file firebase-service-account.json with your owm key ";
+            throw new Exception(AppLogger.logError(Thread.currentThread().getStackTrace()[1].getClassName(), Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.obj, errorMessage + ", "+ ex.getMessage())) ;
         }
     }
 
