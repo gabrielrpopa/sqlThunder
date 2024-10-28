@@ -20,10 +20,8 @@ package com.widescope.scripting.db;
 public class MachineNodeToScriptBridge {
 	
 	private int	id;
-	
 	private int	nodeId ;
 	private String nodeName;
-	
 	private int	scriptId ;
 	private String scriptName;
 	
@@ -32,12 +30,11 @@ public class MachineNodeToScriptBridge {
 									 final int nodeId ,
 									 final String nodeName,
 									 final int scriptId,
-									 final String scriptName
-									 ) {
-		this.setId(nodeId);
+									 final String scriptName) {
+		this.setId(id);
 		this.setNodeId(nodeId);
 		this.setNodeName(nodeName);
-		this.setScriptId(nodeId);
+		this.setScriptId(scriptId);
 		this.setScriptName(scriptName);
 	}
 
