@@ -214,6 +214,22 @@ public class RestObject {
 	}
 
 	public static ResponseEntity<RestObject>
+	retOKWithPayload(	final RestInterface payload,
+						 final String requestId,
+						 final String methodName,
+						 final String errorMessage) {
+		RestObject transferableObject = new RestObject(	payload,
+														requestId,
+														errorMessage,
+														"",
+														ErrorCode.ERROR,
+														Sources.NONE,
+														ErrorSeverity.NONE,
+														methodName);
+		return new ResponseEntity<> (transferableObject, HttpStatus.OK);
+	}
+
+	public static ResponseEntity<RestObject>
 	retOKWithPayload(	final String payload,
 						 final String requestId,
 						 final String errorMessage,
