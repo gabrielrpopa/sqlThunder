@@ -99,8 +99,8 @@ public class ResultQueryAsList implements RestInterface
 	}
 	
 	
-	public static boolean isMatadata(	final ResultQueryAsList v1,
-										final ResultQueryAsList v2) {
+	public static boolean isMetadata(final ResultQueryAsList v1,
+									 final ResultQueryAsList v2) {
 		Map<String, ResultMetadata> map1 = v1.getMetadata().stream().collect(Collectors.toMap(ResultMetadata::getColumnName, Function.identity()));
 		Map<String, ResultMetadata> map2 = v2.getMetadata().stream().collect(Collectors.toMap(ResultMetadata::getColumnName, Function.identity()));
 		return map1.keySet().equals(map2.keySet());
@@ -129,7 +129,7 @@ public class ResultQueryAsList implements RestInterface
 	public static ResultQueryAsList compound(	final ResultQueryAsList v1,
 												final ResultQueryAsList v2) {
 		if(!v1.getMetadata().isEmpty()) {
-			if(isMatadata(v1, v2)) {
+			if(isMetadata(v1, v2)) {
 				v1.getResultQuery().addAll(v2.getResultQuery());
 				v1.setRecordsAffected(v1.getRecordsAffected() + v2.getRecordsAffected());
 			} else {
