@@ -38,11 +38,8 @@ public class DbConnectionInfo {
 	private String warehouse;
 	private String account;
 	private String other;
-	
-	
-	private String connType;;
+	private String connType;
 	private String tunnelLocalPort;
-	
 	private String tunnelRemoteHostAddress;
 	private String tunnelRemoteHostPort;
 	private String tunnelRemoteUser;
