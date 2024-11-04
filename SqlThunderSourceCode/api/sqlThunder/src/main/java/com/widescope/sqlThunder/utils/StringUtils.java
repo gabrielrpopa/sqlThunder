@@ -238,4 +238,18 @@ public class StringUtils {
 		return new String(Base64.getDecoder().decode(input.getBytes()));
 	}
 
+
+	public static String generateRequestId(String requestId) {
+
+		Pattern UUID_REGEX =
+				Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+		boolean isUUID = UUID_REGEX.matcher(requestId).matches();
+
+		if(!isUUID || requestId.isBlank() || requestId.isEmpty()) {
+			return StaticUtils.getUUID();
+		}
+
+		return requestId;
+	}
+
 }
