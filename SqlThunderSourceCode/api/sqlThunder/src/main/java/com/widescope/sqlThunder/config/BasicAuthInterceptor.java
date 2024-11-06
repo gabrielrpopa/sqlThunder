@@ -161,7 +161,8 @@ public class BasicAuthInterceptor implements HandlerInterceptor {
                 uri.equalsIgnoreCase("/google/authenticate-new") ||
                 uri.equalsIgnoreCase("/okta/login") ||
                 uri.equalsIgnoreCase("/sqlThunder/cluster/node/ping:pong") ||
-                uri.equalsIgnoreCase("/exchange/generate:uid")
+                uri.equalsIgnoreCase("/exchange/generate:uid") ||
+                uri.equalsIgnoreCase("/users/user:register")
                 ;
     }
 
