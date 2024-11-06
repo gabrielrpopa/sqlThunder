@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.okta.idx.sdk.api.response.ErrorResponse;
 import com.widescope.logging.AppLogger;
+import com.widescope.sqlThunder.utils.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,13 +23,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.okta.commons.lang.Assert;
@@ -104,9 +99,9 @@ public class OktaController {
     @Operation(summary = "Get all users")
     public 
     ResponseEntity<RestObject> 
-    getUsers() {
+    getUsers(@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+        requestId = StringUtils.generateRequestId(requestId);
 
 		com.okta.sdk.client.Client client = setClient(o);
 		OktaUserList o = new OktaUserList(client.listUsers());
@@ -128,9 +123,10 @@ public class OktaController {
                                                     schema = @Schema(implementation = ErrorResponse.class)) }) })
 	public
 	ResponseEntity<RestObject>  
-	searchUserByEmail(@RequestParam String query) {
+	searchUserByEmail(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+                      @RequestParam final String query) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+        requestId = StringUtils.generateRequestId(requestId);
 
 		com.okta.sdk.client.Client client = setClient(o);
 		OktaUserList o = new OktaUserList(client.listUsers(query, null, null, null, null));
@@ -153,10 +149,10 @@ public class OktaController {
 
     public
 	ResponseEntity<RestObject>  
-	createUser() {
-		
+	createUser(@RequestHeader(value="requestId", defaultValue = "") String requestId) {
+        requestId = StringUtils.generateRequestId(requestId);
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+
 
 		com.okta.sdk.client.Client client = setClient(o);
 	    char[] tempPassword = {'P','a','$','$','w','0','r','d'};
@@ -180,12 +176,13 @@ public class OktaController {
     @Operation(summary = "Set an object in the cache")
 	public 
 	ResponseEntity<RestObject> 
-	login (	final @RequestParam("username") String username,
-            final @RequestParam(value = "password", required = false) String password,
-            final HttpSession session) {
+	login (@RequestHeader(value="requestId", defaultValue = "") String requestId,
+           @RequestParam("username") final String username,
+           @RequestParam(value = "password", required = false) final String password,
+           final HttpSession session) {
 		
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+        requestId = StringUtils.generateRequestId(requestId);
 
 		try	{
 			IDXAuthenticationWrapper idxAuthenticationWrapper 
@@ -240,10 +237,11 @@ public class OktaController {
     @Operation(summary = "Logout Okta")
     public 
     ResponseEntity<RestObject> 
-	logout(final HttpSession session) {
+	logout(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+           final HttpSession session) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+        requestId = StringUtils.generateRequestId(requestId);
 
 		
         // retrieve access token
@@ -279,11 +277,12 @@ public class OktaController {
     @Operation(summary = "Forgot password")
     public 
     ResponseEntity<RestObject> 
-	forgotPassword(	final @RequestParam("username") String username,
-					final HttpSession session) {
+	forgotPassword(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+                   @RequestParam("username") final String username,
+                   final HttpSession session) {
 		
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+        requestId = StringUtils.generateRequestId(requestId);
 
 		
 		ModelAndView modelAndView = null;
@@ -324,12 +323,13 @@ public class OktaController {
     @Operation(summary = "Select Authenticator")
     public 
     ResponseEntity<RestObject> 
-	selectAuthenticator(final @RequestParam("authenticator-type") String authenticatorType,
-                        final @RequestParam(value = "action") String action,
+	selectAuthenticator(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+                        @RequestParam("authenticator-type") final String authenticatorType,
+                        @RequestParam(value = "action") final String action,
                         final HttpSession session) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+        requestId = StringUtils.generateRequestId(requestId);
 
         AuthenticationResponse authenticationResponse = null;
         Authenticator foundAuthenticator = null;
@@ -481,15 +481,16 @@ public class OktaController {
     
     @CrossOrigin(origins = "*")
 	@RequestMapping(value = "/okta/select-factor", method = RequestMethod.POST)
-    @Operation(summary = "Select FActor")
+    @Operation(summary = "Select Factor")
     public 
     ResponseEntity<RestObject>  
-    selectFactor(	final @RequestParam("authenticatorId") String authenticatorId,
-    				final @RequestParam("mode") String mode,
-    				final HttpSession session) {
+    selectFactor(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+                 @RequestParam("authenticatorId") String authenticatorId,
+                 @RequestParam("mode") final String mode,
+                 final HttpSession session) {
 
     	String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+        requestId = StringUtils.generateRequestId(requestId);
 
         ProceedContext proceedContext = Util.getProceedContextFromSession(session);
 
@@ -571,16 +572,17 @@ public class OktaController {
      */
     @CrossOrigin(origins = "*")
 	@RequestMapping(value = "/okta/verify-channel-data", method = RequestMethod.POST)
-    @Operation(summary = "Select FActor")
+    @Operation(summary = "Select Factor")
     public 
     ResponseEntity<RestObject> 
-    verify(	final @RequestParam("code") String code,
-    		final @RequestParam(value = "security_question", required = false) String securityQuestion,
-    		final @RequestParam(value = "security_question_key", required = false) String securityQuestionKey,
-    		final HttpSession session) {
+    verify(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+           @RequestParam("code") final String code,
+           @RequestParam(value = "security_question", required = false) final String securityQuestion,
+           @RequestParam(value = "security_question_key", required = false) final String securityQuestionKey,
+           final HttpSession session) {
     	
     	String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+        requestId = StringUtils.generateRequestId(requestId);
 
         ProceedContext proceedContext = Util.getProceedContextFromSession(session);
         IDXAuthenticationWrapper idxAuthenticationWrapper 
@@ -630,9 +632,10 @@ public class OktaController {
     @Operation(summary = "Handle Poll functionality")
     public 
     ResponseEntity<RestObject> 
-    pollResults(final HttpSession session) {
+    pollResults(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+                final HttpSession session) {
     	String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+        requestId = StringUtils.generateRequestId(requestId);
 
         PollResults pollResults = new PollResults();
         ProceedContext proceedContext = Util.getProceedContextForPoll(session);
@@ -669,10 +672,11 @@ public class OktaController {
     @Operation(summary = "Handle Okta verify functionality")
     public 
     ResponseEntity<RestObject>  
-    poll(final HttpSession session) {
+    poll(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+         final HttpSession session) {
     	
     	String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+        requestId = StringUtils.generateRequestId(requestId);
 
 		IDXAuthenticationWrapper idxAuthenticationWrapper 
 			= new IDXAuthenticationWrapper(o.getIssuer(), o.getClientId(), o.getClientSecret(), o.getScopes(), o.getRedirectUrl());
@@ -708,11 +712,12 @@ public class OktaController {
     @Operation(summary = "Handle webauthn authenticator verification functionality")
     public 
     ResponseEntity<RestObject>   
-    verifyWebAuthn(	final @RequestBody WebAuthnRequest webauthnRequest,
-    				final HttpSession session) {
+    verifyWebAuthn(@RequestBody final WebAuthnRequest webauthnRequest,
+                   @RequestHeader(value="requestId", defaultValue = "") String requestId,
+                   final HttpSession session) {
 
     	String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+        requestId = StringUtils.generateRequestId(requestId);
 
         ProceedContext proceedContext = Util.getProceedContextFromSession(session);
         IDXAuthenticationWrapper idxAuthenticationWrapper 
@@ -745,12 +750,13 @@ public class OktaController {
     @Operation(summary = "Handle change password functionality")
     public 
     ResponseEntity<RestObject> 
-    registerPassword(final @RequestParam("new-password") String newPassword,
-                     final @RequestParam("confirm-new-password") String confirmNewPassword,
+    registerPassword(@RequestParam("new-password") final String newPassword,
+                     @RequestParam("confirm-new-password") final String confirmNewPassword,
+                     @RequestHeader(value="requestId", defaultValue = "") String requestId,
                      final HttpSession session) {
 
     	String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+        requestId = StringUtils.generateRequestId(requestId);
 
         if (!newPassword.equals(confirmNewPassword)) {
             ModelAndView mav = new ModelAndView("register-password");
@@ -790,12 +796,13 @@ public class OktaController {
     @Operation(summary = "Handle new user registration functionality")
     public 
     ResponseEntity<RestObject>  
-    register(	final @RequestParam(value = "userProfileAttribute[]") String[] userProfileAttributes,
-    			final @RequestParam(value = "password", required = false) char[] password,
-    			final HttpSession session) {
+    register(@RequestParam(value = "userProfileAttribute[]") final String[] userProfileAttributes,
+             @RequestParam(value = "password", required = false) final char[] password,
+             @RequestHeader(value="requestId", defaultValue = "") String requestId,
+             final HttpSession session) {
     	
     	String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+        requestId = StringUtils.generateRequestId(requestId);
 
 		IDXAuthenticationWrapper idxAuthenticationWrapper 
 			= new IDXAuthenticationWrapper(o.getIssuer(), o.getClientId(), o.getClientSecret(), o.getScopes(), o.getRedirectUrl());
@@ -900,12 +907,13 @@ public class OktaController {
     @Operation(summary = "Handle phone authenticator enrollment functionality")
     public 
     ResponseEntity<RestObject> 
-    registerPhone(final @RequestParam("phone") String phone,
-                  final @RequestParam(value = "mode", required = false) String mode,
+    registerPhone(@RequestParam("phone") final String phone,
+                  @RequestParam(value = "mode", required = false) final String mode,
+                  @RequestHeader(value="requestId", defaultValue = "") String requestId,
                   final HttpSession session) {
     	
     	String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+        requestId = StringUtils.generateRequestId(requestId);
         if (!Strings.hasText(phone)) {
             ModelAndView mav = new ModelAndView("register-phone");
             mav.addObject("errors", "Phone is required");
@@ -955,10 +963,11 @@ public class OktaController {
     @Operation(summary = "Handle webauthn authenticator enrollment functionality")
     public 
     ResponseEntity<RestObject> 
-    enrollWebauthn(	final @RequestBody WebAuthnRequest webauthnRequest,
-    				final HttpSession session) {
+    enrollWebauthn(@RequestBody final WebAuthnRequest webauthnRequest,
+                   final HttpSession session,
+                   @RequestHeader(value="requestId", defaultValue = "") String requestId) {
     	String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+        requestId = StringUtils.generateRequestId(requestId);
 
         ProceedContext proceedContext = Util.getProceedContextFromSession(session);
         IDXAuthenticationWrapper idxAuthenticationWrapper 

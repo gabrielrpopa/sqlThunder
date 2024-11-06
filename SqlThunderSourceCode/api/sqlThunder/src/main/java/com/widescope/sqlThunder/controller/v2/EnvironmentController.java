@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.widescope.logging.AppLogger;
 import com.widescope.sqlThunder.service.GeneralService;
+import com.widescope.sqlThunder.utils.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.PostConstruct;
@@ -71,9 +72,10 @@ public class EnvironmentController {
 	@RequestMapping(value = "/environment:about", method = RequestMethod.GET)
 	@Operation(summary = "About this API")
 	public ResponseEntity<RestObject> 
-	about(	@RequestHeader(value="requestId") String requestId) {
+	about(	@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		String appDesc = "Sql Thunder";
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			StaticUtils.getHostInfo();
 			List<DatabaseEnvironment> listOfDatabases = generalService.getAllAvailableDatabases();
@@ -97,7 +99,9 @@ public class EnvironmentController {
 	@RequestMapping(value = "/client:ip", method = RequestMethod.GET)
 	@Operation(summary = "Get client IP Address")
 	public ResponseEntity<RestObject>
-	clientIpAddress(@RequestHeader(value="requestId") String requestId, HttpServletRequest request) {
+	clientIpAddress(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					HttpServletRequest request) {
+		requestId = StringUtils.generateRequestId(requestId);
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		String ipAddress = request.getRemoteAddr();
 		return RestObject.retOKWithPayload(ipAddress, requestId, methodName);
@@ -109,9 +113,10 @@ public class EnvironmentController {
 	@RequestMapping(value = "/environment/log:query", method = RequestMethod.GET)
 	@Operation(summary = "Get the log")
 	public ResponseEntity<RestObject>
-	getLog( @RequestHeader(value="requestId") String requestId,
-			@RequestHeader(value="stringToSearch") String stringToSearch) {
+	getLog( @RequestHeader(value="requestId", defaultValue = "") String requestId,
+			@RequestHeader(value="stringToSearch") final String stringToSearch) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			LogContent logContent = generalService.getLogContent(stringToSearch);
 			return RestObject.retOKWithPayload(logContent, requestId, methodName);
@@ -128,8 +133,9 @@ public class EnvironmentController {
 	@RequestMapping(value = "/environment/be:version", method = RequestMethod.GET)
 	@Operation(summary = "Get the backend version")
 	public ResponseEntity<RestObject> 
-	getBEVersion(@RequestHeader(value="requestId") String requestId) {
+	getBEVersion(@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			return RestObject.retOKWithPayload(new GenericResponse("1.3.2"), requestId, methodName);
 		} catch(Exception ex) {

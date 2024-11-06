@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 import com.widescope.logging.AppLogger;
+import com.widescope.sqlThunder.utils.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.PostConstruct;
@@ -65,8 +66,8 @@ public class ConfigController {
 	@RequestMapping(value = "/config:get", method = RequestMethod.GET)
 	@Operation(summary = "Get all current config settings") 
 	public ResponseEntity<RestObject> 
-	getConfig(	@RequestHeader(value="requestId") String requestId)  {
-
+	getConfig(	@RequestHeader(value="requestId", defaultValue = "") String requestId)  {
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			ConfigRepoDbRecordList ret = configRepoDb.getConfig();
 			return RestObject.retOKWithPayload(ret, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -82,7 +83,8 @@ public class ConfigController {
 	@RequestMapping(value = "/config:owner", method = RequestMethod.GET)
 	@Operation(summary = "Get owner's name") /*response = ResponseEntity.class*/
 	public ResponseEntity<RestObject> 
-	getOwner(@RequestHeader(value="requestId") String requestId)  {
+	getOwner(@RequestHeader(value="requestId", defaultValue = "") String requestId)  {
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			ConfigRepoDbRecord ret = configRepoDb.getConfigRec("owner");
 			return RestObject.retOKWithPayload(ret, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -98,9 +100,9 @@ public class ConfigController {
 	@RequestMapping(value = "/config:update", method = RequestMethod.POST)
 	@Operation(summary = "Change config setting")
 	public ResponseEntity<RestObject> 
-	changeConfig(	@RequestHeader(value="requestId") String requestId,
-					@RequestBody ConfigRepoDbRecord configRepoDbRecord)  {
-
+	changeConfig(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestBody final ConfigRepoDbRecord configRepoDbRecord)  {
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			configRepoDb.updateConfig(configRepoDbRecord);
 			ConfigRepoDb.updateInMemConfig(configRepoDbRecord);
@@ -123,7 +125,8 @@ public class ConfigController {
 	@RequestMapping(value = "/config/endpoint:get", method = RequestMethod.GET)
 	@Operation(summary = "Get all endpoint allowed IPs")
 	public ResponseEntity<RestObject> 
-	getAllEndpointAllowedIPs(@RequestHeader(value="requestId") String requestId)  {
+	getAllEndpointAllowedIPs(@RequestHeader(value="requestId", defaultValue = "") String requestId)  {
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			EndpointDbRecordList ret = configRepoDb.getEndpoints();
 			IpToEndpointDbRecordList ipList = configRepoDb.getAllIp();
@@ -144,9 +147,9 @@ public class ConfigController {
 	@RequestMapping(value = "/config/endpoint/ip:add",method = RequestMethod.POST)
 	@Operation(summary = "Add allowed IP to endpoint") /*response = ResponseEntity.class*/
 	public ResponseEntity<RestObject> 
-	addEndpointAllowedIp(	@RequestHeader(value="requestId") String requestId,
-							@Valid @RequestBody IpToEndpointDbRecord ipToEndpointDbRecord)  {
-
+	addEndpointAllowedIp(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@Valid @RequestBody final IpToEndpointDbRecord ipToEndpointDbRecord)  {
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			List<IpToEndpointDbRecord> p = new ArrayList<IpToEndpointDbRecord>();
 			p.add(ipToEndpointDbRecord);
@@ -169,8 +172,9 @@ public class ConfigController {
 	@RequestMapping(value = "/config/endpoint/ip:addAll", method = RequestMethod.POST)
 	@Operation(summary = "Add allowed IP to all endpoint") /*response = ResponseEntity.class*/
 	public ResponseEntity<RestObject> 
-	addAllowedIpToAllEndpoints( @RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="ipAddress") String ipAddress)  {
+	addAllowedIpToAllEndpoints( @RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="ipAddress") final String ipAddress)  {
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			List<Integer> allIds = configRepoDb.getEndpointIds();
 			configRepoDb.addIpAddressToEndpoints(allIds, ipAddress);
@@ -187,8 +191,9 @@ public class ConfigController {
 	@RequestMapping(value = "/config/endpoint/ip:deleteAll",method = RequestMethod.DELETE)
 	@Operation(summary = "Delete allowed IP to all endpoint")
 	public ResponseEntity<RestObject> 
-	deleteAllowedIpToAllEndpoints(	@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="ipAddress") String ipAddress)  {
+	deleteAllowedIpToAllEndpoints(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="ipAddress") final String ipAddress)  {
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			configRepoDb.deleteIpAddressToAllEndpoints(ipAddress);
 			ConfigRepoDb.reloadEndpointInMem();
@@ -205,11 +210,11 @@ public class ConfigController {
 	@RequestMapping(value = "/config/endpoint/ip:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete IP associated to endpoint") /*response = ResponseEntity.class*/
 	public ResponseEntity<RestObject> 
-	deleteAllowedIpToEndpoint(	@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="id") String id,
-								@RequestHeader(value="idEndpoint") String idEndpoint,
-								@RequestHeader(value="ipAddress") String ipAddress)  {
-
+	deleteAllowedIpToEndpoint(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="id") final String id,
+								@RequestHeader(value="idEndpoint") final String idEndpoint,
+								@RequestHeader(value="ipAddress") final String ipAddress)  {
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			EndPointDbRecord p = configRepoDb.getEndpoint(Integer.parseInt(idEndpoint));
 			configRepoDb.deleteIpAddressToEndpoint(Integer.parseInt(id));
@@ -231,7 +236,8 @@ public class ConfigController {
 	@RequestMapping(value = "/config/endpoint:deleteAll", method = RequestMethod.POST)
 	@Operation(summary = "Reload mapping ip to endpoints") /*response = ResponseEntity.class*/
 	public ResponseEntity<RestObject> 
-	reloadIpToEndpoints(@RequestHeader(value="requestId") String requestId)  {
+	reloadIpToEndpoints(@RequestHeader(value="requestId", defaultValue = "") String requestId)  {
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			ConfigRepoDb.reloadEndpointInMem();
 			return RestObject.retOKWithPayload("OK", requestId, Thread.currentThread().getStackTrace()[1].getMethodName());

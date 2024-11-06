@@ -29,6 +29,7 @@ import com.widescope.logging.AppLogger;
 import com.widescope.sqlThunder.config.AppConstants;
 import com.widescope.sqlThunder.config.configRepo.ConfigRepoDb;
 import com.widescope.sqlThunder.utils.StaticUtils;
+import com.widescope.sqlThunder.utils.StringUtils;
 import com.widescope.sqlThunder.utils.UserStatus;
 import com.widescope.sqlThunder.utils.security.EncryptionAES;
 import com.widescope.sqlThunder.utils.user.*;
@@ -88,13 +89,14 @@ public class UserController {
 	@RequestMapping(value = "/users/user:login", method = RequestMethod.POST)
 	@Operation(summary = "Authenticate user and generate session on success")
 	public ResponseEntity<RestObject> 
-	login(	@RequestHeader(value="user") String user,
-			@RequestHeader(value="password") String userPasscode,
-			@RequestHeader(value="requestId") String requestId,
-			@RequestHeader(value="pns", required = false, defaultValue = "") String pns,
-			@RequestHeader(value="deviceToken", required = false, defaultValue = "") String deviceToken,
-			@RequestBody (required=false) String authBody)  {
+	login(	@RequestHeader(value="user") final String user,
+			@RequestHeader(value="password") final String userPasscode,
+			@RequestHeader(value="requestId", defaultValue = "") String requestId,
+			@RequestHeader(value="pns", required = false, defaultValue = "") final String pns,
+			@RequestHeader(value="deviceToken", required = false, defaultValue = "") final String deviceToken,
+			@RequestBody (required=false) final String authBody)  {
 
+		requestId = StringUtils.generateRequestId(requestId);
 		String decUserPasscode = EncryptionAES.decryptText(userPasscode,  appConstants.getEncryptionKey());
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		User u = authUtil.isUserAuthenticated(user.toLowerCase(), decUserPasscode, authBody, ClusterDb.ownBaseUrl, pns, deviceToken);
@@ -140,14 +142,16 @@ public class UserController {
 	@RequestMapping(value = "/users/mobile/user:login", method = RequestMethod.POST)
 	@Operation(summary = "Authenticate mobile user and generate session on success")
 	public ResponseEntity<RestObject>
-	loginMobil( @RequestHeader(value="user") String user,
-				@RequestHeader(value="password") String userPasscode,
-				@RequestHeader(value="mobileKey") String mobileKey,
-				@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="pns") String pns,
-				@RequestHeader(value="deviceToken") String deviceToken,
-				@RequestBody (required=false) String authBody)  {
+	loginMobil( @RequestHeader(value="user") final String user,
+				@RequestHeader(value="password") final String userPasscode,
+				@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="mobileKey") final String mobileKey,
+				@RequestHeader(value="pns") final String pns,
+				@RequestHeader(value="deviceToken") final String deviceToken,
+				@RequestBody (required=false) final String authBody)  {
+
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		String base64Credentials = mobileKey.substring("Basic ".length());
 		byte[] decodedCredentials = Base64.getDecoder().decode(base64Credentials);
 		String credentials = new String(decodedCredentials, StandardCharsets.UTF_8);
@@ -202,13 +206,13 @@ public class UserController {
 	@RequestMapping(value = "/users/user:logout", method = RequestMethod.POST)
 	@Operation(summary = "Logouts")
 	public ResponseEntity<RestObject> 
-	logout(	@RequestHeader(value="user") String user,
-			@RequestHeader(value="session") String session,
-			@RequestHeader(value="requestId") String requestId,
-			@RequestHeader(value="deviceToken", required = false, defaultValue = "") String deviceToken) {
+	logout(	@RequestHeader(value="user") final String user,
+			@RequestHeader(value="session") final String session,
+			@RequestHeader(value="requestId", defaultValue = "") String requestId,
+			@RequestHeader(value="deviceToken", required = false, defaultValue = "") final String deviceToken) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		boolean isSession = authUtil.isSessionAuthenticated(user, session);
-
+		requestId = StringUtils.generateRequestId(requestId);
 		/*Send notifications to friends that I'm off-line now */
 		try {
 			User u = authUtil.getUser(user);
@@ -254,10 +258,12 @@ public class UserController {
 
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/users/user:check", method = RequestMethod.GET)
-	@Operation(summary = "Check if I'm connected")
+	@Operation(summary = "Check user connectivity")
 	public ResponseEntity<RestObject>
-	checkUser(@RequestHeader(value="requestId") String requestId, @RequestHeader(value="checkedUser") String checkedUser) {
+	checkUser(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+			  @RequestHeader(value="checkedUser") final String checkedUser) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		boolean isSocket = WebSocketsWrapper.isUser(checkedUser);
 		boolean isUserSession = authUtil.isUserSession(checkedUser);
 		UserStatus us = new UserStatus(checkedUser, isUserSession, isSocket);
@@ -269,9 +275,9 @@ public class UserController {
 
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/users:cleanup", method = RequestMethod.POST)
-	@Operation(summary = "Cleanup")
+	@Operation(summary = "Cleanup Idled sessions")
 	public ResponseEntity<String> 
-	cleanup(@RequestHeader(value="requestId") String requestId, @RequestHeader(value="session") String session) {
+	cleanupIdleSessions(@RequestHeader(value="session") String session) {
 		if(!authUtil.getLocalSession().isBlank() && authUtil.getLocalSession().compareTo(session) == 0 ) {
 			authUtil.cleanupIdleSessions();
 		}
@@ -286,10 +292,11 @@ public class UserController {
 	@RequestMapping(value = "/users/department:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add a new department")
 	public ResponseEntity<RestObject> 
-	addDepartment(	@RequestHeader(value="requestId") String requestId,
+	addDepartment(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
 				  	@RequestHeader(value="newDepartment") String newDepartment,
 				  	@RequestHeader(value="newDepartmentDescription") String newDepartmentDescription )	{
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			newDepartment = WordUtils.capitalizeFully(newDepartment);
 			newDepartmentDescription = WordUtils.capitalizeFully(newDepartmentDescription);
@@ -309,11 +316,12 @@ public class UserController {
 	@RequestMapping(value = "/users/department:update", method = RequestMethod.POST)
 	@Operation(summary = "Update department")
 	public ResponseEntity<RestObject> 
-	updateDepartment(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="id") String id,
+	updateDepartment(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="id") final String id,
 					  	@RequestHeader(value="newDepartment") String newDepartment,
 					  	@RequestHeader(value="newDepartmentDescription") String newDepartmentDescription)	{
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			newDepartment = WordUtils.capitalizeFully(newDepartment);
 			newDepartmentDescription = WordUtils.capitalizeFully(newDepartmentDescription);
@@ -336,11 +344,12 @@ public class UserController {
 	@RequestMapping(value = "/users/title:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add a new title")
 	public ResponseEntity<RestObject> 
-	addTitle(	@RequestHeader(value="requestId") String requestId,
+	addTitle(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
 				@RequestHeader(value="newTitle") String newTitle,
 				@RequestHeader(value="newTitleDescription") String newTitleDescription) {
 		
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			newTitle = WordUtils.capitalizeFully(newTitle);
 			newTitleDescription = WordUtils.capitalizeFully(newTitleDescription);
@@ -360,12 +369,13 @@ public class UserController {
 	@RequestMapping(value = "/users/title:update", method = RequestMethod.POST)
 	@Operation(summary = "Update title")
 	public ResponseEntity<RestObject> 
-	updateTitle(@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="id") String id,
+	updateTitle(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="id") final String id,
 				@RequestHeader(value="newTitle") String newTitle,
 				@RequestHeader(value="newTitleDescription") String newTitleDescription) {
 		
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			newTitle = WordUtils.capitalizeFully(newTitle);
 			newTitleDescription = WordUtils.capitalizeFully(newTitleDescription);
@@ -387,9 +397,9 @@ public class UserController {
 	@RequestMapping(value = "/users/user:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add a new user")
 	public ResponseEntity<RestObject> 
-	addUser(@RequestHeader(value="requestId") String requestId,
+	addUser(@RequestHeader(value="requestId", defaultValue = "") String requestId,
 			@RequestHeader(value="newUser") String newUser,
-			@RequestHeader(value="newUserPassword") String newUserPassword,
+			@RequestHeader(value="newUserPassword") final String newUserPassword,
 			@RequestHeader(value="newUserType") String newUserType,
 			@RequestHeader(value="newUserFirstName") String newUserFirstName,
 			@RequestHeader(value="newUserLastName") String newUserLastName,
@@ -401,7 +411,7 @@ public class UserController {
 			@RequestHeader(value="newUserDescription") String newUserDescription) {
 		
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			newUser = WordUtils.capitalizeFully(newUser);
 			newUserFirstName = WordUtils.capitalizeFully(newUserFirstName);
@@ -443,15 +453,16 @@ public class UserController {
 	@RequestMapping(value = "/users/user:register", method = RequestMethod.PUT)
 	@Operation(summary = "Register user")
 	public ResponseEntity<RestObject> 
-	registerUser(	@RequestHeader(value="newUser") String newUser,
+	registerUser(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="newUser") String newUser,
 					@RequestHeader(value="newUserPassword") String newUserPassword,
-					@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="newUserType") String newUserType,
+					@RequestHeader(value="newUserType") final String newUserType,
 					@RequestHeader(value="newUserFirstName") String newUserFirstName,
 					@RequestHeader(value="newUserLastName") String newUserLastName,
-					@RequestHeader(value="newUserEmail") String newUserEmail) {
+					@RequestHeader(value="newUserEmail") final String newUserEmail) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			newUserFirstName = WordUtils.capitalizeFully(newUserFirstName);
 			newUserLastName = WordUtils.capitalizeFully(newUserLastName);
@@ -487,15 +498,16 @@ public class UserController {
 	@RequestMapping(value = "/users/user:approve", method = RequestMethod.PUT)
 	@Operation(summary = "Approve a registering used")
 	public ResponseEntity<RestObject>
-	approveRegisteringUser(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="newUser") String newUser,
-							@RequestHeader(value="departmentId") String departmentId,
-							@RequestHeader(value="titleId") String titleId,
-							@RequestHeader(value="managerId") String managerId,
-							@RequestHeader(value="characteristic") String characteristic,
-							@RequestHeader(value="description") String description) {
+	approveRegisteringUser(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="newUser") final String newUser,
+							@RequestHeader(value="departmentId") final String departmentId,
+							@RequestHeader(value="titleId") final String titleId,
+							@RequestHeader(value="managerId") final String managerId,
+							@RequestHeader(value="characteristic") final String characteristic,
+							@RequestHeader(value="description") final String description) {
 		
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 
 			boolean u = authUtil.approveRegisteringUser(newUser,
@@ -523,10 +535,11 @@ public class UserController {
 	@RequestMapping(value = "/users/user:reject", method = RequestMethod.PUT)
 	@Operation(summary = "Reject a registering used")
 	public ResponseEntity<RestObject> 
-	rejectRegisteringUser(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="newUser") String newUser) {
+	rejectRegisteringUser(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="newUser") final String newUser) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			boolean u = authUtil.rejectRegisteringUser(	newUser);
 			if(u) {
@@ -545,22 +558,23 @@ public class UserController {
 	@RequestMapping(value = "/users/user:update", method = RequestMethod.POST)
 	@Operation(summary = "Update user")
 	public ResponseEntity<RestObject> 
-	updateUser(	@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="id") String id,
+	updateUser(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="id") final String id,
 				@RequestHeader(value="newUser") String newUser,
-				@RequestHeader(value="newUserPassword") String newUserPassword,
-				@RequestHeader(value="newUserType") String newUserType,
+				@RequestHeader(value="newUserPassword") final String newUserPassword,
+				@RequestHeader(value="newUserType") final String newUserType,
 				@RequestHeader(value="newUserFirstName") String newUserFirstName,
 				@RequestHeader(value="newUserLastName") String newUserLastName,
 				@RequestHeader(value="newUserEmail") String newUserEmail,
-				@RequestHeader(value="newUserDepartment") String newUserDepartment,
-				@RequestHeader(value="newUserTitle") String newUserTitle,
-				@RequestHeader(value="newUserManager") String newUserManager,
+				@RequestHeader(value="newUserDepartment") final String newUserDepartment,
+				@RequestHeader(value="newUserTitle") final String newUserTitle,
+				@RequestHeader(value="newUserManager") final String newUserManager,
 				@RequestHeader(value="newUserCharacteristic") String newUserCharacteristic,
 				@RequestHeader(value="newUserDescription") String newUserDescription,
-				@RequestHeader(value="newUserActive") String newUserActive) {
+				@RequestHeader(value="newUserActive") final String newUserActive) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			newUser = WordUtils.capitalizeFully(newUser);
 			newUserFirstName = WordUtils.capitalizeFully(newUserFirstName);
@@ -599,19 +613,19 @@ public class UserController {
 	@RequestMapping(value = "/users/user/quick:update", method = RequestMethod.POST)
 	@Operation(summary = "Update user")
 	public ResponseEntity<RestObject> 
-	quickUserUpdate(@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="id") String id,
-					@RequestHeader(value="newUser") String newUser,
-					@RequestHeader(value="newUserType") String newUserType,
-					@RequestHeader(value="newUserDepartment") String newUserDepartment,
-					@RequestHeader(value="newUserTitle") String newUserTitle,
-					@RequestHeader(value="newUserManager") String newUserManager,
+	quickUserUpdate(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="id") final String id,
+					@RequestHeader(value="newUser") final String newUser,
+					@RequestHeader(value="newUserType") final String newUserType,
+					@RequestHeader(value="newUserDepartment") final String newUserDepartment,
+					@RequestHeader(value="newUserTitle") final String newUserTitle,
+					@RequestHeader(value="newUserManager") final String newUserManager,
 					@RequestHeader(value="newUserCharacteristic") String newUserCharacteristic,
 					@RequestHeader(value="newUserDescription") String newUserDescription,
-					@RequestHeader(value="newUserActive") String newUserActive) {
+					@RequestHeader(value="newUserActive") final String newUserActive) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			newUserCharacteristic = WordUtils.capitalizeFully(newUserCharacteristic);
 			newUserDescription = WordUtils.capitalizeFully(newUserDescription);
@@ -648,14 +662,15 @@ public class UserController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/users/user:update-my-names", method = RequestMethod.POST)
-	@Operation(summary = "Update my first name and last name")
+	@Operation(summary = "Update my first and last name")
 	public ResponseEntity<RestObject> 
-	updateMyNames(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="id") String id,
+	updateMyNames(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="id") final String id,
 					@RequestHeader(value="newUserFirstName") String newUserFirstName,
 					@RequestHeader(value="newUserLastName") String newUserLastName) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			newUserFirstName = WordUtils.capitalizeFully(newUserFirstName);
 			newUserLastName = WordUtils.capitalizeFully(newUserLastName);
@@ -680,11 +695,12 @@ public class UserController {
 	@RequestMapping(value = "/users/user:update-my-password", method = RequestMethod.POST)
 	@Operation(summary = "Update my password")
 	public ResponseEntity<RestObject> 
-	updateMyPassword(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="id") String id,
-						@RequestHeader(value="password") String password) {
+	updateMyPassword(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="id") final String id,
+						@RequestHeader(value="password") final String password) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			boolean isOk = authUtil.updateMyPassword(	Long.parseLong(id), password );
 			if( !isOk ) {
@@ -703,12 +719,13 @@ public class UserController {
 	@RequestMapping(value = "/users/user:update-my-email", method = RequestMethod.POST)
 	@Operation(summary = "Update my first name and last name")
 	public ResponseEntity<RestObject> 
-	updateMyEmailAndUserName(	@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="id") String id,
-								@RequestHeader(value="userName") String userName,
-								@RequestHeader(value="email") String email) {
+	updateMyEmailAndUserName(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="id") final String id,
+								@RequestHeader(value="userName") final String userName,
+								@RequestHeader(value="email") final String email) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			boolean isOk = authUtil.updateMyEmailUserName(	Long.parseLong(id),
 															userName,
@@ -730,10 +747,11 @@ public class UserController {
 	@RequestMapping(value = "/users/user:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete User")
 	public ResponseEntity<RestObject> 
-	deleteUser(	@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="id") String id) {
+	deleteUser(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="id") final String id) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			if(authUtil.deleteUser(Integer.parseInt(id))) {
 				/*Now delete anything related to this user*/
@@ -754,10 +772,11 @@ public class UserController {
 	@RequestMapping(value = "/users/department:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete Department")
 	public ResponseEntity<RestObject> 
-	deleteDepartment(@RequestHeader(value="requestId") String requestId,
-					 @RequestHeader(value="id") String id) {
+	deleteDepartment(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					 @RequestHeader(value="id") final String id) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			if(!authUtil.deleteDepartment(Integer.parseInt(id))) {
 				return RestObject.retException(requestId, methodName, "This department cannot be deleted");
@@ -775,10 +794,11 @@ public class UserController {
 	@RequestMapping(value = "/users/title:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete Title")
 	public ResponseEntity<RestObject> 
-	deleteTitle(@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="id") String id) {
+	deleteTitle(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="id") final String id) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			if(!authUtil.deleteTitle(Integer.parseInt(id))) {
 				return RestObject.retException(requestId, methodName, "This title cannot be deleted");
@@ -797,9 +817,10 @@ public class UserController {
 	@RequestMapping(value = "/users:query", method = RequestMethod.GET)
 	@Operation(summary = "Get Users")
 	public ResponseEntity<RestObject> 
-	getUsers(	@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="patternToSearch") String patternToSearch) {
+	getUsers(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="patternToSearch") final String patternToSearch) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			List<User> listOfUsers = authUtil.getUsers(patternToSearch);
 			UserList uList = new UserList(listOfUsers);
@@ -817,9 +838,10 @@ public class UserController {
 	@Operation(summary = "Get Users minus current")
 	public ResponseEntity<RestObject> 
 	getUsersMinusCurrent(	@RequestHeader(value="user") String user,
-							@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="patternToSearch") String patternToSearch) {
+							@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="patternToSearch") final String patternToSearch) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			User u = authUtil.getUser(user);
 			List<User> listOfUsers = authUtil.getUsersMinusUser(patternToSearch, u);
@@ -836,12 +858,13 @@ public class UserController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/users:registering", method = RequestMethod.GET)
-	@Operation(summary = "Get Registering Users")
+	@Operation(summary = "Get registering users")
 	public ResponseEntity<RestObject> 
-	getRegisteringUsers(@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="patternToSearch") String patternToSearch) {
+	getRegisteringUsers(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="patternToSearch") final String patternToSearch) {
 		
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			List<User> listOfUsers = authUtil.getRegisteringUsers(patternToSearch);
 			UserList uList = new UserList(listOfUsers);
@@ -859,9 +882,10 @@ public class UserController {
 	@RequestMapping(value = "/managers:query", method = RequestMethod.GET)
 	@Operation(summary = "Get Managers")
 	public ResponseEntity<RestObject> 
-	getManagers(@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="patternToSearch") String patternToSearch) {
+	getManagers(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="patternToSearch") final String patternToSearch) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			List<ManagerShort> listOfUsers = authUtil.getManagers(patternToSearch);
 			ManagerShortList uList = new ManagerShortList(listOfUsers);
@@ -879,10 +903,11 @@ public class UserController {
 	@RequestMapping(value = "/users/user:get", method = RequestMethod.GET)
 	@Operation(summary = "Get specific User based on id")
 	public ResponseEntity<RestObject> 
-	getUser(@RequestHeader(value="requestId") String requestId,
-			@RequestHeader(value="id") String id) {
+	getUser(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+			@RequestHeader(value="id") final String id) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			User u = authUtil.getUser(Integer.parseInt(id));
 			UserList uList = new UserList(u);
@@ -901,10 +926,11 @@ public class UserController {
 	@RequestMapping(value = "/users/departments:query", method = RequestMethod.GET)
 	@Operation(summary = "Search Departments")
 	public ResponseEntity<RestObject> 
-	getDepartments(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="patternToSearch") String patternToSearch) {
+	getDepartments(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="patternToSearch") final String patternToSearch) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			List<Department> listOfDepartments = authUtil.getDepartments(patternToSearch);
 			DepartmentList dList = new DepartmentList(listOfDepartments);
@@ -921,10 +947,11 @@ public class UserController {
 	@RequestMapping(value = "/users/department:get", method = RequestMethod.GET)
 	@Operation(summary = "Get a specific Department, from an id")
 	public ResponseEntity<RestObject> 
-	getDepartment(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="id") String id) {
+	getDepartment(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="id") final String id) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			Department dept = authUtil.getDepartmentById(Integer.parseInt(id));
 			DepartmentList dList = new DepartmentList(dept);
@@ -936,15 +963,39 @@ public class UserController {
 		}
 		
 	}
-	
+
+
+
+	@CrossOrigin(origins = "*")
+	@RequestMapping(value = "/users/department:search", method = RequestMethod.GET)
+	@Operation(summary = "Get Department by Name")
+	public ResponseEntity<RestObject>
+	getDepartmentByName(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="department") final String d) {
+
+		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
+		try {
+			Department department = authUtil.getDepartmentByName(d);
+			DepartmentList dList = new DepartmentList(department);
+			return RestObject.retOKWithPayload(dList, requestId, methodName);
+		} catch(Exception ex) {
+			return RestObject.retException(requestId, methodName, AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+		} catch(Throwable ex)	{
+			return RestObject.retFatal(requestId, methodName, AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+		}
+	}
+
+
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/users/titles:query", method = RequestMethod.GET)
 	@Operation(summary = "Search Titles")
 	public ResponseEntity<RestObject> 
-	getTitles(	@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="patternToSearch") String patternToSearch) {
+	getTitles(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="patternToSearch") final String patternToSearch) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			List<Title> listOfTitles = authUtil.getTitles(patternToSearch);
 			TitleList dList = new TitleList(listOfTitles);
@@ -963,10 +1014,11 @@ public class UserController {
 	@RequestMapping(value = "/users/title:get", method = RequestMethod.GET)
 	@Operation(summary = "Get a specific title, based on an id")
 	public ResponseEntity<RestObject> 
-	getTitleById(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="id") String id) {
+	getTitleById(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="id") final String id) {
 		
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			Title title = authUtil.getTitle(Integer.parseInt(id));
 			TitleList dList = new TitleList(title);
@@ -985,9 +1037,10 @@ public class UserController {
 	@RequestMapping(value = "/users/title:search", method = RequestMethod.GET)
 	@Operation(summary = "Get Title by Name")
 	public ResponseEntity<RestObject> 
-	getTitleByName( @RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="title") String t) {
+	getTitleByName( @RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="title") final String t) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			Title title = authUtil.getTitle(t);
 			TitleList dList = new TitleList(title);
@@ -999,39 +1052,16 @@ public class UserController {
 		}
 	}
 	
-	
-	
-	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/users/department:search", method = RequestMethod.GET)
-	@Operation(summary = "Get Department by Name")
-	public ResponseEntity<RestObject> 
-	getDepartmentByName(@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="department") String d) {
-		
-		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		try {
-			Department department = authUtil.getDepartmentByName(d);
-			DepartmentList dList = new DepartmentList(department);
-			return RestObject.retOKWithPayload(dList, requestId, methodName);
-		} catch(Exception ex) {
-			return RestObject.retException(requestId, methodName, AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-		} catch(Throwable ex)	{
-			return RestObject.retFatal(requestId, methodName, AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-		}
-	}
-	
-	
-	
-	
-	
+
 	@CrossOrigin(origins = "*") 
 	@RequestMapping(value = "/users/generateSyntheticSession", method = RequestMethod.GET)
-	@Operation(summary = "Generates a synthetic session for debug only in DEV and QA environment.")
+	@Operation(summary = "Generates a synthetic session for debug only in DEV or QA environment.")
 	public ResponseEntity<RestObject>
-	generateSyntheticSession(	@RequestHeader(value="admin") String admin,
-								@RequestHeader(value="password") String password,
-								@RequestHeader(value="requestId") String requestId) {
+	generateSyntheticDevSession(@RequestHeader(value="admin") final String admin,
+								@RequestHeader(value="password") final String password,
+								@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		if (appConstants.getSpringProfilesActive().equalsIgnoreCase("PROD")) {
 			return RestObject.retAuthError(requestId);
 		}
@@ -1055,10 +1085,11 @@ public class UserController {
 	@RequestMapping(value = "/users/timer:subscribe", method = RequestMethod.GET)
 	@Operation(summary = "50 milliseconds timer subscription.",	description= "Subscribe to 50 milliseconds timer generated from server to clients for sampling video/audio communication")
 	public ResponseEntity<RestObject>
-	subscribeToTimer(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="session") String session) {
+	subscribeToTimer(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="session") final String session) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		InternalUserDb.timedUsers.remove(session);
 		return RestObject.retOKWithPayload(new GenericResponse("OK"), requestId, methodName);
 	}
@@ -1068,10 +1099,11 @@ public class UserController {
 	@RequestMapping(value = "/users/timer:unsubscribe", method = RequestMethod.GET)
 	@Operation(summary = "unsubscribe from 50 milliseconds timer.",	description= "Unsubscribe from 50 milliseconds timer generated from server to clients.")
 	public ResponseEntity<RestObject>
-	unsubscribeToTimer(	@RequestHeader(value="user") String user,
-						@RequestHeader(value="session") String session,
-						@RequestHeader(value="requestId") String requestId) {
+	unsubscribeToTimer(	@RequestHeader(value="user") final String user,
+						@RequestHeader(value="session") final String session,
+						@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		InternalUserDb.timedUsers.put(session, user);
+		requestId = StringUtils.generateRequestId(requestId);
 		return RestObject.retOKWithPayload(new GenericResponse("OK"), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 	}
 

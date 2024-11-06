@@ -135,8 +135,9 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo:list", method = RequestMethod.GET)
 	@Operation(summary = "Query the Elastic Db Repository") 
 	public ResponseEntity<RestObject> 
-	elasticRepo(@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="uniqueName", required = false) String uniqueName) {
+	elasticRepo(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="uniqueName", required = false) final String uniqueName) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(uniqueName);
 			ElasticClusterList elasticClusterList = new ElasticClusterList(clusterMap);
@@ -158,10 +159,11 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/cluster:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add a new Elastic cluster with all node connections") 
 	public ResponseEntity<RestObject> 
-	addElasticCluster(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="clusterUniqueName") String clusterUniqueName,
-						@RequestHeader(value="clusterDescription") String clusterDescription,
+	addElasticCluster(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="clusterUniqueName") final String clusterUniqueName,
+						@RequestHeader(value="clusterDescription") final String clusterDescription,
 						@RequestBody String hostListStr)	{
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<ElasticHost> hostList = null;
 			ObjectMapper mapper = new ObjectMapper();
@@ -195,10 +197,11 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/cluster:update", method = RequestMethod.POST)
 	@Operation(summary = "Update current elastic cluster info (cluster name and description)") 
 	public ResponseEntity<RestObject> 
-	updateElasticCluster(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="clusterId") String clusterId,
-							@RequestHeader(value="clusterUniqueName") String clusterUniqueName,
-							@RequestHeader(value="clusterDescription") String clusterDescription)	{
+	updateElasticCluster(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="clusterId") final String clusterId,
+							@RequestHeader(value="clusterUniqueName") final String clusterUniqueName,
+							@RequestHeader(value="clusterDescription") final String clusterDescription)	{
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<ElasticHost> clusterMap = elasticClusterDb.getElasticClusterHosts(Integer.parseInt(clusterId) );
 			if(!clusterMap.isEmpty()) {
@@ -215,15 +218,40 @@ public class ElasticsearchController {
 			return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
 		}
 	}
-	
+
+	@CrossOrigin(origins = "*")
+	@RequestMapping(value = "/elastic-repo/cluster:remove", method = RequestMethod.DELETE)
+	@Operation(summary = "Remove Elasticsearch server/cluster connection")
+	public ResponseEntity<RestObject>
+	removeElasticCluster(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							 @RequestHeader(value="clusterUniqueName") final String clusterUniqueName) {
+		requestId = StringUtils.generateRequestId(requestId);
+		try	{
+			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(clusterUniqueName);
+
+			if(clusterMap.size() == 1) {
+				elasticClusterDb.deleteElasticCluster(clusterMap.get(clusterUniqueName).getClusterId());
+				Map<String, ElasticCluster> cMap = elasticClusterDb.getElasticCluster(clusterUniqueName);
+				ElasticClusterList elasticClusterList = new ElasticClusterList(cMap);
+				return RestObject.retOKWithPayload(elasticClusterList, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
+			} else {
+				return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), "Cluster cannot be removed");
+			}
+		} catch(Exception ex) {
+			return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+		} catch(Throwable ex)	{
+			return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+		}
+	}
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/elastic-repo/cluster/host:add", method = RequestMethod.PUT)
     @Operation(summary = "Add a new host to an existing Elastic cluster") 
 	public ResponseEntity<RestObject> 
-	addElasticHost(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="clusterUniqueName") String clusterUniqueName,
+	addElasticHost(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="clusterUniqueName") final String clusterUniqueName,
 					@RequestBody String hostStr)	{
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			ElasticHost host = ElasticHost.toElasticHost(hostStr);
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(clusterUniqueName);
@@ -248,9 +276,10 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/cluster/host:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete Elastic Host from Cluster ")
 	public ResponseEntity<RestObject> 
-	deleteElasticHost(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="clusterUniqueName") String clusterUniqueName,
-						@RequestHeader(value="hostId") String hostId)	{
+	deleteElasticHost(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="clusterUniqueName") final String clusterUniqueName,
+						@RequestHeader(value="hostId") final String hostId)	{
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(clusterUniqueName);
 			if(clusterMap.size() == 1) {
@@ -273,9 +302,10 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/cluster/host:update", method = RequestMethod.POST)
 	@Operation(summary = "Update an existing Elastic cluster")
 	public ResponseEntity<RestObject> 
-	updateElasticHost(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="clusterUniqueName") String clusterUniqueName,
-						@RequestBody ElasticHost host)	{
+	updateElasticHost(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="clusterUniqueName") final String clusterUniqueName,
+						@RequestBody final ElasticHost host)	{
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(clusterUniqueName);
 			if(clusterMap.size() == 1) {
@@ -294,29 +324,7 @@ public class ElasticsearchController {
 	}
 	
 	
-	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/elastic-repo/cluster:remove", method = RequestMethod.DELETE)
-	@Operation(summary = "Remove Elasticsearch server/cluster connection")
-	public ResponseEntity<RestObject> 
-	removeElasticCluster(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="clusterUniqueName") String clusterUniqueName) {
-		try	{
-			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(clusterUniqueName);
-			
-			if(clusterMap.size() == 1) {
-				elasticClusterDb.deleteElasticCluster(clusterMap.get(clusterUniqueName).getClusterId());
-				Map<String, ElasticCluster> cMap = elasticClusterDb.getElasticCluster(clusterUniqueName);
-				ElasticClusterList elasticClusterList = new ElasticClusterList(cMap);
-				return RestObject.retOKWithPayload(elasticClusterList, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
-			} else {
-				return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), "Cluster cannot be removed");
-			}
-		} catch(Exception ex) {
-			return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-		} catch(Throwable ex)	{
-			return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-		}
-	}
+
 	
 	
 	
@@ -328,8 +336,9 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/management/query:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add a new SQL/DSL statement to the repo")
 	public ResponseEntity<RestObject> 
-	addQuery(	@RequestHeader(value="requestId") String requestId,
-				@RequestBody String queryObj) {
+	addQuery(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestBody final String queryObj) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			ElasticQuery elasticQuery = ElasticQuery.toElasticQuery(queryObj);
 
@@ -363,8 +372,9 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/management/query:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete query statement against Elasticsearch cluster/server")
 	public ResponseEntity<RestObject> 
-	deleteElasticQuery(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="queryId") String queryId) {
+	deleteElasticQuery(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="queryId") final String queryId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			elasticClusterDb.deleteQuery(Integer.parseInt(queryId));
 			return RestObject.retOK(requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -380,9 +390,10 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/management/query:search", method = RequestMethod.GET)
 	@Operation(summary = "Search Dsl/Sql statement by searching a keyword")
 	public ResponseEntity<RestObject> 
-	searchElasticQuery( @RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="stringToSearch") String stringToSearch) {
+	searchElasticQuery( @RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="stringToSearch") final String stringToSearch) {
 		List<ElasticQuery> lstQuery;
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			int queryId_ = -1;
 			if(!stringToSearch.isEmpty() && !stringToSearch.isBlank()) {
@@ -407,9 +418,10 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/management/query:cluster", method = RequestMethod.GET)
 	@Operation(summary = "Get the list of queries associated with a cluster")
 	public ResponseEntity<RestObject> 
-	getQueriesForCluster(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="clusterName") String clusterName) {
+	getQueriesForCluster(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="clusterName") final String clusterName) {
 		List<ElasticQuery> lstQuery;
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			lstQuery = elasticClusterDb.getQueriesForCluster(clusterName);
 			for(ElasticQuery eQuery: lstQuery) {
@@ -426,12 +438,12 @@ public class ElasticsearchController {
 	}
 	
 	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/elastic-repo/management/query:get", method = RequestMethod.POST)
+	@RequestMapping(value = "/elastic-repo/management/query:get", method = RequestMethod.GET)
 	@Operation(summary = "Get the Dsl/Sql statement by searching a keyword")
 	public ResponseEntity<RestObject> 
-	getSpecificQuery(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="clusterUniqueName") String clusterUniqueName,
-						@RequestHeader(value="queryId") String queryId) {
+	getSpecificQuery(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="queryId") final String queryId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			int qId = Integer.parseInt(queryId);
 			ElasticQueryList elasticQueryList = new ElasticQueryList();
@@ -451,8 +463,9 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/management/query/params:get", method = RequestMethod.GET)
 	@Operation(summary = "Get all params of the query")
 	public ResponseEntity<RestObject> 
-	getQueryParams(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="queryId") String queryId) {
+	getElasticQueryParams(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="queryId") final String queryId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			if(queryId == null || queryId.isBlank() || queryId.isEmpty()) {
 				throw new Exception("queryId is null or empty");
@@ -472,11 +485,12 @@ public class ElasticsearchController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/elastic-repo/management/query/param:get", method = RequestMethod.GET)
-	@Operation(summary = "Get all params of the query")
+	@Operation(summary = "Get param of the query by name")
 	public ResponseEntity<RestObject> 
-	getQueryParam(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="queryId") String queryId,
-					@RequestHeader(value="paramName") String paramName) {
+	getElasticQueryParam(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="queryId") final String queryId,
+							@RequestHeader(value="paramName") final String paramName) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			if(queryId == null || queryId.isBlank() || queryId.isEmpty() ||	paramName == null || paramName.isBlank() || paramName.isEmpty() ) {
 				throw new Exception(AppLogger.logError(Thread.currentThread().getStackTrace()[1], AppLogger.obj, "Query Id or Param Name is null/empty")) ;
@@ -499,8 +513,9 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/management/query/param:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add query params", description= "")
 	public ResponseEntity<RestObject> 
-	addQueryParam(	@RequestHeader(value="requestId") String requestId,
-					@RequestBody ElasticQueryParam elasticQueryParam) {
+	addElasticQueryParam(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestBody final ElasticQueryParam elasticQueryParam) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			elasticClusterDb.mergeQueryParam(	elasticQueryParam.getQueryId(),
 												elasticQueryParam.getQueryParamName(),
@@ -530,9 +545,10 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/management/query/param:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete query params") 
 	public ResponseEntity<RestObject> 
-	deleteElasticQueryParam(@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="queryId") String queryId,
-							@RequestHeader(value="paramId") String paramId) {
+	deleteElasticQueryParam(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="queryId") final String queryId,
+							@RequestHeader(value="paramId") final String paramId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			elasticClusterDb.deleteQueryParam(Integer.parseInt(queryId), Integer.parseInt(paramId) );
 			ElasticQueryParamList elasticQueryParamList = new ElasticQueryParamList();
@@ -551,7 +567,8 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/management/query/signature", method = RequestMethod.GET)
 	@Operation(summary = "Get Input Object for Query execution") 
 	public ResponseEntity<RestObject> 
-	getQueryInputObject(@RequestHeader(value="requestId") String requestId) {
+	getQueryInputObject(@RequestHeader(value="requestId", defaultValue = "") String requestId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			QueryInputWrapper queryInputWrapper = new QueryInputWrapper();
 			return RestObject.retOKWithPayload(queryInputWrapper, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -568,8 +585,9 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/management/query/bridge:get", method = RequestMethod.GET)
 	@Operation(summary = "Set Query Bridge To Cluster") 
 	public ResponseEntity<RestObject> 
-	getQueryBridgeToCluster(@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="queryId") String queryId) {
+	getQueryBridgeToCluster(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="queryId") final String queryId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			QueryToClusterBridgeList queryToClusterBridgeList = new QueryToClusterBridgeList(elasticClusterDb.getQueryToClusterBridge(Integer.parseInt(queryId)));
 			return RestObject.retOKWithPayload(queryToClusterBridgeList, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -584,11 +602,13 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/management/query/bridge:add", method = RequestMethod.PUT)
 	@Operation(summary = "Set Query Bridge To Cluster") 
 	public ResponseEntity<RestObject> 
-	addQueryBridgeToCluster(@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="queryId") String queryId,
-							@RequestHeader(value="clusterId") String clusterId,
+	addQueryBridgeToCluster(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="queryId") final String queryId,
+							@RequestHeader(value="clusterId") final String clusterId,
 							@RequestHeader(value="active", defaultValue = "1") String active) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
+
 			long queryId_ = Integer.parseInt(queryId);
 			long clusterId_ = Integer.parseInt(clusterId);
 			int active_ = Integer.parseInt(active);
@@ -607,9 +627,10 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/management/query/bridge:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete Query Bridge To Cluster") 
 	public ResponseEntity<RestObject> 
-	deleteQueryBridgeToCluster(	@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="queryId") String queryId,
-								@RequestHeader(value="clusterId") String clusterId) {
+	deleteQueryBridgeToCluster(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="queryId") final String queryId,
+								@RequestHeader(value="clusterId") final String clusterId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			elasticClusterDb.deleteActiveQueryToClusterBridge(Integer.parseInt(queryId), Integer.parseInt(clusterId));
 			QueryToClusterBridgeList queryToClusterBridgeList = new QueryToClusterBridgeList(elasticClusterDb.getQueryToClusterBridge(Integer.parseInt(queryId)));
@@ -627,12 +648,12 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/index:create", method = RequestMethod.PUT)
 	@Operation(summary = "Create Elasticsearch Index") 
 	public ResponseEntity<RestObject> 
-	createIndex(@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="clusterUniqueName") String clusterUniqueName,
-				@RequestHeader(value="indexName") String indexName,
-				@RequestHeader(value="numberOfShards") String numberOfShards,
-				@RequestHeader(value="numberOfReplicas") String numberOfReplicas) {
-
+	createIndex(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="clusterUniqueName") final String clusterUniqueName,
+				@RequestHeader(value="indexName") final String indexName,
+				@RequestHeader(value="numberOfShards") final String numberOfShards,
+				@RequestHeader(value="numberOfReplicas") final String numberOfReplicas) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(clusterUniqueName);
 			if(clusterMap.size() == 1) {
@@ -663,8 +684,42 @@ public class ElasticsearchController {
 			return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
 		}
 	}
-	
-	
+
+
+	@CrossOrigin(origins = "*")
+	@RequestMapping(value = "/elastic-repo/cluster/index:remove", method = RequestMethod.DELETE)
+	@Operation(summary = "Remove elasticsearch index")
+	public ResponseEntity<RestObject>
+	deleteElasticIndex(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					   @RequestHeader(value="clusterUniqueName") final String clusterUniqueName,
+					   @RequestHeader(value="indexName") final String indexName) {
+		requestId = StringUtils.generateRequestId(requestId);
+		try	{
+			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(clusterUniqueName);
+			if(clusterMap.size() == 1) {
+				HttpHost[] httpHostArray = elasticClusterDb.getHostArray(clusterMap, clusterUniqueName);
+				ElasticLowLevelWrapper elasticLowLevelWrapper = new ElasticLowLevelWrapper(httpHostArray);
+				boolean ret = CreateIndexLowApi.indexDelete(elasticLowLevelWrapper,	indexName);
+				elasticLowLevelWrapper.disconnect();
+
+				if(ret)	{
+					return RestObject.retOK(requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
+				} else {
+					return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), "Index cannot be removed");
+				}
+			} else {
+				return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), "Cluster does not exist");
+			}
+
+		} catch(Exception ex) {
+			return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+		} catch(Throwable ex)	{
+			return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+		}
+	}
+
+
+
 	/** Copy to Elastic Operations*/ 
 	
 	
@@ -673,13 +728,14 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/index/copy/embedded:sql", method = RequestMethod.PUT)
 	@Operation(summary = "Copy to index from an Embedded Db query")
 	public ResponseEntity<RestObject> 
-	copyFromEmbeddedQueryToElastic(	@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="toElasticClusterName") String toElasticClusterName,
-									@RequestHeader(value="toElasticIndexName") String toElasticIndexName,
-									@RequestHeader(value="fromClusterId") String fromClusterId,
-									@RequestHeader(value="fromEmbeddedDatabaseName") String fromEmbeddedDatabaseName,
-									@RequestHeader(value="fromEmbeddedSchemaName") String fromEmbeddedSchemaName,
+	copyFromEmbeddedQueryToElastic(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="toElasticClusterName") final String toElasticClusterName,
+									@RequestHeader(value="toElasticIndexName") final String toElasticIndexName,
+									@RequestHeader(value="fromClusterId") final String fromClusterId,
+									@RequestHeader(value="fromEmbeddedDatabaseName") final String fromEmbeddedDatabaseName,
+									@RequestHeader(value="fromEmbeddedSchemaName") final String fromEmbeddedSchemaName,
 									@RequestBody String sqlContent) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(toElasticClusterName);
 			if(clusterMap.size() == 1) {
@@ -691,8 +747,7 @@ public class ElasticsearchController {
 				}
 				
 				H2Static h2Db = new H2Static(Long.parseLong(fromClusterId), fromEmbeddedDatabaseName );
-				TableFormatMap recordSet=
-						h2Db.execStaticQueryWithTableFormat(sqlContent);
+				TableFormatMap recordSet = h2Db.execStaticQueryWithTableFormat(sqlContent);
 				
 				if(recordSet.getRows().isEmpty()) {
 					elasticLowLevelWrapper.disconnect();
@@ -720,12 +775,12 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/index/copy/rdbms:sql", method = RequestMethod.PUT)
 	@Operation(summary = "Copy to index from an RDBMS query")
 	public ResponseEntity<RestObject> 
-	copyFromRDBMSQueryToElastic(@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="toElasticClusterName") String toElasticClusterName,
-								@RequestHeader(value="toElasticIndexName") String toElasticIndexName,
-								@RequestHeader(value="fromRdbmsSchemaName") String fromRdbmsSchemaName,
-								@RequestHeader(value="batchValue", defaultValue = "0") String batchValue,
-								@RequestBody String sqlContent) {
+	copyFromRDBMSQueryToElastic(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="toElasticClusterName") final String toElasticClusterName,
+								@RequestHeader(value="toElasticIndexName") final String toElasticIndexName,
+								@RequestHeader(value="fromRdbmsSchemaName") final String fromRdbmsSchemaName,
+								@RequestBody final String sqlContent) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(toElasticClusterName);
 			if(clusterMap.size() == 1) {
@@ -772,14 +827,15 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/index/copy/mongo/adhoc:mql", method = RequestMethod.PUT)
 	@Operation(summary = "Copy to index from Mongo simple search")
 	public ResponseEntity<RestObject> 
-	copyFromMongoAdhocToElastic(	@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="toElasticClusterName") String toElasticClusterName,
-									@RequestHeader(value="toElasticIndexName") String toElasticIndexName,
-									@RequestHeader(value="fromMongoClusterName") String fromMongoClusterName,
-									@RequestHeader(value="fromMongoDatabaseName") String fromMongoDatabaseName,
-									@RequestHeader(value="fromMongoCollectionName") String fromMongoCollectionName,
-									@RequestHeader(value="batchValue", defaultValue = "0") String batchValue,
+	copyFromMongoAdhocToElastic(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="toElasticClusterName") final String toElasticClusterName,
+									@RequestHeader(value="toElasticIndexName") final String toElasticIndexName,
+									@RequestHeader(value="fromMongoClusterName") final String fromMongoClusterName,
+									@RequestHeader(value="fromMongoDatabaseName") final String fromMongoDatabaseName,
+									@RequestHeader(value="fromMongoCollectionName") final String fromMongoCollectionName,
+									@RequestHeader(value="batchValue", defaultValue = "0") final String batchValue,
 									@RequestBody String sqlContent) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(toElasticClusterName);
 			if(clusterMap.size() == 1) {
@@ -832,17 +888,18 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/index/copy/mongo:simple", method = RequestMethod.PUT)
 	@Operation(summary = "Copy to index from Mongo simple search")
 	public ResponseEntity<RestObject> 
-	copyFromMongoSimpleQueryToElastic(	@RequestHeader(value="requestId") String requestId,
-										@RequestHeader(value="toElasticClusterName") String toElasticClusterName,
-										@RequestHeader(value="toElasticIndexName") String toElasticIndexName,
-										@RequestHeader(value="fromMongoClusterName") String fromMongoClusterName,
-										@RequestHeader(value="fromMongoDatabaseName") String fromMongoDatabaseName,
-										@RequestHeader(value="fromMongoCollectionName") String fromMongoCollectionName,
-										@RequestHeader(value="itemToSearch") String itemToSearch,
-										@RequestHeader(value="valueToSearch") String valueToSearch,
-										@RequestHeader(value="valueToSearchType") String valueToSearchType,
-										@RequestHeader(value="operator", defaultValue = "$eq") String operator,
-										@RequestHeader(value="batchValue", defaultValue = "0") String batchValue) {
+	copyFromMongoSimpleQueryToElastic(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+										@RequestHeader(value="toElasticClusterName") final String toElasticClusterName,
+										@RequestHeader(value="toElasticIndexName") final String toElasticIndexName,
+										@RequestHeader(value="fromMongoClusterName") final String fromMongoClusterName,
+										@RequestHeader(value="fromMongoDatabaseName") final String fromMongoDatabaseName,
+										@RequestHeader(value="fromMongoCollectionName") final String fromMongoCollectionName,
+										@RequestHeader(value="itemToSearch") final String itemToSearch,
+										@RequestHeader(value="valueToSearch") final String valueToSearch,
+										@RequestHeader(value="valueToSearchType") final String valueToSearchType,
+										@RequestHeader(value="operator", defaultValue = "$eq") final String operator,
+										@RequestHeader(value="batchValue", defaultValue = "0") final String batchValue) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(toElasticClusterName);
 			if(clusterMap.size() == 1) {
@@ -897,19 +954,20 @@ public class ElasticsearchController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/elastic-repo/index/copy/mongo:range", method = RequestMethod.PUT)
-	@Operation(summary = "Copy from index Index from Mongo range search")
+	@Operation(summary = "Copy to Elastic Index from a Mongo range search")
 	public ResponseEntity<RestObject> 
-	copyFromMongoRangeToElastic(@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="toElasticClusterName") String toElasticClusterName,
-								@RequestHeader(value="toElasticIndexName") String toElasticIndexName,
-								@RequestHeader(value="fromMongoClusterName") String fromMongoClusterName,
-								@RequestHeader(value="fromMongoDatabaseName") String fromMongoDatabaseName,
-								@RequestHeader(value="fromMongoCollectionName") String fromMongoCollectionName,
-								@RequestHeader(value="itemToSearch") String itemToSearch,
-								@RequestHeader(value="fromValue") String fromValue,
-								@RequestHeader(value="toValue") String toValue,
-								@RequestHeader(value="valueSearchType") String valueSearchType,
-								@RequestHeader(value="batchValue", defaultValue = "0") String batchValue) {
+	copyFromMongoRangeToElastic(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="toElasticClusterName") final String toElasticClusterName,
+								@RequestHeader(value="toElasticIndexName") final String toElasticIndexName,
+								@RequestHeader(value="fromMongoClusterName") final String fromMongoClusterName,
+								@RequestHeader(value="fromMongoDatabaseName") final String fromMongoDatabaseName,
+								@RequestHeader(value="fromMongoCollectionName") final String fromMongoCollectionName,
+								@RequestHeader(value="itemToSearch") final String itemToSearch,
+								@RequestHeader(value="fromValue") final String fromValue,
+								@RequestHeader(value="toValue") final String toValue,
+								@RequestHeader(value="valueSearchType") final String valueSearchType,
+								@RequestHeader(value="batchValue", defaultValue = "0") final String batchValue) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(toElasticClusterName);
 			if(clusterMap.size() == 1) {
@@ -969,13 +1027,14 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/index/copy/mongo:collection", method = RequestMethod.PUT)
 	@Operation(summary = "Copy from Mongo collection to Elastic") 
 	public ResponseEntity<RestObject> 
-	copyFromMongoFullCollectionToElastic(	@RequestHeader(value="requestId") String requestId,
-											@RequestHeader(value="toElasticClusterName") String toElasticClusterName,
-											@RequestHeader(value="toElasticIndexName") String toElasticIndexName,
-											@RequestHeader(value="fromMongoClusterName") String fromMongoClusterName,
-											@RequestHeader(value="fromMongoDatabaseName") String fromMongoDatabaseName,
-											@RequestHeader(value="fromMongoCollectionName") String fromMongoCollectionName,
-											@RequestHeader(value="batchCount", defaultValue = "0") String batchCount) {
+	copyFromMongoFullCollectionToElastic(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+											@RequestHeader(value="toElasticClusterName") final String toElasticClusterName,
+											@RequestHeader(value="toElasticIndexName") final String toElasticIndexName,
+											@RequestHeader(value="fromMongoClusterName") final String fromMongoClusterName,
+											@RequestHeader(value="fromMongoDatabaseName") final String fromMongoDatabaseName,
+											@RequestHeader(value="fromMongoCollectionName") final String fromMongoCollectionName,
+											@RequestHeader(value="batchCount", defaultValue = "0") final String batchCount) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(toElasticClusterName);
 			if(clusterMap.size() == 1) {
@@ -1028,17 +1087,19 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/index/copy/elastic:dsl", method = RequestMethod.PUT)
 	@Operation(summary = "Copy to Elastic Index from another Elastic Dsl query")
 	public ResponseEntity<RestObject> 
-	copyElasticToElasticViaDsl(	@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="fromElasticClusterName") String fromElasticClusterName,
-								@RequestHeader(value="fromIndexName") String fromIndexName,
-								@RequestHeader(value="fromHttpVerb") String fromHttpVerb,
-								@RequestHeader(value="fromElasticApi") String fromElasticApi,
-								@RequestHeader(value="fromEndPoint") String fromEndPoint,
-								@RequestHeader(value="toElasticClusterName") String toElasticClusterName,
-								@RequestHeader(value="toIndexName") String toIndexName,
-								@RequestHeader(value="batchValue", required = false, defaultValue = "0") String batchValue,
-								@RequestBody (required = false) String fromHttpPayload) {
+	copyElasticToElasticViaDsl(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="fromElasticClusterName") final String fromElasticClusterName,
+								@RequestHeader(value="fromIndexName") final String fromIndexName,
+								@RequestHeader(value="fromHttpVerb") final String fromHttpVerb,
+								@RequestHeader(value="fromElasticApi") final String fromElasticApi,
+								@RequestHeader(value="fromEndPoint") final String fromEndPoint,
+								@RequestHeader(value="toElasticClusterName") final String toElasticClusterName,
+								@RequestHeader(value="toIndexName") final String toIndexName,
+								@RequestHeader(value="batchValue", required = false, defaultValue = "0") final String batchValue,
+								@RequestBody (required = false) final String fromHttpPayload) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
+
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(toElasticClusterName);
 			if(clusterMap.size() == 1) {
 				HttpHost[] toHttpHostArray = elasticClusterDb.getHostArray(clusterMap, toElasticClusterName);
@@ -1099,14 +1160,15 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/index/copy/elastic:sql", method = RequestMethod.PUT)
 	@Operation(summary = "Copy to Elastic Index from another Elastic Sql query")
 	public ResponseEntity<RestObject> 
-	copyElasticToElasticViaSql(	@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="fromElasticClusterName") String fromElasticClusterName,
-								@RequestHeader(value="fromIndexName") String fromIndexName,
-								@RequestHeader(value="toElasticClusterName") String toElasticClusterName,
-								@RequestHeader(value="toIndexName") String toIndexName,
-								@RequestHeader(value="fetchSize", defaultValue = "0") String fetchSize,
-								@RequestHeader(value="batchValue", required = false, defaultValue = "0") String batchValue,
-								@RequestBody (required = false) String sqlPayload) {
+	copyElasticToElasticViaSql(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="fromElasticClusterName") final String fromElasticClusterName,
+								@RequestHeader(value="fromIndexName") final String fromIndexName,
+								@RequestHeader(value="toElasticClusterName") final String toElasticClusterName,
+								@RequestHeader(value="toIndexName") final String toIndexName,
+								@RequestHeader(value="fetchSize") final int fetchSize,
+								@RequestHeader(value="batchValue", required = false) final int batchValue,
+								@RequestBody (required = false) final String sqlPayload) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(toElasticClusterName);
 			if(clusterMap.size() == 1) {
@@ -1118,13 +1180,13 @@ public class ElasticsearchController {
 					return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), "Index does not exist. Please create one before this operation");
 				}
 
-				List<String> elasticFromResultSet = new ArrayList<String>();
+				List<String> elasticFromResultSet;
 				
 				Map<String, ElasticCluster> fromClusterMap = elasticClusterDb.getElasticCluster(fromElasticClusterName);
 				if(fromClusterMap.size() == 1) {
 					HttpHost[] fromHttpHostArray = elasticClusterDb.getHostArray(clusterMap, fromElasticClusterName);
 					ElasticLowLevelWrapper fromElasticLowLevelWrapper = new ElasticLowLevelWrapper(fromHttpHostArray);
-					JSONObject ret = SearchSql.searchSql(fromElasticLowLevelWrapper, sqlPayload, Integer.valueOf(fetchSize) );
+					JSONObject ret = SearchSql.searchSql(fromElasticLowLevelWrapper, sqlPayload, fetchSize);
 					elasticFromResultSet = Objects.requireNonNull(SqlResponse.toSqlResponse(ret.toJSONString())).toListOfJsonStrings();
 
 					fromElasticLowLevelWrapper.disconnect();
@@ -1135,17 +1197,17 @@ public class ElasticsearchController {
                     for (HitsInner temp : hitsInner ) {
 			            elasticFromResultSet.add(temp.get_source().toJSONString());
 					}
+				} else {
+					elasticFromResultSet = new ArrayList<>();
 				}
 
 				long startWith = 0;
 				long noDocsAdded = 0;
-				
-				
-				int batch = Integer.parseInt(batchValue);
-				if(batch <= 0)
+
+				if(batchValue <= 0)
 					noDocsAdded = CreateIndexLowApi.addDocumentToIndex(toElasticLowLevelWrapper, toIndexName, elasticFromResultSet, startWith);
 				else
-					noDocsAdded = CreateIndexLowApi.addBulkDocumentsToIndex(toElasticLowLevelWrapper, toIndexName, elasticFromResultSet, batch);						
+					noDocsAdded = CreateIndexLowApi.addBulkDocumentsToIndex(toElasticLowLevelWrapper, toIndexName, elasticFromResultSet, batchValue);
 
 				
 				toElasticLowLevelWrapper.disconnect();
@@ -1169,14 +1231,13 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/index/copy/csv:load", method = RequestMethod.PUT)
 	@Operation(summary = "Copy Csv to Elastic Index") 
 	public ResponseEntity<RestObject> 
-	copyCsvToElastic(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="fileType", defaultValue = "N") String fileType,
-						@RequestHeader(value="toElasticClusterName") String toElasticClusterName,
-						@RequestHeader(value="toIndexName") String toIndexName,
-						@RequestHeader(value="fetchSize", required = false, defaultValue = "0") String fetchSize,
-						@RequestHeader(value="batchValue", required = false, defaultValue = "0") String batchValue,
-						@RequestParam("file") MultipartFile file) {
+	copyCsvToElastic(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="fileType", defaultValue = "text/csv") final String fileType,
+						@RequestHeader(value="toElasticClusterName") final String toElasticClusterName,
+						@RequestHeader(value="toIndexName") final String toIndexName,
+						@RequestParam("file") final MultipartFile file) {
 		String fileName = StringUtils.generateUniqueString32();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(toElasticClusterName);
 			if(clusterMap.size() == 1) {
@@ -1227,12 +1288,12 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/execute/adhoc/multiple:aggregate", method = RequestMethod.PUT, consumes = "text/plain")
 	@Operation(summary = "Execute Sql or Dsl on multiple clusters / indexes and aggregate results with Sql") 
 	public ResponseEntity<RestObject> 
-	executeAdhocMultipleIndex(	@RequestHeader(value="user") String user,
-								@RequestHeader(value="session") String session,
-								@RequestHeader(value="requestId") String requestId,
-								@RequestBody String strObj)  {
+	executeAdhocMultipleIndex(	@RequestHeader(value="user") final String user,
+								@RequestHeader(value="session") final String session,
+								@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestBody final String strObj)  {
 		ListElasticCompoundQuery listElasticCompoundQuery = ListElasticCompoundQuery.toListElasticCompoundQuery(strObj);
-		
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			String inMemDbName = com.widescope.sqlThunder.utils.StringUtils.generateUniqueString();
             assert listElasticCompoundQuery != null;
@@ -1256,14 +1317,14 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/index/dsl:fuzzy", method = RequestMethod.POST)
 	@Operation(summary = "Query index via native DSL")
 	public ResponseEntity<RestObject> 
-	searchFuzzyIndex(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="clusterUniqueName") String clusterUniqueName,
-						@RequestHeader(value="indexName") String indexName,
-						@RequestHeader(value="fromRecno") Integer fromRecno,
-						@RequestHeader(value="size") Integer size,
-						@RequestBody QueryType queryType) {
+	searchFuzzyIndex(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="clusterUniqueName") final String clusterUniqueName,
+						@RequestHeader(value="indexName") final String indexName,
+						@RequestHeader(value="fromRecno") final Integer fromRecno,
+						@RequestHeader(value="size") final Integer size,
+						@RequestBody final QueryType queryType) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
-		
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(clusterUniqueName);
 			
 			if(clusterMap.size() == 1) {
@@ -1293,14 +1354,14 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/index/management:list", method = RequestMethod.GET)
 	@Operation(summary = "List of indexes") 
 	public ResponseEntity<RestObject> 
-	listIndexes(@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="clusterUniqueName") String clusterUniqueName,
+	listIndexes(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="clusterUniqueName") final String clusterUniqueName,
 				@RequestHeader(value="indexName", required = false) String indexName) throws Exception {
 
 		if(clusterUniqueName.isEmpty()) {
 			throw new Exception ("Empty Cluster Name provided");
 		}
-
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			indexName = (indexName == null ? "" : indexName);
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(clusterUniqueName);
@@ -1333,10 +1394,11 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/index/mapping:update", method = RequestMethod.POST)
 	@Operation(summary = "Update index mapping/properties") 
 	public ResponseEntity<RestObject> 
-	updateIndexMapping(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="clusterUniqueName") String clusterUniqueName,
-						@RequestHeader(value="indexName") String indexName,
-						@RequestBody JSONObject properties) {
+	updateIndexMapping(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="clusterUniqueName") final String clusterUniqueName,
+						@RequestHeader(value="indexName") final String indexName,
+						@RequestBody final JSONObject properties) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(clusterUniqueName);
 			if(clusterMap.size() == 1) {
@@ -1354,59 +1416,15 @@ public class ElasticsearchController {
 			return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
 		}
 	}
-	
-	
-	
-	
-	
-	
-	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/elastic-repo/cluster/index:remove", method = RequestMethod.DELETE)
-	@Operation(summary = "Remove elasticsearch index") 
-	public ResponseEntity<RestObject> 
-	elasticIndexDelete(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="clusterUniqueName") String clusterUniqueName,
-						@RequestHeader(value="indexName") String indexName) {
-		try	{
-			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(clusterUniqueName);
-			if(clusterMap.size() == 1) {
-				HttpHost[] httpHostArray = elasticClusterDb.getHostArray(clusterMap, clusterUniqueName);
-				ElasticLowLevelWrapper elasticLowLevelWrapper = new ElasticLowLevelWrapper(httpHostArray);
-				boolean ret = CreateIndexLowApi.indexDelete(elasticLowLevelWrapper,	indexName);
-				elasticLowLevelWrapper.disconnect();
-				
-				if(ret)	{
-					return RestObject.retOK(requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
-				} else {
-					return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), "Index cannot be removed");
-				}
-			} else {
-				return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), "Cluster does not exist");
-			}
 
-		} catch(Exception ex) {
-			return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-		} catch(Throwable ex)	{
-			return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-		}
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/elastic-repo/index/sql:translate", method = RequestMethod.POST)
 	@Operation(summary = "Translate Sql to Dsl") 
 	public ResponseEntity<RestObject> 
-	translateSqlToDsl(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="clusterUniqueName") String clusterUniqueName,
-						@RequestBody String sqlContent) {
+	translateSqlToDsl(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="clusterUniqueName") final String clusterUniqueName,
+						@RequestBody final String sqlContent) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(clusterUniqueName);
 			if(clusterMap.size() == 1) {
@@ -1435,18 +1453,19 @@ public class ElasticsearchController {
 	@Operation(summary = "Execute a generic adhoc Dsl query") 
 	public ResponseEntity<RestObject> 
 	runAdhocDsl(@RequestHeader(value="user") String user,
-				@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="clusterUniqueName") String clusterUniqueName,
-				@RequestHeader(value="httpVerb") String httpVerb,
-				@RequestHeader(value="elasticApi") String elasticApi,
-				@RequestHeader(value="indexName") String indexName,
-				@RequestHeader(value="endPoint") String endPoint,
-				@RequestHeader(value="isOriginalFormat") String isOriginalFormat,
-				@RequestHeader(value="persist", required = false, defaultValue = "N") String persist,
-				@RequestHeader(value="comment", required = false) String comment,
-				@RequestHeader(value="sqlName") String sqlName,
-				@RequestBody (required = false) String httpPayload) {
+				@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="clusterUniqueName") final String clusterUniqueName,
+				@RequestHeader(value="httpVerb") final String httpVerb,
+				@RequestHeader(value="elasticApi") final String elasticApi,
+				@RequestHeader(value="indexName") final String indexName,
+				@RequestHeader(value="endPoint") final String endPoint,
+				@RequestHeader(value="isOriginalFormat") final String isOriginalFormat,
+				@RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
+				@RequestHeader(value="comment", required = false) final String comment,
+				@RequestHeader(value="sqlName") final String sqlName,
+				@RequestBody (required = false) final String httpPayload) {
 
+		requestId = StringUtils.generateRequestId(requestId);
 		if( !ElasticClusterDb.isElasticApi(elasticApi) || !ElasticClusterDb.isVerb(httpVerb)) {
 			return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), "No conforming api");
 		}
@@ -1520,15 +1539,16 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/index/sql/adhoc:run", method = RequestMethod.POST)
 	@Operation(summary = "Execute an adhoc SQL statement against an index") 
 	public ResponseEntity<RestObject> 
-	runAdhocSql(@RequestHeader(value="user") String user,
-				@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="clusterUniqueName") String clusterUniqueName,
-				@RequestHeader(value="fetchSize") Integer fetchSize,
-				@RequestHeader(value="persist", required = false, defaultValue = "N") String persist,
-				@RequestHeader(value="comment", required = false) String comment,
-				@RequestHeader(value="sqlName") String sqlName,
-				@RequestBody String sqlContent) {
+	runAdhocSql(@RequestHeader(value="user") final String user,
+				@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="clusterUniqueName") final String clusterUniqueName,
+				@RequestHeader(value="fetchSize") final Integer fetchSize,
+				@RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
+				@RequestHeader(value="comment", required = false) final String comment,
+				@RequestHeader(value="sqlName") final String sqlName,
+				@RequestBody final String sqlContent) {
 		try	{
+			requestId = StringUtils.generateRequestId(requestId);
 			User u = authUtil.getUser(user);
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(clusterUniqueName);
 			if(clusterMap.size() == 1) {
@@ -1591,17 +1611,17 @@ public class ElasticsearchController {
 	/*To-Be-Completed in the next iteration*/
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/elastic-repo/index/query:run", method = RequestMethod.POST)
-	@Operation(summary = "Execute a repo query") 
+	@Operation(summary = "Execute a repo elastic query")
 	public ResponseEntity<RestObject> 
-	runQueryFromRepo(	@RequestHeader(value="user") String user,
-						@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="clusterUniqueName") String clusterUniqueName,
-						@RequestHeader(value="queryId") String queryId,
-						@RequestHeader(value="queryType") String queryType,
-						@RequestHeader(value="persist", required = false, defaultValue = "N") String persist,
-						@RequestHeader(value="comment", required = false) String comment,
-						@RequestBody String paramObj) {
-
+	runElasticQueryFromRepo(@RequestHeader(value="user") final String user,
+							@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="clusterUniqueName") final String clusterUniqueName,
+							@RequestHeader(value="queryId") final String queryId,
+							@RequestHeader(value="queryType") final String queryType,
+							@RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
+							@RequestHeader(value="comment", required = false) final String comment,
+							@RequestBody String paramObj) {
+		requestId = StringUtils.generateRequestId(requestId);
 		ElasticQueryList elasticQueryList = new ElasticQueryList();
 		ElasticQueryExec elasticQueryExec = null;
 		try { elasticQueryExec = ElasticQueryExec.toElasticQueryExec(paramObj); } finally {}
@@ -1649,12 +1669,12 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/snapshot:history", method = RequestMethod.GET)
 	@Operation(summary = "Get a list of snapshots to visualize") 
 	public ResponseEntity<RestObject> 
-	getElasticSnapshotHistory(	@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="ownerId") String ownerId,
-								@RequestHeader(value="startTime") String startTime,
-								@RequestHeader(value="endTime") String endTime,
-								@RequestHeader(value="sqlStatement", required = false) String sqlStatement) {
-
+	getElasticSnapshotHistory(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="ownerId") final String ownerId,
+								@RequestHeader(value="startTime") final String startTime,
+								@RequestHeader(value="endTime") final String endTime,
+								@RequestHeader(value="sqlStatement", required = false) final String sqlStatement) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			SnapshotElasticDbRepo snp = new SnapshotElasticDbRepo();
 			SnapshotDbRecordList ret = snp.getUserSnapshotDb(	Long.parseLong(ownerId), 
@@ -1673,8 +1693,9 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/snapshot:get", method = RequestMethod.GET)
 	@Operation(summary = "Get snapshot to visualize") 
 	public ResponseEntity<RestObject> 
-	getElasticSnapshot(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="snapshotId") String snapshotId) {
+	getElasticSnapshot(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="snapshotId") final String snapshotId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			SnapshotElasticDbRepo snp = new SnapshotElasticDbRepo();
 			SnapshotDbRecord snapshotDbRecord = snp.getSnapshot(Long.parseLong(snapshotId));
@@ -1694,8 +1715,9 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/snapshot:delete", method = RequestMethod.POST)
 	@Operation(summary = "Delete snapshot") 
 	public ResponseEntity<RestObject> 
-	deleteSnapshot(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="snapshotId") String snapshotId) {
+	deleteElasticSnapshot(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="snapshotId") final String snapshotId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			SnapshotElasticDbRepo snp = new SnapshotElasticDbRepo();
 			SnapshotDbRecord snapshotDbRecord = snp.getSnapshot(Long.parseLong(snapshotId));
@@ -1717,8 +1739,9 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/association:get", method = RequestMethod.GET)
 	@Operation(summary = "Get elastic repo associations")
 	public ResponseEntity<RestObject> 
-	getRepoAssociationTable(@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="associationName") String associationName) {
+	getElasticRepoAssociationTable(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="associationName") final String associationName) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			RepoAssociationTableList repoAssociationTableList = elasticClusterDb.getRepoAssociationTable( associationName );
 			return RestObject.retOKWithPayload(repoAssociationTableList, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -1735,9 +1758,9 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/association:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add elastic repo association")
 	public ResponseEntity<RestObject> 
-	addRepoAssociationTable(@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="associationName") String associationName) {
-
+	addElasticRepoAssociationTable(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="associationName") final String associationName) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			elasticClusterDb.insertRepoAssociationTable(associationName);
 			return RestObject.retOK(requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -1752,9 +1775,10 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/association:update", method = RequestMethod.PUT)
 	@Operation(summary = "Update elastic repo association")
 	public ResponseEntity<RestObject> 
-	updateElasticRepoAssociation(	@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="associationId") String associationId,
-									@RequestHeader(value="associationName") String associationName) {
+	updateElasticRepoAssociation(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="associationId") final String associationId,
+									@RequestHeader(value="associationName") final String associationName) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			elasticClusterDb.updateRepoAssociationTable(Integer.parseInt(associationId) , associationName);
 			return RestObject.retOK(requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -1767,11 +1791,12 @@ public class ElasticsearchController {
 	
 	
 	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/elastic-repo/association:delete", method = RequestMethod.PUT)
+	@RequestMapping(value = "/elastic-repo/association:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete elastic repo association")
 	public ResponseEntity<RestObject> 
-	deleteRepoAssociation(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="associationId") String associationId) {
+	deleteElasticRepoAssociation(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="associationId") final String associationId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			elasticClusterDb.deleteRepoAssociationTable(Integer.parseInt(associationId));
 			return RestObject.retOK(requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -1790,11 +1815,12 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/history/stm:get", method = RequestMethod.GET)
 	@Operation(summary = "Get the List of executed sql statements") 
 	public ResponseEntity<RestObject> 
-	getEsHistStm(	@RequestHeader(value="user") String user,
-				 	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="type") String type,
-					@RequestHeader(value="stext", required = false, defaultValue = "") String sText) {
-		List<HistoryStatement> lstSql = new ArrayList<HistoryStatement>();
+	getElasticHistStm(	@RequestHeader(value="user") final String user,
+						@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="type") final String type,
+						@RequestHeader(value="stext", required = false, defaultValue = "") final String sText) {
+		List<HistoryStatement> lstSql = new ArrayList<>();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			User u = authUtil.getUser(user);
 			long userId = u.getId();
@@ -1826,11 +1852,12 @@ public class ElasticsearchController {
 	@RequestMapping(value = "/elastic-repo/history/stm:copy", method = RequestMethod.POST)
 	@Operation(summary = "Copy sql statements to another user") 
 	public ResponseEntity<RestObject> 
-	copyEsHistStm(	@RequestHeader(value="user") String user,
-				  	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="toUserId") String toUserId,
-					@RequestHeader(value="shaHash") String shaHash,
-					@RequestHeader(value="type") String type) {
+	copyEsHistStm(	@RequestHeader(value="user") final String user,
+				  	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="toUserId") final String toUserId,
+					@RequestHeader(value="shaHash") final String shaHash,
+					@RequestHeader(value="type") final String type) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			User u = authUtil.getUser(user);
 			long userId = u.getId();
@@ -1850,9 +1877,10 @@ public class ElasticsearchController {
 	@Operation(summary = "Delete an executed sql statement from your profile") 
 	public ResponseEntity<RestObject> 
 	deleteEsHistStmt(	@RequestHeader(value="user") String user,
-						@RequestHeader(value="requestId") String requestId,
+						@RequestHeader(value="requestId", defaultValue = "") String requestId,
 						@RequestHeader(value="shaHash") String shaHash,
 						@RequestHeader(value="type") String type) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			User u = authUtil.getUser(user);
 			long userId = u.getId();

@@ -89,16 +89,17 @@ public class ExchangeStorageController {
 					method = RequestMethod.POST,
 					consumes = { MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE }
 					)
-	@Operation(summary = "Receive a file from")
+	@Operation(summary = "Receive a file form an external exchange")
 	public ResponseEntity<RestObject> 
-	receiveFilesFromRemoteExchange(	@RequestHeader(value="externalUserEmail") String externalUserEmail,
-									@RequestHeader(value="externalExchangeUid") String externalExchangeUid,  /*for verification*/
-									@RequestHeader(value="externalUserPassword") String externalUserPassword,
-									@RequestHeader(value="toUserEmail") String toUserEmail,
-									@RequestParam("files") MultipartFile[] files)  {
+	receiveFilesFromRemoteExchange(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								   @RequestHeader(value="externalUserEmail") final String externalUserEmail,
+								   @RequestHeader(value="externalExchangeUid") final String externalExchangeUid,  /*for verification*/
+								   @RequestHeader(value="externalUserPassword") final String externalUserPassword,
+								   @RequestHeader(value="toUserEmail") final String toUserEmail,
+								   @RequestParam("files") final MultipartFile[] files)  {
 		
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+		requestId = StringUtils.generateRequestId(requestId);
 
 		try {
 			if( exchangeDb.isUser(externalUserEmail, externalUserPassword) ) {
@@ -151,15 +152,16 @@ public class ExchangeStorageController {
 					)
 	@Operation(summary = "Upload a generic file, and send it to a remote exchange")
 	public ResponseEntity<RestObject> 
-	uploadFilesAndSendToRemote(	@RequestHeader(value="user") String user,
-								@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="externalExchangeUid") String externalExchangeUid,
-								@RequestHeader(value="externalUserPassword") String externalUserPassword,
-								@RequestHeader(value="toUserEmail") String toUserEmail,
-								@RequestHeader(value="remoteExchangeUrl") String remoteExchangeUrl,
-								@RequestParam("file") MultipartFile[] files) {
+	uploadFilesAndSendToRemote(	@RequestHeader(value="user") final String user,
+								@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="externalExchangeUid") final String externalExchangeUid,
+								@RequestHeader(value="externalUserPassword") final String externalUserPassword,
+								@RequestHeader(value="toUserEmail") final String toUserEmail,
+								@RequestHeader(value="remoteExchangeUrl") final String remoteExchangeUrl,
+								@RequestParam("files") final MultipartFile[] files) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			ExchangeEndPointWrapper.uploadFilesToExternalExchange(	user,
 																	externalExchangeUid, 
@@ -181,14 +183,15 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/file/send:remote", method = RequestMethod.POST)
 	@Operation(summary = "Send a file from this exchange/instance to a remote exchange/instance")
 	public ResponseEntity<RestObject> 
-	sendFileToRemoteExchange(	@RequestHeader(value="user") String user,
-								@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="toExchangeId") String toExchangeId, 
-								@RequestHeader(value="externalUserPassword") String externalUserPassword,
-								@RequestHeader(value="toUserEmail") String toUserEmail,
-								@RequestBody (required=false) FileDescriptorList fileDescriptorList)  {
+	sendFileToRemoteExchange(	@RequestHeader(value="user") final String user,
+								@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="toExchangeId") final String toExchangeId,
+								@RequestHeader(value="externalUserPassword") final String externalUserPassword,
+								@RequestHeader(value="toUserEmail") final String toUserEmail,
+								@RequestBody (required=false) final FileDescriptorList fileDescriptorList)  {
 		String uploadFileFromRemoteExchange = "/exchange/file/upload:remote";
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			ConfigRepoDbRecord owner = configRepoDb.getConfigRec("owner");
 			ExchangeRecord fromExchangeUid = exchangeDb.getOwnExchange(owner.getConfigValue());
@@ -217,12 +220,13 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/file/hist:get", method = RequestMethod.GET)
 	@Operation(summary = "Get List of Files from a saved Files Repo")
 	public ResponseEntity<RestObject> 
-	getSnapshot(@RequestHeader(value="user") String user,
-				@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="startTime") String startTime,
-				@RequestHeader(value="endTime") String endTime)  {
+	getSnapshot(@RequestHeader(value="user") final String user,
+				@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="startTime") final String startTime,
+				@RequestHeader(value="endTime") final String endTime)  {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			long userId = authUtil.getUser(user).getId();
 			SnapshotDbRepo snp = new SnapshotDbRepo();
@@ -243,11 +247,11 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/file/delete:local", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete a file on this Data Exchange Server or own file on remote")
 	public ResponseEntity<RestObject> 
-	deleteFileFromLocalRequest(	@RequestHeader(value="user") String user,
-								@RequestHeader(value="session") String session,
-								@RequestHeader(value="fileId") String fileId,
-								@RequestHeader(value="requestId") String requestId)  {
+	deleteFileFromLocalRequest(	@RequestHeader(value="user") final String user,
+								@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								   @RequestHeader(value="fileId") final String fileId)  {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			ConfigRepoDbRecord owner = configRepoDb.getConfigRec("owner");
 			ExchangeRecord ownExchange = exchangeDb.getOwnExchange(owner.getConfigValue());
@@ -275,11 +279,12 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/file/attach-h2", method = RequestMethod.PUT)
 	@Operation(summary = "Move and attach embedded db from Exchange")
 	public ResponseEntity<RestObject> 
-	moveAndAttachH2FromExchange(@RequestHeader(value="user") String user,
-								@RequestHeader(value="fileId") String fileId,
-								@RequestHeader(value="clusterId") String clusterId,
-								@RequestHeader(value="requestId") String requestId) {
+	moveAndAttachH2FromExchange(@RequestHeader(value="user")  final String user,
+								@RequestHeader(value="fileId") final String fileId,
+								@RequestHeader(value="clusterId") final String clusterId,
+								@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			String pathCluster = H2Static.getClusterPath(Long.parseLong(clusterId) );
 			ExchangeFileDbRecord rec = exchangeDb.getFile(Long.parseLong(fileId));
@@ -317,11 +322,12 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/exchange:new", method = RequestMethod.PUT)
 	@Operation(summary = "Add new remote exchange, local exchange can interact with")
 	public ResponseEntity<RestObject> 
-	addNewRemoteExchange(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="exchangeAddress") String exchangeAddress,
-							@RequestHeader(value="exchangeName") String exchangeName,
+	addNewRemoteExchange(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="exchangeAddress") final String exchangeAddress,
+							@RequestHeader(value="exchangeName") final String exchangeName,
 							@RequestHeader(value="exchangeUid", required = false) String exchangeUid) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		if(exchangeUid == null || exchangeUid.isBlank() || exchangeUid.isEmpty()) {
 			exchangeUid = StringUtils.generateUniqueString();
 		}
@@ -342,16 +348,17 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/exchange:update", method = RequestMethod.POST)
 	@Operation(summary = "Update remote exchange, local exchange can interact with. This end point will not update own exchange")
 	public ResponseEntity<RestObject> 
-	updateRemoteExchange(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="id") String id,
-							@RequestHeader(value="exchangeAddress") String exchangeAddress,
-							@RequestHeader(value="exchangeName") String exchangeName,
-							@RequestHeader(value="exchangeUid", required = false) String exchangeUid) {
+	updateRemoteExchange(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="id") final String id,
+							@RequestHeader(value="exchangeAddress") final String exchangeAddress,
+							@RequestHeader(value="exchangeName") final String exchangeName,
+							@RequestHeader(value="exchangeUid", required = false) final String exchangeUid) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		if(Integer.parseInt(id) == 1) {
 			return RestObject.retException(requestId, methodName, " Cannot update own exchange. Only via change company name"  );
 		}
-		
+
 		ExchangeRecord exchangeRecord = new ExchangeRecord(Integer.parseInt(id), exchangeAddress, exchangeName, exchangeUid);
 		try	{
 			exchangeDb.updateExchange(exchangeRecord);
@@ -366,11 +373,12 @@ public class ExchangeStorageController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/exchange/exchange:delete", method = RequestMethod.DELETE)
-	@Operation(summary = "Get list of Sql Commands")
+	@Operation(summary = "Delete Exchange")
 	public ResponseEntity<RestObject> 
-	deleteRemoteExchange(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="exchangeUid", required = false) String exchangeUid) {
+	deleteRemoteExchange(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="exchangeUid", required = false) final String exchangeUid) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			ExchangeRecord e = exchangeDb.getExchange(exchangeUid);
 			if(e.getId() == 1) {
@@ -391,8 +399,9 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/exchange:get", method = RequestMethod.GET)
 	@Operation(summary = "Get exchange info")
 	public ResponseEntity<RestObject> 
-	getAllExchanges(@RequestHeader(value="requestId") String requestId) {
+	getAllExchanges(@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			ExchangeList eList = exchangeDb.getAllExchanges();
 			return RestObject.retOKWithPayload(eList, requestId, methodName);
@@ -407,9 +416,10 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/exchange/search:get", method = RequestMethod.GET)
 	@Operation(summary = "Search exchanges")
 	public ResponseEntity<RestObject> 
-	searchExchanges(@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="exchange") String exchange) {
+	searchExchanges(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="exchange") final String exchange) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			ExchangeList eList = exchangeDb.searchExchange(exchange);
 			return RestObject.retOKWithPayload(eList, requestId, methodName);
@@ -425,9 +435,10 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/exchange/associated:get", method = RequestMethod.GET)
 	@Operation(summary = "Get exchange info")
 	public ResponseEntity<RestObject> 
-	getAssociatedExchanges(	@RequestHeader(value="user") String user,
-							@RequestHeader(value="requestId") String requestId) {
+	getAssociatedExchanges(	@RequestHeader(value="user") final String user,
+							@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			User u = authUtil.getUser(user);
 			ExchangeList eList = exchangeDb.getAssociatedExchanges(u.getId());
@@ -450,9 +461,10 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/users/email:get", method = RequestMethod.GET)
 	@Operation(summary = "Get users")
 	public ResponseEntity<RestObject> 
-	getExchangeUsers(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="email") String email) {
+	getExchangeUsers(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="email") final String email) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			UserDbList u = exchangeDb.getUsers(email);
 			return RestObject.retOKWithPayload(u, requestId, methodName);
@@ -468,9 +480,10 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/users/exchange:get", method = RequestMethod.GET)
 	@Operation(summary = "Get users by Exchange")
 	public ResponseEntity<RestObject> 
-	getUsersByExchange(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="exchangeId") String exchangeId) {
+	getUsersByExchange(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="exchangeId") final String exchangeId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			UserDbList u = exchangeDb.getUsersByExchange(Integer.parseInt(exchangeId));
 			return RestObject.retOKWithPayload(u, requestId, methodName);
@@ -486,9 +499,10 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/users:get", method = RequestMethod.GET)
 	@Operation(summary = "Get users associated to Exchange")
 	public ResponseEntity<RestObject> 
-	getAssociatedUsersToExchange(	@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="exchangeId") String exchangeId) {
+	getAssociatedUsersToExchange(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="exchangeId") final String exchangeId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			UserDbList u = exchangeDb.getUsersByAssociatedExchange(Integer.parseInt(exchangeId));
 			return RestObject.retOKWithPayload(u, requestId, methodName);
@@ -504,9 +518,10 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/user/exchanges:get", method = RequestMethod.GET)
 	@Operation(summary = "Get associated exchanges to a user")
 	public ResponseEntity<RestObject> 
-	getAssociatedExchangesToUser(	@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="userId") String userId) {
+	getAssociatedExchangesToUser(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="userId") final String userId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			ExchangeList u = exchangeDb.getAssociatedExchangesToUser(Long.parseLong(userId));
 			return RestObject.retOKWithPayload(u, requestId, methodName);
@@ -522,9 +537,10 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/user/own:get", method = RequestMethod.GET)
 	@Operation(summary = "Get own user info related to exchanges")
 	public ResponseEntity<RestObject> 
-	getCurrentUserInfo( @RequestHeader(value="user") String user,
-						@RequestHeader(value="requestId") String requestId) {
+	getCurrentUserInfo( @RequestHeader(value="user") final String user,
+						@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			User u = authUtil.getUser(user);
 			UserDbRecord ur = exchangeDb.getUserByInternalUserId(u.getId());
@@ -541,12 +557,13 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/user:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add new user to this exchange")
 	public ResponseEntity<RestObject> 
-	addNewExchangeUser(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="email") String email,
-						@RequestHeader(value="exchangeId") String exchangeId,
-						@RequestHeader(value="isAdmin") String isAdmin,
-						@RequestHeader(value="userPassword") String userPassword) {
+	addNewExchangeUser(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="email") final String email,
+						@RequestHeader(value="exchangeId") final String exchangeId,
+						@RequestHeader(value="isAdmin") final String isAdmin,
+						@RequestHeader(value="userPassword") final String userPassword) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		String hashedPassword = SHA512Hasher.hash(userPassword);
 		long internalUserId = -1;
 		User internalUser = authUtil.getUser(email);
@@ -569,11 +586,12 @@ public class ExchangeStorageController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/exchange/user:delete", method = RequestMethod.DELETE)
-	@Operation(summary = "Delete user from this exchange")
+	@Operation(summary = "Delete user from current exchange")
 	public ResponseEntity<RestObject> 
-	deleteExchangeUser(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="id") String id) {
+	deleteExchangeUser(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="id") final String id) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			exchangeDb.deleteUser(Long.parseLong(id));
 			exchangeDb.deleteUserToExchanges(Long.parseLong(id));
@@ -587,13 +605,14 @@ public class ExchangeStorageController {
 	
 	
 	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/exchange/user:update", method = RequestMethod.DELETE)
+	@RequestMapping(value = "/exchange/user:update", method = RequestMethod.POST)
 	@Operation(summary = "Update external users password")
 	public ResponseEntity<RestObject> 
-	updateExternalUserPasswordByAdmin(	@RequestHeader(value="requestId") String requestId,
-										@RequestHeader(value="id") String id,
-										@RequestHeader(value="password") String password) {
+	updateExternalUserPasswordByAdmin(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+										@RequestHeader(value="id") final String id,
+										@RequestHeader(value="password") final String password) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			exchangeDb.updateUserPassword(Long.parseLong(id), password);
 			return RestObject.retOK(requestId, methodName);
@@ -606,15 +625,16 @@ public class ExchangeStorageController {
 	
 
 	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/exchange/user/self:update", method = RequestMethod.DELETE)
-	@Operation(summary = "Update user from this exchange")
+	@RequestMapping(value = "/exchange/user/self:update", method = RequestMethod.POST)
+	@Operation(summary = "Update user from current exchange")
 	public ResponseEntity<RestObject> 
-	updateExternalUserPasswordByUser(	@RequestHeader(value="requestId") String requestId,
-										@RequestHeader(value="externalUserEmail") String externalUserEmail,
-										@RequestHeader(value="externalExchangeUid") String externalExchangeUid,  /*for verification*/
-										@RequestHeader(value="externalUserPassword") String externalUserPassword,
-										@RequestHeader(value="newExternalUserPassword") String newExternalUserPassword) {
+	updateExternalUserPasswordByUser(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+										@RequestHeader(value="externalUserEmail") final String externalUserEmail,
+										@RequestHeader(value="externalExchangeUid") final String externalExchangeUid,  /*for verification*/
+										@RequestHeader(value="externalUserPassword") final String externalUserPassword,
+										@RequestHeader(value="newExternalUserPassword") final String newExternalUserPassword) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			if( exchangeDb.isUser(externalUserEmail, externalUserPassword) ) {
 				return RestObject.retAuthError(requestId);
@@ -639,10 +659,11 @@ public class ExchangeStorageController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/exchange/user/exchange:get", method = RequestMethod.GET)
-	@Operation(summary = "Get user to exchange info")
+	@Operation(summary = "Get user info for a certain exchange")
 	public ResponseEntity<RestObject> 
-	getUserToExchanges(	@RequestHeader(value="requestId") String requestId) {
+	getUserToExchanges(	@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			UserToExchangeDbList ret = exchangeDb.getUserToExchange();
 			return RestObject.retOKWithPayload(ret, requestId, methodName);
@@ -658,8 +679,9 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/user/exchange:getExtended", method = RequestMethod.GET)
 	@Operation(summary = "Get user to exchange extended info")
 	public ResponseEntity<RestObject> 
-	getUserToExchangesExtended(	@RequestHeader(value="requestId") String requestId) {
+	getUserToExchangesExtended(	@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			UserToExchangeDbRecordExtendedList ret = exchangeDb.getUserToExchangeExtended();
 			return RestObject.retOKWithPayload(ret, requestId, methodName);
@@ -673,13 +695,14 @@ public class ExchangeStorageController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/exchange/user/exchange:add", method = RequestMethod.PUT)
-	@Operation(summary = "Add new user to this exchange")
+	@Operation(summary = "Add new user to current exchange")
 	public ResponseEntity<RestObject> 
-	addUserToExchange(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="userId") String userId,
-						@RequestHeader(value="exchangeId") String exchangeId,
-						@RequestHeader(value="isAdmin", defaultValue = "N") String isAdmin) {
+	addUserToExchange(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="userId") final String userId,
+						@RequestHeader(value="exchangeId") final String exchangeId,
+						@RequestHeader(value="isAdmin", defaultValue = "N") final String isAdmin) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			long userId_ = Long.parseLong(userId);
 			int exchangeId_ = Integer.parseInt(exchangeId);
@@ -695,12 +718,13 @@ public class ExchangeStorageController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/exchange/user/exchange:delete", method = RequestMethod.DELETE)
-	@Operation(summary = "Delete user from this exchange")
+	@Operation(summary = "Delete user from current exchange")
 	public ResponseEntity<RestObject> 
-	deleteUserToExchange(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="userId") String userId,
-							@RequestHeader(value="exchangeId") String exchangeId) {
+	deleteUserToExchange(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="userId") final String userId,
+							@RequestHeader(value="exchangeId") final String exchangeId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			exchangeDb.deleteUserToExchange(Long.parseLong(userId), Integer.parseInt(exchangeId));
 			return RestObject.retOK(requestId, methodName);
@@ -719,13 +743,14 @@ public class ExchangeStorageController {
 	@RequestMapping(value = "/exchange/local:get", method = RequestMethod.GET)
 	@Operation(summary = "Query Files, sent or received")
 	public ResponseEntity<RestObject> 
-	queryExchange(	@RequestHeader(value="user") String user,
-					@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="externalUserPassword", required = false) String externalUserPassword,
+	queryExchange(	@RequestHeader(value="user") final String user,
+					@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="externalUserPassword", required = false) final String externalUserPassword,
 					@RequestHeader(value="fromUserEmail", required = false) String fromUserEmail,
-					@RequestHeader(value="toUserEmail") String toUserEmail) {
+					@RequestHeader(value="toUserEmail") final String toUserEmail) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			UserDbRecord requestingUser = exchangeDb.getUserByEmail(user);
 			if(requestingUser.getIsAdmin().equals("N")) { fromUserEmail = user;	}
@@ -764,14 +789,15 @@ public class ExchangeStorageController {
 	
 
 	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/exchange/remote:query", method = RequestMethod.POST)
+	@RequestMapping(value = "/exchange/remote:query", method = RequestMethod.GET)
 	@Operation(summary = "Query Files from Remote Exchange")
 	public ResponseEntity<RestObject> 
-	queryFromRemoteExchange(@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="externalUserEmail") String externalUserEmail,
-							@RequestHeader(value="externalUserPassword") String externalUserPassword) {
+	queryFromRemoteExchange(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="externalUserEmail") final String externalUserEmail,
+							@RequestHeader(value="externalUserPassword") final String externalUserPassword) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			if( exchangeDb.isUser(externalUserEmail, externalUserPassword) ) {
 				return RestObject.retAuthError(requestId);
@@ -791,11 +817,12 @@ public class ExchangeStorageController {
 	/*Generate UUID*/
 	
 	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/exchange/generate:uid", method = RequestMethod.PUT)
+	@RequestMapping(value = "/exchange/generate:uid", method = RequestMethod.GET)
 	@Operation(summary = "Generate uid")
 	public ResponseEntity<RestObject> 
-	generateUid(@RequestHeader(value="requestId") String requestId) {
+	generateUid(@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			String uid = StringUtils.generateUniqueString();
 			return RestObject.retOKWithPayload(new GenericResponse(uid), requestId, methodName);
@@ -807,11 +834,12 @@ public class ExchangeStorageController {
 	}
 	
 	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/exchange/generate:password", method = RequestMethod.PUT)
+	@RequestMapping(value = "/exchange/generate:password", method = RequestMethod.GET)
 	@Operation(summary = "Generate strong password")
 	public ResponseEntity<RestObject> 
-	generateStrongPassword(@RequestHeader(value="requestId") String requestId) {
+	generateStrongPassword(@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			String strongPassword = StaticUtils.strongPasswordGenerator();
 			return RestObject.retOKWithPayload(new GenericResponse(strongPassword), requestId, methodName);

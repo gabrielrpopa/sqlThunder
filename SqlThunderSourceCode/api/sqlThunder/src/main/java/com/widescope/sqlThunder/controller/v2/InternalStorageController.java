@@ -6,6 +6,7 @@ package com.widescope.sqlThunder.controller.v2;
 import java.io.File;
 import java.io.FileInputStream;
 import com.widescope.logging.AppLogger;
+import com.widescope.sqlThunder.utils.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.PostConstruct;
@@ -76,14 +77,15 @@ public class InternalStorageController {
 					)
 	@Operation(summary = "Upload a generic file, on internal storage")
 	public ResponseEntity<RestObject> 
-	uploadFile(	@RequestHeader(value="user") String user,
-				@RequestHeader(value="requestId") String requestId,
+	uploadFile(	@RequestHeader(value="user") final String user,
+				@RequestHeader(value="requestId", defaultValue = "") String requestId,
 				@RequestHeader(value="machineName") String machineName,
 				@RequestHeader(value="fullPath") String fullPath,
-				@RequestHeader(value="lastModified") String lastModified,
-				@RequestHeader(value="storageType") String storageType,
-				@RequestParam("file") MultipartFile file) {
+				@RequestHeader(value="lastModified") final String lastModified,
+				@RequestHeader(value="storageType") final String storageType,
+				@RequestParam("file") final MultipartFile file) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		long lastModified_ = 0;
 		String fileName = "";
 		try { lastModified_ = Long.parseUnsignedLong(lastModified);	} catch(Exception ignored) {	}
@@ -125,12 +127,10 @@ public class InternalStorageController {
 	@RequestMapping(value = "/internalStorage/downloadFile", method = RequestMethod.GET)
 	@Operation(summary = "Download file from internal storage")
 	public ResponseEntity<Resource> 
-	downloadFile(	@RequestHeader(value="user") String user,
-					@RequestHeader(value="session") String session,
-					@RequestHeader(value="machineName") String machineName,
-					@RequestHeader(value="fullPath") String fullPath,
-					@RequestHeader(value="filename") String filename,
-					@RequestHeader(value="lastModified") String lastModified) {
+	downloadFile(	@RequestHeader(value="machineName") final String machineName,
+					@RequestHeader(value="fullPath") final String fullPath,
+					@RequestHeader(value="filename") final String filename,
+					@RequestHeader(value="lastModified") final String lastModified) {
 		try {
 			HttpHeaders headers = new HttpHeaders();
 			headers.add("Access-Control-Expose-Headers", "*");
@@ -160,10 +160,11 @@ public class InternalStorageController {
 	@RequestMapping(value = "/internalStorage/deleteFile", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete file from internal storage")
 	public ResponseEntity<RestObject> 
-	deleteFile(	@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="storageId") String storageId,
-				@RequestHeader(value="fileName") String fileName) {
+	deleteFile(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="storageId") final String storageId,
+				@RequestHeader(value="fileName") final String fileName) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			InternalFileStorageRecord r = storageRepoDb.getFile(Long.parseLong(storageId) );
 			if(!r.getFileName().equals(fileName)) {
@@ -191,10 +192,11 @@ public class InternalStorageController {
 	@RequestMapping(value = "/internalStorage/list", method = RequestMethod.GET)
 	@Operation(summary = "List all files in internal storage")
 	public ResponseEntity<RestObject> 
-	listFilesInFolder(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="appName") String appName,
-						@RequestHeader(value="folder") String folder) {
+	listFilesInFolder(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="appName") final String appName,
+						@RequestHeader(value="folder") final String folder) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			FileList ret = new FileList(storageService.listFiles(appName.toLowerCase(), folder.toLowerCase()));
 			return RestObject.retOKWithPayload(ret, requestId, methodName);
@@ -210,9 +212,10 @@ public class InternalStorageController {
 	@RequestMapping(value = "/internalStorage/user/list", method = RequestMethod.GET)
 	@Operation(summary = "List all files in internal storage for current user")
 	public ResponseEntity<RestObject> 
-	getFilesByUser(	@RequestHeader(value="user") String user,
-					@RequestHeader(value="requestId") String requestId) {
+	getFilesByUser(	@RequestHeader(value="user") final String user,
+					@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			long userId = authUtil.getUser(user).getId();
 			InternalFileStorageList ret = storageRepoDb.getFiles( userId );
@@ -230,9 +233,10 @@ public class InternalStorageController {
 	@RequestMapping(value = "/internalStorage/storage/priv", method = RequestMethod.GET)
 	@Operation(summary = "Get user privileges for a stored file")
 	public ResponseEntity<RestObject> 
-	getFilePriv(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="storageId") String storageId) {
+	getFilePriv(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="storageId") final String storageId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			InternalStoragePrivList ret = storageRepoDb.getUsersAssociatedToFile( Long.parseLong(storageId) );
 			return RestObject.retOKWithPayload(ret, requestId, methodName);
@@ -252,11 +256,12 @@ public class InternalStorageController {
 	@RequestMapping(value = "/internalStorage/user:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add internal user to a file uploaded by another internal user")
 	public ResponseEntity<RestObject> 
-	addUserToFile(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="storageId") String storageId,
-					@RequestHeader(value="userId") String userId,
-					@RequestHeader(value="privType") String privType) {
+	addUserToFile(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="storageId") final String storageId,
+					@RequestHeader(value="userId") final String userId,
+					@RequestHeader(value="privType") final String privType) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			storageRepoDb.mergePrivs(Long.parseLong(storageId),	Long.parseLong(userId),	privType);
 			storageRepoDb.getPrivs(Long.parseLong(storageId),	Long.parseLong(userId));
@@ -272,10 +277,11 @@ public class InternalStorageController {
 	@RequestMapping(value = "/internalStorage/user:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete user to a file link")
 	public ResponseEntity<RestObject> 
-	deleteUserToFile(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="storageId") String storageId,
-						@RequestHeader(value="userId") String userId) {
+	deleteUserToFile(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="storageId") final String storageId,
+						@RequestHeader(value="userId") final String userId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			storageRepoDb.deletePrivs(Long.parseLong(storageId),	Long.parseLong(userId));
 			return RestObject.retOKWithPayload(new GenericResponse("OK"), requestId, methodName);
@@ -292,9 +298,10 @@ public class InternalStorageController {
 	@RequestMapping(value = "/internalStorage/storage/type", method = RequestMethod.GET)
 	@Operation(summary = "Get file type")
 	public ResponseEntity<RestObject> 
-	getFileType(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="storageId") String storageId) {
+	getFileType(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="storageId") final String storageId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			InternalFileStorageRecord rec = storageRepoDb.getFile(Long.parseLong(storageId));
 			String fullPath= storageService.getFilePath(rec.getMachineName(), rec.getFullFilePath(), rec.getFileName(), rec.getLastModified());
@@ -312,12 +319,13 @@ public class InternalStorageController {
 	@RequestMapping(value = "/internalStorage/storage/attach-h2", method = RequestMethod.PUT)
 	@Operation(summary = "Move and attach embedded db from storage")
 	public ResponseEntity<RestObject> 
-	moveAndAttachH2FromStorage(	@RequestHeader(value="user") String user,
-								@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="storageId") String storageId,
-								@RequestHeader(value="clusterId") String clusterId) {
+	moveAndAttachH2FromStorage(	@RequestHeader(value="user") final String user,
+								@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="storageId") final String storageId,
+								@RequestHeader(value="clusterId") final String clusterId) {
 		
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			String pathCluster = H2Static.getClusterPath(Long.parseLong(clusterId) );
 			InternalFileStorageRecord rec = storageRepoDb.getFile(Long.parseLong(storageId));
@@ -358,9 +366,10 @@ public class InternalStorageController {
 	@RequestMapping(value = "/internalStorage/storage/import", method = RequestMethod.PUT)
 	@Operation(summary = "Import files such as JSON tables or RestResponse into attached systems")
 	public ResponseEntity<RestObject> 
-	importFile( @RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="storageId") String storageId) {
+	importFile( @RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="storageId") final String storageId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			InternalFileStorageRecord rec = storageRepoDb.getFile(Long.parseLong(storageId));
 			String fullPath= storageService.getFilePath(rec.getMachineName(), rec.getFullFilePath(), rec.getFileName(), rec.getLastModified());

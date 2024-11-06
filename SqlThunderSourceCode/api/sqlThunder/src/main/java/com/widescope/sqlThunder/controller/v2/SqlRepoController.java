@@ -25,7 +25,7 @@ import com.widescope.logging.AppLogger;
 import com.widescope.rdbmsRepo.database.*;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.PostConstruct;
-import jakarta.servlet.http.HttpServletRequest;
+
 import javax.validation.Valid;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -33,7 +33,6 @@ import org.apache.http.HttpHost;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -93,7 +92,6 @@ import com.widescope.rdbmsRepo.database.tempSqlRepo.HistFileManagement;
 import com.widescope.rdbmsRepo.database.tempSqlRepo.HistSqlList;
 import com.widescope.rdbmsRepo.utils.SqlParser;
 import com.widescope.sqlThunder.config.AppConstants;
-import com.widescope.sqlThunder.config.configRepo.ConfigRepoDb;
 import com.widescope.rdbmsRepo.database.structuredFiles.csv.CsvWrapper;
 import com.widescope.sqlThunder.utils.DateTimeUtils;
 import com.widescope.sqlThunder.utils.FileUtilWrapper;
@@ -141,10 +139,11 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/databases", method = RequestMethod.GET)
 	@Operation(summary = "Get the List of available Databases")
 	public ResponseEntity<RestObject> 
-	getDatabase(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="databaseName", required = false) String databaseName) {
+	getDatabase(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="databaseName", required = false) final String databaseName) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
         try	{
+			requestId = StringUtils.generateRequestId(requestId);
 			final RdbmsRepoDatabaseList ret = getRdbmsRepoDatabaseList(databaseName);
 			ret.blockPassword();
 			return RestObject.retOKWithPayload(ret, requestId, methodName);
@@ -156,7 +155,7 @@ public class SqlRepoController {
 	}
 
 	@NotNull
-	private static RdbmsRepoDatabaseList getRdbmsRepoDatabaseList(String databaseName) {
+	private static RdbmsRepoDatabaseList getRdbmsRepoDatabaseList(final String databaseName) {
 		List<SqlRepoDatabase> sqlRepoDatabaseList = new ArrayList<>();
 		if(databaseName != null && !databaseName.isEmpty())	{
 			for (Map.Entry<String, SqlRepoDatabase> element : SqlRepoUtils.sqlRepoDatabaseMap.entrySet()) {
@@ -181,25 +180,27 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/database/add", method = RequestMethod.PUT)
 	@Operation(summary = "Add a new database connection to the list of available Databases/schema connections")
 	public ResponseEntity<RestObject> 
-	addDatabase(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="databaseType", required = false) String databaseType,
-					@RequestHeader(value="databaseName", required = false) String databaseName,
-					@RequestHeader(value="databaseServer", required = false) String databaseServer,
-					@RequestHeader(value="databasePort", required = false) String databasePort,
-					@RequestHeader(value="databaseDescription", required = false) String databaseDescription,
-					@RequestHeader(value="databaseWarehouseName", required = false) String databaseWarehouseName,
-					@RequestHeader(value="schemaName", required = false) String schemaName,
-					@RequestHeader(value="schemaService", required = false) String schemaService,
-					@RequestHeader(value="schemaPassword", required = false) String schemaPassword,
-					@RequestHeader(value="schemaUniqueUserName", required = false) String schemaUniqueUserName,
-					@RequestHeader(value="tunnelLocalPort", required = false) String tunnelLocalPort,
-					@RequestHeader(value="tunnelRemoteHostAddress", required = false) String tunnelRemoteHostAddress,
-					@RequestHeader(value="tunnelRemoteHostPort", required = false) String tunnelRemoteHostPort,
-					@RequestHeader(value="tunnelRemoteHostUser", required = false) String tunnelRemoteHostUser,
-					@RequestHeader(value="tunnelRemoteHostUserPassword", required = false) String tunnelRemoteHostUserPassword,
-					@RequestHeader(value="tunnelRemoteHostRsaKey", required = false) String tunnelRemoteHostRsaKey) {
+	addDatabase(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="databaseType") final String databaseType,
+					@RequestHeader(value="databaseName") final String databaseName,
+					@RequestHeader(value="databaseServer") final String databaseServer,
+					@RequestHeader(value="databasePort") final String databasePort,
+					@RequestHeader(value="databaseDescription", required = false) final String databaseDescription,
+					@RequestHeader(value="databaseWarehouseName", required = false) final String databaseWarehouseName,
+					@RequestHeader(value="schemaName", required = false) final String schemaName,
+					@RequestHeader(value="schemaService", required = false) final String schemaService,
+					@RequestHeader(value="schemaPassword", required = false) final String schemaPassword,
+					@RequestHeader(value="schemaUniqueUserName") final String schemaUniqueUserName,
+					@RequestHeader(value="tunnelLocalPort", required = false) final String tunnelLocalPort,
+					@RequestHeader(value="tunnelRemoteHostAddress", required = false) final String tunnelRemoteHostAddress,
+					@RequestHeader(value="tunnelRemoteHostPort", required = false)  final String tunnelRemoteHostPort,
+					@RequestHeader(value="tunnelRemoteHostUser", required = false) final String tunnelRemoteHostUser,
+					@RequestHeader(value="tunnelRemoteHostUserPassword", required = false) final String tunnelRemoteHostUserPassword,
+					@RequestHeader(value="tunnelRemoteHostRsaKey", required = false) final String tunnelRemoteHostRsaKey) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
+
 			String sqlRepoName = appConstants.getActiveRepo();
 			DbConnectionInfo connectionInfo = DbUtil.connectionDetailsTable.get(sqlRepoName);
 			
@@ -268,28 +269,29 @@ public class SqlRepoController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/sqlrepo/database/update", method = RequestMethod.PUT)
-	@Operation(summary = "Add a new database connection to the list of available Databases/schema connections")
+	@Operation(summary = "Update database connection")
 	public ResponseEntity<RestObject> 
-	updateDatabase(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="databaseId") String databaseId,
-					@RequestHeader(value="databaseType") String databaseType,
-					@RequestHeader(value="databaseName") String databaseName,
-					@RequestHeader(value="databaseServer") String databaseServer,
-					@RequestHeader(value="databasePort") String databasePort,
-					@RequestHeader(value="databaseDescription") String databaseDescription,
-					@RequestHeader(value="databaseWarehouseName") String databaseWarehouseName,
-					@RequestHeader(value="schemaName") String schemaName,
-					@RequestHeader(value="schemaService") String schemaService,
-					@RequestHeader(value="schemaPassword") String schemaPassword,
-					@RequestHeader(value="schemaUniqueUserName") String schemaUniqueUserName,
-					@RequestHeader(value="tunnelLocalPort", required = false, defaultValue = "") String tunnelLocalPort,
-					@RequestHeader(value="tunnelRemoteHostAddress", required = false, defaultValue = "") String tunnelRemoteHostAddress,
-					@RequestHeader(value="tunnelRemoteHostPort", required = false, defaultValue = "") String tunnelRemoteHostPort,
-					@RequestHeader(value="tunnelRemoteHostUser", required = false, defaultValue = "") String tunnelRemoteHostUser,
-					@RequestHeader(value="tunnelRemoteHostUserPassword", required = false, defaultValue = "") String tunnelRemoteHostUserPassword,
-					@RequestHeader(value="tunnelRemoteHostRsaKey", required = false, defaultValue = "") String tunnelRemoteHostRsaKey,
-					@RequestHeader(value="isActive", required = false) String isActive) {
+	updateDatabase(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="databaseId") final String databaseId,
+					@RequestHeader(value="databaseType") final String databaseType,
+					@RequestHeader(value="databaseName") final String databaseName,
+					@RequestHeader(value="databaseServer") final String databaseServer,
+					@RequestHeader(value="databasePort") final String databasePort,
+					@RequestHeader(value="databaseDescription") final String databaseDescription,
+					@RequestHeader(value="databaseWarehouseName") final String databaseWarehouseName,
+					@RequestHeader(value="schemaName") final String schemaName,
+					@RequestHeader(value="schemaService") final String schemaService,
+					@RequestHeader(value="schemaPassword") final String schemaPassword,
+					@RequestHeader(value="schemaUniqueUserName") final String schemaUniqueUserName,
+					@RequestHeader(value="tunnelLocalPort", required = false, defaultValue = "") final String tunnelLocalPort,
+					@RequestHeader(value="tunnelRemoteHostAddress", required = false, defaultValue = "") final String tunnelRemoteHostAddress,
+					@RequestHeader(value="tunnelRemoteHostPort", required = false, defaultValue = "") final String tunnelRemoteHostPort,
+					@RequestHeader(value="tunnelRemoteHostUser", required = false, defaultValue = "") final String tunnelRemoteHostUser,
+					@RequestHeader(value="tunnelRemoteHostUserPassword", required = false, defaultValue = "") final String tunnelRemoteHostUserPassword,
+					@RequestHeader(value="tunnelRemoteHostRsaKey", required = false, defaultValue = "") final String tunnelRemoteHostRsaKey,
+					@RequestHeader(value="isActive", required = false) final String isActive) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			if( SqlRepoUtils.sqlRepoDatabaseMap.containsKey(schemaUniqueUserName) )	{
 				return RestObject.retException(requestId, methodName, AppLogger.logError(Thread.currentThread().getStackTrace()[1], AppLogger.ctrl,"Schema Name conflict"));
@@ -322,7 +324,7 @@ public class SqlRepoController {
 			
 			SqlRepoDatabase sqlRepoDatabase = SqlRepoUtils.getDatabase(connectionInfo, schemaUniqueUserName);
 			SqlRepoUtils.sqlRepoDatabaseMap.put(sqlRepoDatabase.getSchemaUniqueUserName(), sqlRepoDatabase);
-			return RestObject.retOK(requestId, methodName);
+			return RestObject.retOKWithPayload(new GenericResponse("The database connection has been updated"), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 		} catch(Exception ex) {
 			return RestObject.retException(requestId, methodName, AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
 		} catch(Throwable ex)	{
@@ -335,9 +337,10 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/database/delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete database/schema connection")
 	public ResponseEntity<RestObject> 
-	databaseDelete(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="databaseId", required = false) String databaseId) {
+	databaseDelete(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="databaseId", required = false) final String databaseId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			String sqlRepoName = appConstants.getActiveRepo();
 			DbConnectionInfo connectionInfo = DbUtil.connectionDetailsTable.get(sqlRepoName);
@@ -348,7 +351,7 @@ public class SqlRepoController {
 			if(sqlRepoDatabase2 == null) {
 				SqlRepoUtils.sqlRepoDatabaseMap.remove(sqlRepoDatabase1.getSchemaUniqueUserName());
 			}
-			return RestObject.retOK(requestId, methodName);
+			return RestObject.retOKWithPayload(new GenericResponse("The database connection has been deleted"), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 		} catch(Exception ex) {
 			return RestObject.retException(requestId, methodName, AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
 		} catch(Throwable ex)	{
@@ -361,26 +364,27 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/database/connection/validate:new-connection", method = RequestMethod.GET)
 	@Operation(summary = "Validate a new Database/schema connection")
 	public ResponseEntity<RestObject> 
-	validateDatabase(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="databaseType", required = false) String databaseType,
-						@RequestHeader(value="databaseName", required = false) String databaseName,
-						@RequestHeader(value="databaseServer", required = false) String databaseServer,
-						@RequestHeader(value="databasePort", required = false) String databasePort,
-						@RequestHeader(value="databaseDescription", required = false) String databaseDescription,
-						@RequestHeader(value="databaseWarehouseName", required = false) String databaseWarehouseName,
-						@RequestHeader(value="schemaName", required = false) String schemaName,
-						@RequestHeader(value="schemaService", required = false) String schemaService,
-						@RequestHeader(value="schemaPassword", required = false) String schemaPassword,
-						@RequestHeader(value="schemaUniqueUserName", required = false) String schemaUniqueUserName,
-						@RequestHeader(value="account", required = false) String account,
-						@RequestHeader(value="other_parameter", required = false) String otherParameter,
-						@RequestHeader(value="tunnelLocalPort", required = false) String tunnelLocalPort,
-						@RequestHeader(value="tunnelRemoteHostAddress", required = false) String tunnelRemoteHostAddress,
-						@RequestHeader(value="tunnelRemoteHostPort", required = false) String tunnelRemoteHostPort,
-						@RequestHeader(value="tunnelRemoteHostUser", required = false) String tunnelRemoteHostUser,
-						@RequestHeader(value="tunnelRemoteHostUserPassword", required = false) String tunnelRemoteHostUserPassword,
-						@RequestHeader(value="tunnelRemoteHostRsaKey", required = false) String tunnelRemoteHostRsaKey) {
+	validateDatabase(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="databaseType") final String databaseType,
+						@RequestHeader(value="databaseName") final String databaseName,
+						@RequestHeader(value="databaseServer") final String databaseServer,
+						@RequestHeader(value="databasePort") final String databasePort,
+						@RequestHeader(value="databaseDescription", required = false) final String databaseDescription,
+						@RequestHeader(value="databaseWarehouseName", required = false) final String databaseWarehouseName,
+						@RequestHeader(value="schemaName", required = false) final String schemaName,
+						@RequestHeader(value="schemaService", required = false) final String schemaService,
+						@RequestHeader(value="schemaPassword", required = false) final String schemaPassword,
+						@RequestHeader(value="schemaUniqueUserName", required = false) final String schemaUniqueUserName,
+						@RequestHeader(value="account", required = false) final String account,
+						@RequestHeader(value="other_parameter", required = false) final String otherParameter,
+						@RequestHeader(value="tunnelLocalPort", required = false) final String tunnelLocalPort,
+						@RequestHeader(value="tunnelRemoteHostAddress", required = false) final String tunnelRemoteHostAddress,
+						@RequestHeader(value="tunnelRemoteHostPort", required = false) final String tunnelRemoteHostPort,
+						@RequestHeader(value="tunnelRemoteHostUser", required = false) final String tunnelRemoteHostUser,
+						@RequestHeader(value="tunnelRemoteHostUserPassword", required = false) final String tunnelRemoteHostUserPassword,
+						@RequestHeader(value="tunnelRemoteHostRsaKey", required = false) final String tunnelRemoteHostRsaKey) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			DbConnectionInfo connectionDetailInfo 
 			= DbConnectionInfo.makeDbConnectionInfo(databaseType, 
@@ -406,9 +410,9 @@ public class SqlRepoController {
 			
 			boolean IsOK = DbUtil.checkConnection(connectionDetailInfo);
 			if(IsOK ) {
-				return RestObject.retOKWithPayload(new GenericResponse( Boolean.toString(IsOK)), requestId, methodName);
+				return RestObject.retOKWithPayload(new GenericResponse( Boolean.toString(true)), requestId, methodName);
 			} else {
-				return RestObject.retException(requestId, methodName, "Connection to database is invalid. Cannot connect to database");
+				return RestObject.retException(new GenericResponse( Boolean.toString(false)), requestId, methodName, "Cannot connect to database. Connection to database is invalid or database is down");
 			}
 		} catch(Exception ex) {
 			return RestObject.retException(requestId, methodName, AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
@@ -422,10 +426,11 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/database/connection/validate:connection", method = RequestMethod.GET)
 	@Operation(summary = "Validate an existing Database/schema connection")
 	public ResponseEntity<RestObject>
-	validateSqlRepoDatabase(@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="databaseName", required = false) String databaseName) {
+	validateSqlRepoDatabase(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="databaseName", required = false) final String databaseName) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			RdbmsRepoDatabaseList sqlRepoDatabaseList = new RdbmsRepoDatabaseList();
 
@@ -448,12 +453,12 @@ public class SqlRepoController {
 				DbConnectionInfo connectionDetailInfo = DbConnectionInfo.makeDbConnectionInfo_(sqlRepoDatabaseList.getSqlRepoDatabaseList().get(0));
 				boolean IsOK = DbUtil.checkConnection(connectionDetailInfo);
 				if(IsOK ) {
-					return RestObject.retOK(requestId, methodName);
+					return RestObject.retOKWithPayload(new GenericResponse( Boolean.toString(true)), requestId, methodName);
 				} else {
-					return RestObject.retException(requestId, methodName, AppLogger.logError(Thread.currentThread().getStackTrace()[1], "Connection to database is invalid. Cannot connect to database", AppLogger.ctrl));
+					return RestObject.retException(new GenericResponse( Boolean.toString(false)), requestId, methodName, "Cannot connect to database. Connection to database is invalid or database is down");
 				}
 			} else {
-				return RestObject.retException(requestId, methodName, AppLogger.logError(Thread.currentThread().getStackTrace()[1], AppLogger.ctrl, "Connection to database is invalid. Cannot connect to database"));
+				return RestObject.retException(new GenericResponse( Boolean.toString(false)), requestId, methodName, "Cannot connect to database. Connection to database is invalid or database is down");
 			}
 
 		} catch(Exception ex) {
@@ -467,18 +472,13 @@ public class SqlRepoController {
 
 
 
-
-
-
-
-
-
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/sqlrepo/reload", method = RequestMethod.GET)
 	@Operation(summary = "Reload Repo List")
 	public ResponseEntity<RestObject> 
-	reloadSqlRepo(@RequestHeader(value="requestId") String requestId) {
+	reloadSqlRepo(@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			SqlRepoUtils.populateRepo(appConstants.getActiveRepo());
 			SqlRepoList sqlRepoList = SqlRepoList.setSqlRepoList(SqlRepoUtils.sqlRepoDynamicSqlMap);
@@ -494,19 +494,21 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/sql:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add a new Sql statement to the repo")
 	public ResponseEntity<RestObject> 
-	addSql(	@RequestHeader(value="user") String user,
-			@RequestHeader(value="session") String session,
-			@RequestHeader(value="sqlType", defaultValue = "QUERY") String sqlType,
-			@RequestHeader(value="sqlReturnType", defaultValue = "RECORDSET") String sqlReturnType,
-			@RequestHeader(value="sqlCategory") String sqlCategory,
-			@RequestHeader(value="sqlName") String sqlName,
-			@RequestHeader(value="sqlDescription") String sqlDescription,
-			@RequestHeader(value="sqlContent") String sqlContent,
-			@RequestHeader(value="execution") String execution,
-			@RequestHeader(value="active", defaultValue = "1") String active) {
+	addSql(@RequestHeader(value="user") final String user,
+		   @RequestHeader(value="session") final String session,
+		   @RequestHeader(value="requestId", defaultValue = "") String requestId,
+		   @RequestHeader(value="sqlType", defaultValue = "QUERY") final String sqlType,
+		   @RequestHeader(value="sqlReturnType", defaultValue = "RECORDSET") final String sqlReturnType,
+		   @RequestHeader(value="sqlReturnType") final String sqlCategory,
+		   @RequestHeader(value="sqlName") final String sqlName,
+		   @RequestHeader(value="sqlDescription") final String sqlDescription,
+		   @RequestHeader(value="sqlContent") final String sqlContent,
+		   @RequestHeader(value="execution") final String execution,
+		   @RequestHeader(value="active", defaultValue = "1") final String active) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+		requestId = StringUtils.generateRequestId(requestId);
+
 		if( !authUtil.isSessionAuthenticated(user, session) )	{
 			return RestObject.retAuthError(requestId);
 		}
@@ -549,9 +551,10 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/sql:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Add a new Sql statement to the repo")
 	public ResponseEntity<RestObject> 
-	deleteSql(	@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="sqlId") String sqlId) {
+	deleteSql(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="sqlId") final String sqlId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			String sqlRepoName = appConstants.getActiveRepo();
 			DbConnectionInfo connectionInfo = DbUtil.connectionDetailsTable.get(sqlRepoName);
@@ -573,19 +576,20 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/sql:update", method = RequestMethod.PUT)
 	@Operation(summary = "Update Sql statement to the repo")
 	public ResponseEntity<RestObject> 
-	updateSql(	@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="sqlId") String sqlId,
-				@RequestHeader(value="databaseId") String databaseId,
-				@RequestHeader(value="sqlType", defaultValue = "QUERY") String sqlType,
-				@RequestHeader(value="sqlReturnType", defaultValue = "RECORDSET") String sqlReturnType,
-				@RequestHeader(value="sqlCategory") String sqlCategory,
-				@RequestHeader(value="sqlName") String sqlName,
-				@RequestHeader(value="sqlDescription") String sqlDescription,
-				@RequestHeader(value="sqlContent") String sqlContent,
-				@RequestHeader(value="execution") String execution,
-				@RequestHeader(value="active", defaultValue = "1") String active) {
+	updateSql(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="sqlId") final String sqlId,
+				@RequestHeader(value="databaseId") final String databaseId,
+				@RequestHeader(value="sqlType", defaultValue = "QUERY") final String sqlType,
+				@RequestHeader(value="sqlReturnType", defaultValue = "RECORDSET") final String sqlReturnType,
+				@RequestHeader(value="sqlCategory") final String sqlCategory,
+				@RequestHeader(value="sqlName") final String sqlName,
+				@RequestHeader(value="sqlDescription") final String sqlDescription,
+				@RequestHeader(value="sqlContent") final String sqlContent,
+				@RequestHeader(value="execution") final String execution,
+				@RequestHeader(value="active", defaultValue = "1") final String active) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			String sqlRepoName = appConstants.getActiveRepo();
 			DbConnectionInfo connectionInfo = DbUtil.connectionDetailsTable.get(sqlRepoName);
@@ -615,17 +619,18 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/sqlparam:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add Sql Param to Sql Statement")
 	public ResponseEntity<RestObject> 
-	addSqlParam(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="sqlId") String sqlId,
-					@RequestHeader(value="sqlParamName") String sqlParamName,
-					@RequestHeader(value="sqlParamType", defaultValue = "STRING") String sqlParamType,
-					@RequestHeader(value="sqlParamDefaultValue") String sqlParamDefaultValue,
-					@RequestHeader(value="sqlParamPosition", defaultValue = "IN") String sqlParamPosition,
-					@RequestHeader(value="sqlParamOrder", defaultValue = "1") String sqlParamOrder,
-					@RequestHeader(value="sqlParamOriginTbl") String sqlParamOriginTbl,
-					@RequestHeader(value="sqlParamOriginCol") String sqlParamOriginCol) {
+	addSqlParam(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="sqlId") final String sqlId,
+					@RequestHeader(value="sqlParamName") final String sqlParamName,
+					@RequestHeader(value="sqlParamType", defaultValue = "STRING") final String sqlParamType,
+					@RequestHeader(value="sqlParamDefaultValue") final String sqlParamDefaultValue,
+					@RequestHeader(value="sqlParamPosition", defaultValue = "IN") final String sqlParamPosition,
+					@RequestHeader(value="sqlParamOrder", defaultValue = "1") final String sqlParamOrder,
+					@RequestHeader(value="sqlParamOriginTbl") final String sqlParamOriginTbl,
+					@RequestHeader(value="sqlParamOriginCol") final String sqlParamOriginCol) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			String sqlRepoName = appConstants.getActiveRepo();
 			DbConnectionInfo connectionInfo = DbUtil.connectionDetailsTable.get(sqlRepoName);
@@ -658,11 +663,12 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/sqlparam:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete Sql Param")
 	public ResponseEntity<RestObject> 
-	deleteSqlParam(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="sqlId") String sqlId,
-					@RequestHeader(value="sqlParamId") String sqlParamId) {
+	deleteSqlParam(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="sqlId") final String sqlId,
+					@RequestHeader(value="sqlParamId") final String sqlParamId) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			String sqlRepoName = appConstants.getActiveRepo();
 			DbConnectionInfo connectionInfo = DbUtil.connectionDetailsTable.get(sqlRepoName);
@@ -687,11 +693,12 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo", method = RequestMethod.GET)
 	@Operation(summary = "Get Sql Repo List")
 	public ResponseEntity<RestObject> 
-	getSqlRepoList(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="filter", required = false, defaultValue = "") String filter,
-					@RequestHeader(value="databaseId", required = false, defaultValue = "") String databaseId) {
+	getSqlRepoList(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="filter", required = false, defaultValue = "") final String filter,
+					@RequestHeader(value="databaseId", required = false, defaultValue = "") final String databaseId) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<SqlRepoDynamicSql> ret = new ArrayList<>();
 			if(!filter.isEmpty() &&  !databaseId.trim().isEmpty()) {
@@ -758,11 +765,12 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlRepo/sql", method = RequestMethod.GET)
 	@Operation(summary = "Get Sql Repo List Without Params")
 	public ResponseEntity<RestObject> 
-	getSqlRepoListWithNoParams(	@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="filter", required = false) String filter,
-								@RequestHeader(value="databaseId", required = false, defaultValue = "") String databaseId) {
+	getSqlRepoListWithNoParams(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="filter", required = false) final String filter,
+								@RequestHeader(value="databaseId", required = false, defaultValue = "") final String databaseId) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<SqlRepoDynamicSql> ret = new ArrayList<>();
 			if(!filter.isEmpty() &&  !databaseId.trim().isEmpty()) {
@@ -833,10 +841,11 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/sql/summary", method = RequestMethod.GET)
 	@Operation(summary = "Get Sql Repo List Summary Format")
 	public ResponseEntity<RestObject> 
-	getSqlRepoListSummary(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="filter", required = false) String filter) {
+	getSqlRepoListSummary(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="filter", required = false) final String filter) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			SqlRepoListShortFormat sqlRepoList = SqlRepoListShortFormat.setSqlRepoListShortFormat(SqlRepoUtils.sqlRepoDynamicSqlMap, filter);
 			return RestObject.retOKWithPayload(sqlRepoList, requestId, methodName);
@@ -852,10 +861,11 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/sql/detail", method = RequestMethod.GET)
 	@Operation(summary = "Get Sql Detail")
 	public ResponseEntity<RestObject> 
-	getSqlDetail(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="sqlID", required = false) String sqlId) {
+	getSqlDetail(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="sqlID", required = false) final String sqlId) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			String sqlRepoName = appConstants.getActiveRepo();
 			DbConnectionInfo connectionInfo = DbUtil.connectionDetailsTable.get(sqlRepoName);
@@ -874,7 +884,7 @@ public class SqlRepoController {
 				SqlRepoUtils.sqlRepoDynamicSqlMap.put(Long.valueOf(sqlId), sqlRepoDynamicSql );
 			}
 
-			Map<Long, SqlRepoDynamicSql> _sqlRepoDynamicSqlMap = new HashMap<Long, SqlRepoDynamicSql>();
+			Map<Long, SqlRepoDynamicSql> _sqlRepoDynamicSqlMap = new HashMap<>();
 			_sqlRepoDynamicSqlMap.put(Long.valueOf(sqlId) , sqlRepoDynamicSql);
 			SqlRepoList sqlRepoList = SqlRepoList.setSqlRepoList(_sqlRepoDynamicSqlMap);
 			return RestObject.retOKWithPayload(sqlRepoList, requestId, methodName);
@@ -891,10 +901,11 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/param/detail", method = RequestMethod.GET)
 	@Operation(summary = "Get Sql Param List Detail")
 	public ResponseEntity<RestObject> 
-	getSqlParamListDetail(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="sqlID", required = false) String sqlID) {
+	getSqlParamListDetail(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="sqlID", required = false) final String sqlID) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			SqlRepoParamListDetail 
 			sqlRepoParamListDetail = SqlRepoParamListDetail.setSqlRepoParamListDetail(SqlRepoUtils.sqlRepoDynamicSqlMap, 
@@ -913,9 +924,10 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/params", method = RequestMethod.GET)
 	@Operation(summary = "Get Sql Param List")
 	public ResponseEntity<RestObject> 
-	getSqlParamList(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="sqlID", required = false) String sqlID) {
+	getSqlParamList(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="sqlID", required = false) final String sqlID) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			ParamObj paramObj = new ParamObj();
 			paramObj.setPList(SqlRepoUtils.sqlRepoDynamicSqlMap, Long.valueOf(sqlID));
@@ -932,10 +944,11 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/param/bulk", method = RequestMethod.GET)
 	@Operation(summary = "Get Sql Param List for Bulk DML. DQLs and DDLs are excluded")
 	public ResponseEntity<RestObject>
-	getSqlParamListBulk(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="sqlID", required = false) String sqlID) {
+	getSqlParamListBulk(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="sqlID", required = false) final String sqlID) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			SqlRepoDynamicSql sqlRepoDynamicSql = SqlRepoUtils.sqlRepoDynamicSqlMap.get(Long.valueOf(sqlID));
 			if(sqlRepoDynamicSql == null) {
@@ -956,13 +969,14 @@ public class SqlRepoController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/sqlrepo/sqlToDb/mapping:update", method = RequestMethod.PUT)
-	@Operation(summary = "Map a sql statement to multiple databases")
+	@Operation(summary = "Assign sql statement to a certain database")
 	public ResponseEntity<RestObject> 
-	addSqlToDbMapping(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="sqlId", required = false) String sqlId,
-						@RequestHeader(value="dbId", required = false) String dbId,
-						@RequestHeader(value="active", required = false) String active) {
+	addSqlToDbMapping(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="sqlId", required = false) final String sqlId,
+						@RequestHeader(value="dbId", required = false) final String dbId,
+						@RequestHeader(value="active", required = false) final String active) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			
 			int sqlID_ = Integer.parseInt(sqlId);
@@ -984,13 +998,14 @@ public class SqlRepoController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/sqlrepo/sqlToDb/mapping:delete", method = RequestMethod.DELETE)
-	@Operation(summary = "Delete mapping of sql statement to multiple databases")
+	@Operation(summary = "Delete association of sql statement to database")
 	public ResponseEntity<RestObject> 
-	deleteSqlToDbMapping(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="sqlId", required = false) String sqlId,
-							@RequestHeader(value="dbId", required = false) String dbId) {
+	deleteSqlToDbMapping(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="sqlId", required = false) final String sqlId,
+							@RequestHeader(value="dbId", required = false) final String dbId) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			int sqlID_ = Integer.parseInt(sqlId);
 			int dbID_ = Integer.parseInt(dbId);
@@ -1010,11 +1025,12 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/sqlToDb/mapping:list", method = RequestMethod.GET)
 	@Operation(summary = "Get mapping of sql statements to databases")
 	public ResponseEntity<RestObject> 
-	listSqlToDbMapping(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="sqlId") String sqlId,
-						@RequestHeader(value="dbId", required = false) String dbId) {
+	listSqlToDbMapping(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="sqlId") final String sqlId,
+						@RequestHeader(value="dbId", required = false) final String dbId) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			int sqlID_ = -1;
 			int dbID_ = -1;
@@ -1040,18 +1056,19 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/execute/adhoc", method = RequestMethod.POST, consumes = "text/plain")
 	@Operation(summary = "Execute Adhoc Sql")
 	public ResponseEntity<RestObject> 
-	executeAdhocSql(@RequestHeader(value="user") String user,
-					@RequestHeader(value="session") String session,
-					@RequestHeader(value="schemaUniqueName") String schemaUniqueName,
-					@RequestHeader(value="outputCompression", required = false) String outputCompression,
-					@RequestHeader(value="persist", required = false, defaultValue = "N") String persist,
-					@RequestHeader(value="forceNoPush", required = false, defaultValue = "Y") String forceNoPush,
-					@RequestHeader(value="sqlType", required = false, defaultValue = "") String sqlType, /*DQL/DML/DDL*/
-					@RequestHeader(value="comment", required = false) String comment,
-					@RequestHeader(value="sqlName") String sqlName,
-					@RequestHeader(value="requestId") String requestId,
-					@RequestBody String sqlContent) {
+	executeAdhocSql(@RequestHeader(value="user") final String user,
+					@RequestHeader(value="session") final String session,
+					@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="schemaUniqueName") final String schemaUniqueName,
+					@RequestHeader(value="outputCompression", required = false) final String outputCompression,
+					@RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
+					@RequestHeader(value="forceNoPush", required = false, defaultValue = "Y") final String forceNoPush,
+					@RequestHeader(value="sqlType", required = false, defaultValue = "") final String sqlType, /*DQL/DML/DDL*/
+					@RequestHeader(value="comment", required = false) final String comment,
+					@RequestHeader(value="sqlName") final String sqlName,
+					@RequestBody final String sqlContent) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		if(sqlContent == null || sqlContent.isEmpty()) {
 			return RestObject.retException(requestId, methodName, "SQL Content missing", "SQL Content missing");
 		}
@@ -1125,12 +1142,13 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/database/generate:script", method = RequestMethod.PUT)
 	@Operation(summary = "Get the List of all user tables in database schema")
 	public ResponseEntity<RestObject> 
-	generateCreateScriptForTable(	@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="fromRdbmsSchemaUniqueName", required = false) String fromRdbmsSchemaUniqueName,
-									@RequestHeader(value="tableName", required = false) String tableName,
-									@RequestBody String sqlContent) {
+	generateCreateScriptForTable(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="fromRdbmsSchemaUniqueName", required = false) final String fromRdbmsSchemaUniqueName,
+									@RequestHeader(value="tableName", required = false) final String tableName,
+									@RequestBody final String sqlContent) {
 		
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			String script = SqlMetadataWrapper.createRdbmsTableStm(fromRdbmsSchemaUniqueName, sqlContent, tableName);
 			return RestObject.retOKWithPayload(new GenericResponse(script), requestId, methodName);
@@ -1147,11 +1165,12 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/database/tables", method = RequestMethod.GET)
 	@Operation(summary = "Get the List of all user tables in database schema")
 	public ResponseEntity<RestObject>
-	getDatabaseTables(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="connectionUniqueName", required = false) String connectionUniqueName,
-						@RequestHeader(value="schema", required = false) String schema) {
+	getDatabaseTables(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="connectionUniqueName") final String connectionUniqueName,
+						@RequestHeader(value="schema") final String schema) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			TableList ret = SqlQueryRepoUtils.getTableList(connectionUniqueName, schema);
 			return RestObject.retOKWithPayload(ret, requestId, methodName);
@@ -1166,10 +1185,11 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/database/schemas", method = RequestMethod.GET)
 	@Operation(summary = "Get the List of database schemas")
 	public ResponseEntity<RestObject> 
-	getDatabaseSchemas( @RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="connectionUniqueName", required = false) String connectionUniqueName) {
+	getDatabaseSchemas( @RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="connectionUniqueName", required = false) final String connectionUniqueName) {
 		
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			TableList ret = SqlQueryRepoUtils.getSchemaList(connectionUniqueName);
 			return RestObject.retOKWithPayload(ret, requestId, methodName);
@@ -1188,22 +1208,23 @@ public class SqlRepoController {
 					)
 	@Operation(summary = "Execute Sql Repo")
 	public ResponseEntity<RestObject> 
-	executeSqlRepo(	@RequestHeader(value="user") String user,
-					@RequestHeader(value="session") String session,
-					@RequestHeader(value="sqlID") String sqlID,
-					@RequestHeader(value="schemaUniqueName") String schemaUniqueName,
-					@RequestHeader(value="outputCompression", required = false) String outputCompression,
-					@RequestHeader(value="outputType", defaultValue = "JSON") String outputType,
-					@RequestHeader(value="batchCount", required = false, defaultValue = "1") String batchCount,
-					@RequestHeader(value="persist", required = false, defaultValue = "N") String persist,
-					@RequestHeader(value="comment", required = false, defaultValue = "") String comment,
-					@RequestHeader(value="requestId", required = false, defaultValue = "") String requestId,
-					@Valid @RequestBody String jsonObjSqlParam)  {
+	executeSqlRepo(@RequestHeader(value="user") final String user,
+				   @RequestHeader(value="session") final String session,
+				   @RequestHeader(value="requestId", defaultValue = "") String requestId,
+				   @RequestHeader(value="sqlID") final String sqlID,
+				   @RequestHeader(value="schemaUniqueName") final String schemaUniqueName,
+				   @RequestHeader(value="outputCompression", required = false) final String outputCompression,
+				   @RequestHeader(value="outputType", defaultValue = "JSON") final String outputType,
+				   @RequestHeader(value="batchCount", required = false, defaultValue = "1") final String batchCount,
+				   @RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
+				   @RequestHeader(value="comment", required = false, defaultValue = "") final String comment,
+				   @Valid @RequestBody final String jsonObjSqlParam)  {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			User u = authUtil.getUser(user);
-			SqlRepoExecReturn sqlRepoExecReturn = new SqlRepoExecReturn();
+			SqlRepoExecReturn sqlRepoExecReturn;
 			//Check that user is connected to websocket
 			if( user != null && !user.isEmpty() && 
 					!user.isBlank() && 
@@ -1261,27 +1282,27 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/execute:multipleDb", method = RequestMethod.POST, consumes = "application/json")
 	@Operation(summary = "Execute Sql On multiple DBs and aggregate results")
 	public ResponseEntity<RestObject> 
-	executeSqlRepoMultiple(	@RequestHeader(value="user") String user,
-							@RequestHeader(value="session") String session,
-							@RequestHeader(value="sqlID") String sqlID,
-							@RequestHeader(value="outputCompression", required = false) String outputCompression,
-							@RequestHeader(value="outputType", defaultValue = "JSON") String outputType,
-							@RequestHeader(value="batchCount", required = false, defaultValue = "1") String batchCount,
-							@RequestHeader(value="comment", required = false, defaultValue = "") String comment,
-							@RequestHeader(value="dbIdList", required = false, defaultValue = "") String dbIdList,
-							@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="persist", required = false, defaultValue = "N") String persist,
-							@RequestHeader HttpHeaders incomingHeaders,
-							@RequestBody String jsonObjSqlParam)  {
+	executeSqlRepoMultiple(@RequestHeader(value="user") final String user,
+						   @RequestHeader(value="session") final String session,
+						   @RequestHeader(value="requestId", defaultValue = "") String requestId,
+						   @RequestHeader(value="sqlID") final String sqlID,
+						   @RequestHeader(value="outputCompression", required = false) final String outputCompression,
+						   @RequestHeader(value="outputType", defaultValue = "JSON") final String outputType,
+						   @RequestHeader(value="batchCount", required = false, defaultValue = "1") final String batchCount,
+						   @RequestHeader(value="comment", required = false, defaultValue = "") final String comment,
+						   @RequestHeader(value="dbIdList", required = false, defaultValue = "") final String dbIdList,
+						   @RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
+						   @RequestHeader final HttpHeaders incomingHeaders,
+						   @RequestBody final String jsonObjSqlParam)  {
 		
 		String host = Objects.requireNonNull(incomingHeaders.getHost()).getHostName();
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		RestObject transferableObject = new RestObject(null, methodName, requestId);
 
 		try	{
 
-			String jsonBody = jsonObjSqlParam;
-			// Now check if body was compressed
+            // Now check if body was compressed
 			transferableObject.setRequestId(requestId);
 			if( user != null && !user.isEmpty() && !user.isBlank() && WebSocketsWrapper.isUser(user)) {
 				List<String> lstString = Arrays.asList(dbIdList.split(",", -1));
@@ -1309,8 +1330,8 @@ public class SqlRepoController {
 				return RestObject.retOKWithPayload(new GenericResponse(null) , requestId, methodName);
 			} else {
 				SqlRepoExecReturn sqlRepoExecReturn = SqlRepoExecWrapper.execSqlRepoParallel(	sqlID,	
-																								dbIdList, 
-																								jsonBody,	
+																								dbIdList,
+                        jsonObjSqlParam,
 																								batchCount,
 																								user,
 																								persist);
@@ -1329,12 +1350,13 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/execute/adhoc/multipledb:aggregate", method = RequestMethod.PUT, consumes = "text/plain")
 	@Operation(summary = "Execute Sql On multiple DBs and aggregate results")
 	public ResponseEntity<RestObject> 
-	executeSqlAdhocMultiple(@RequestHeader(value="user") String user,
-							@RequestHeader(value="session") String session,
-							@RequestHeader(value="requestId") String requestId,
-							@RequestBody String strObj)  {
+	executeSqlAdhocMultiple(@RequestHeader(value="user") final String user,
+							@RequestHeader(value="session") final String session,
+							@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestBody final String strObj)  {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		ListRdbmsCompoundQuery listRdbmsCompoundQuery = ListRdbmsCompoundQuery.toListRdbmsCompoundQuery(strObj);
 		try	{
 			String inMemDbName = com.widescope.sqlThunder.utils.StringUtils.generateUniqueString();
@@ -1361,17 +1383,17 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/migrate", method = RequestMethod.POST, consumes = "application/json")
 	@Operation(summary = "Create and Insert table from Sql Repo execution")
 	public ResponseEntity<RestObject> 
-	executeSqlRepoToMigrateData(	@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="jobID", required = false) String jobID,
-									@RequestHeader(value="sqlID") String sqlID,
-									@RequestHeader(value="sourceConnectionName") String sourceConnectionName,
-									@RequestHeader(value="inputCompression", required = false) String inputCompression,
-									@RequestHeader(value="destinationConnectionName") String destinationConnectionName,
-									@RequestHeader(value="destinationSchema", required = false) String destinationSchema,
-									@RequestHeader(value="destinationTable", required = false) String destinationTable,
-									@RequestBody String jsonObjSqlParam) {
+	executeSqlRepoToMigrateData(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="sqlID") final String sqlID,
+									@RequestHeader(value="sourceConnectionName") final String sourceConnectionName,
+									@RequestHeader(value="inputCompression", required = false) final String inputCompression,
+									@RequestHeader(value="destinationConnectionName") final String destinationConnectionName,
+									@RequestHeader(value="destinationSchema", required = false) final String destinationSchema,
+									@RequestHeader(value="destinationTable", required = false) final String destinationTable,
+									@RequestBody final String jsonObjSqlParam) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		int countInserted;
 		try	{
 			SqlRepoDynamicSql queryObj = SqlRepoUtils.sqlRepoDynamicSqlMap.get(Long.valueOf(sqlID));
@@ -1415,19 +1437,20 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/snapshot:history", method = RequestMethod.GET)
 	@Operation(summary = "Get a list of snapshots to visualize")
 	public ResponseEntity<RestObject> 
-	getRdbmsSnapshotHistory(@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="ownerId") String ownerId,
-							@RequestHeader(value="startIime") String startIime,
-							@RequestHeader(value="endTime") String endTime,
-							@RequestHeader(value="sqlStatement", required = false) String sqlStatement) {
+	getRdbmsSnapshotHistory(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="ownerId") final String ownerId,
+							@RequestHeader(value="startIime") final String startIime,
+							@RequestHeader(value="endTime") final String endTime,
+							@RequestHeader(value="sqlStatement", required = false) final String sqlStatement) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			SnapshotDbRepo snp = new SnapshotDbRepo();
 			SnapshotDbRecordList ret = snp.getUserSnapshotDb(	Long.parseLong(ownerId), 
-															Long.parseLong(startIime), 
-															Long.parseLong(endTime),
-															sqlStatement);
+																Long.parseLong(startIime),
+																Long.parseLong(endTime),
+																sqlStatement);
 			
 			return RestObject.retOKWithPayload(ret, requestId, methodName);
 		} catch(Exception ex) {
@@ -1443,10 +1466,11 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/snapshot:get", method = RequestMethod.GET)
 	@Operation(summary = "Get snapshot to visualize")
 	public ResponseEntity<RestObject> 
-	getRdbmsSnapshot(@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="snapshotId") String snapshotId) {
+	getRdbmsSnapshot(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="snapshotId") final String snapshotId) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			
 			SnapshotDbRepo snp = new SnapshotDbRepo();
@@ -1467,9 +1491,10 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/snapshot:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete snapshots")
 	public ResponseEntity<RestObject> 
-	deleteSnapshot(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="snapshotId") String snapshotId) {
+	deleteSnapshot(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="snapshotId") final String snapshotId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			SnapshotDbRepo snp = new SnapshotDbRepo();
 			SnapshotDbRecord snapshotDbRecord = snp.getSnapshot(Long.parseLong(snapshotId));
@@ -1496,17 +1521,18 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/copy/embedded/adhoc:sql", method = RequestMethod.PUT)
 	@Operation(summary = "Copy records from Embedded Sql to RDBMS table")
 	public ResponseEntity<RestObject> 
-	copyEmbeddedSqlResultToRdbmsTable(	@RequestHeader(value="requestId") String requestId,
-										@RequestHeader(value="fromEmbeddedType", defaultValue = "H2") String fromEmbeddedType,
-										@RequestHeader(value="fromClusterId") String fromClusterId,
-										@RequestHeader(value="fromEmbeddedDatabaseName") String fromEmbeddedDatabaseName,
-										@RequestHeader(value="fromEmbeddedSchemaName") String fromEmbeddedSchemaName,
-										@RequestHeader(value="toRdbmsConnectionName") String toRdbmsConnectionName,
-										@RequestHeader(value="toRdbmsSchemaName") String toRdbmsSchemaName,
-										@RequestHeader(value="toRdbmsTableName") String toRdbmsTableName,
-										@RequestBody (required = true) String sqlContent) {
+	copyEmbeddedSqlResultToRdbmsTable(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+										@RequestHeader(value="fromEmbeddedType", defaultValue = "H2") final String fromEmbeddedType,
+										@RequestHeader(value="fromClusterId") final String fromClusterId,
+										@RequestHeader(value="fromEmbeddedDatabaseName") final String fromEmbeddedDatabaseName,
+										@RequestHeader(value="fromEmbeddedSchemaName") final String fromEmbeddedSchemaName,
+										@RequestHeader(value="toRdbmsConnectionName") final String toRdbmsConnectionName,
+										@RequestHeader(value="toRdbmsSchemaName") final String toRdbmsSchemaName,
+										@RequestHeader(value="toRdbmsTableName") final String toRdbmsTableName,
+										@RequestBody final String sqlContent) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			H2Static h2Db = new H2Static(Long.parseLong(fromClusterId), fromEmbeddedDatabaseName );
 			TableFormatMap recordSet= h2Db.execStaticQueryWithTableFormat(sqlContent);
@@ -1529,20 +1555,20 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/copy/mongodb/search:simple", method = RequestMethod.PUT)
 	@Operation(summary = "Copy records from Mongodb simple search to RDBMS table")
 	public ResponseEntity<RestObject> 
-	copyMongoSimpleSearchResultToRdbmsTable(@RequestHeader(value="requestId") String requestId,
-											@RequestHeader(value="fromClusterUniqueName") String fromClusterUniqueName,
-											@RequestHeader(value="fromMongoDbName") String fromMongoDbName,
-											@RequestHeader(value="fromCollectionName") String fromCollectionName,
-											@RequestHeader(value="itemToSearch") String itemToSearch,
-											@RequestHeader(value="valueToSearch") String valueToSearch,
-											@RequestHeader(value="valueToSearchType") String valueToSearchType,
-											@RequestHeader(value="operator", defaultValue = "$eq") String operator,
-											@RequestHeader(value="toRdbmsConnectionName") String toRdbmsConnectionName,
-											@RequestHeader(value="toRdbmsSchemaName") String toRdbmsSchemaName,
-											@RequestHeader(value="toRdbmsTableName") String toRdbmsTableName,
-											@RequestHeader(value="batchCount", defaultValue = "0") String batchCount) {
+	copyMongoSimpleSearchResultToRdbmsTable(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+											@RequestHeader(value="fromClusterUniqueName") final String fromClusterUniqueName,
+											@RequestHeader(value="fromMongoDbName") final String fromMongoDbName,
+											@RequestHeader(value="fromCollectionName") final String fromCollectionName,
+											@RequestHeader(value="itemToSearch") final String itemToSearch,
+											@RequestHeader(value="valueToSearch") final String valueToSearch,
+											@RequestHeader(value="valueToSearchType") final String valueToSearchType,
+											@RequestHeader(value="operator", defaultValue = "$eq") final String operator,
+											@RequestHeader(value="toRdbmsConnectionName") final String toRdbmsConnectionName,
+											@RequestHeader(value="toRdbmsSchemaName") final String toRdbmsSchemaName,
+											@RequestHeader(value="toRdbmsTableName") final String toRdbmsTableName) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			MongoClusterRecord fromMongoClusterRecord = SqlRepoUtils.mongoDbMap.get(fromClusterUniqueName);
 			MongoDbConnection fromMongoDbConnection = new MongoDbConnection(fromMongoClusterRecord.getConnString(),
@@ -1582,20 +1608,20 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/copy/mongodb/search:range", method = RequestMethod.PUT)
 	@Operation(summary = "Copy records to RDBMS table from another Mongodb collection(s) range search")
 	public ResponseEntity<RestObject> 
-	copyMongoRangeSearchResultToRdbmsTable(	@RequestHeader(value="requestId") String requestId,
-											@RequestHeader(value="fromClusterUniqueName") String fromClusterUniqueName,
-											@RequestHeader(value="fromMongoDbName") String fromMongoDbName,
-											@RequestHeader(value="fromCollectionName") String fromCollectionName,
-											@RequestHeader(value="itemToSearch") String itemToSearch,
-											@RequestHeader(value="fromValue") String fromValue,
-											@RequestHeader(value="toValue") String toValue,
-											@RequestHeader(value="valueSearchType") String valueSearchType,
-											@RequestHeader(value="toRdbmsConnectionName") String toRdbmsConnectionName,
-											@RequestHeader(value="toRdbmsSchemaName") String toRdbmsSchemaName,
-											@RequestHeader(value="toRdbmsTableName") String toRdbmsTableName,
-											@RequestHeader(value="batchCount", defaultValue = "0") String batchCount) {
+	copyMongoRangeSearchResultToRdbmsTable(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+											@RequestHeader(value="fromClusterUniqueName") final String fromClusterUniqueName,
+											@RequestHeader(value="fromMongoDbName")final  String fromMongoDbName,
+											@RequestHeader(value="fromCollectionName") final String fromCollectionName,
+											@RequestHeader(value="itemToSearch") final String itemToSearch,
+											@RequestHeader(value="fromValue") final String fromValue,
+											@RequestHeader(value="toValue") final String toValue,
+											@RequestHeader(value="valueSearchType") final String valueSearchType,
+											@RequestHeader(value="toRdbmsConnectionName") final String toRdbmsConnectionName,
+											@RequestHeader(value="toRdbmsSchemaName") final String toRdbmsSchemaName,
+											@RequestHeader(value="toRdbmsTableName") final String toRdbmsTableName) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			MongoClusterRecord fromMongoClusterRecord = SqlRepoUtils.mongoDbMap.get(fromClusterUniqueName);
 			MongoDbConnection fromMongoDbConnection = new MongoDbConnection(fromMongoClusterRecord.getConnString(), 
@@ -1634,16 +1660,16 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/copy/mongodb:collection", method = RequestMethod.PUT)
 	@Operation(summary = "Copy records to RDBMS table from full Mongodb collection")
 	public ResponseEntity<RestObject> 
-	copyMongoFullCollectionToRdbmsTable(@RequestHeader(value="requestId") String requestId,
-										@RequestHeader(value="fromMongoClusterName") String fromMongoClusterName,
-										@RequestHeader(value="fromMongoDatabaseName") String fromMongoDatabaseName,
-										@RequestHeader(value="fromMongoCollectionName") String fromMongoCollectionName,
-										@RequestHeader(value="toRdbmsConnectionName") String toRdbmsConnectionName,
-										@RequestHeader(value="toRdbmsSchemaName") String toRdbmsSchemaName,
-										@RequestHeader(value="toRdbmsTableName") String toRdbmsTableName,
-										@RequestHeader(value="batchCount", defaultValue = "0") String batchCount) {
+	copyMongoFullCollectionToRdbmsTable(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+										@RequestHeader(value="fromMongoClusterName") final String fromMongoClusterName,
+										@RequestHeader(value="fromMongoDatabaseName") final String fromMongoDatabaseName,
+										@RequestHeader(value="fromMongoCollectionName") final String fromMongoCollectionName,
+										@RequestHeader(value="toRdbmsConnectionName") final String toRdbmsConnectionName,
+										@RequestHeader(value="toRdbmsSchemaName") final String toRdbmsSchemaName,
+										@RequestHeader(value="toRdbmsTableName") final String toRdbmsTableName) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 
 			MongoClusterRecord fromMongoClusterRecord = SqlRepoUtils.mongoDbMap.get(fromMongoClusterName);
@@ -1678,17 +1704,17 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/copy/mongodb:adhoc", method = RequestMethod.PUT)
 	@Operation(summary = "Copy records to RDBMS table from Mongodb ad-hoc search")
 	public ResponseEntity<RestObject> 
-	copyMongoAdhocResultToRdbmsTable(	@RequestHeader(value="requestId") String requestId,
-										@RequestHeader(value="fromClusterUniqueName") String fromClusterUniqueName,
-										@RequestHeader(value="fromMongoDbName") String fromMongoDbName,
-										@RequestHeader(value="fromCollectionName") String fromCollectionName,
-										@RequestHeader(value="toRdbmsConnectionName") String toRdbmsConnectionName,
-										@RequestHeader(value="toRdbmsSchemaName") String toRdbmsSchemaName,
-										@RequestHeader(value="toRdbmsTableName") String toRdbmsTableName,
-										@RequestHeader(value="batchCount", defaultValue = "0") String batchCount,
+	copyMongoAdhocResultToRdbmsTable(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+										@RequestHeader(value="fromClusterUniqueName") final String fromClusterUniqueName,
+										@RequestHeader(value="fromMongoDbName") final String fromMongoDbName,
+										@RequestHeader(value="fromCollectionName") final String fromCollectionName,
+										@RequestHeader(value="toRdbmsConnectionName") final String toRdbmsConnectionName,
+										@RequestHeader(value="toRdbmsSchemaName") final String toRdbmsSchemaName,
+										@RequestHeader(value="toRdbmsTableName") final String toRdbmsTableName,
 										@RequestBody String bsonQuery) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			MongoResultSet mongoResultSet
 			= MongoGet.execDynamicQuery(	fromClusterUniqueName, 
@@ -1720,17 +1746,17 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/copy/elastic:dsl", method = RequestMethod.PUT)
 	@Operation(summary = "Copy records to Rdbms table from Elastic DSL query")
 	public ResponseEntity<RestObject> 
-	copyElasticDslResultToRdbmsTable(	@RequestHeader(value="requestId") String requestId,
-										@RequestHeader(value="fromElasticClusterName") String fromElasticClusterName,
-										@RequestHeader(value="fromElasticHttpVerb", defaultValue = "GET") String fromElasticHttpVerb,
-										@RequestHeader(value="fromElasticEndPoint") String fromElasticEndPoint,
-										@RequestHeader(value="toRdbmsConnectionName") String toRdbmsConnectionName,
-										@RequestHeader(value="toRdbmsSchemaName") String toRdbmsSchemaName,
-										@RequestHeader(value="toRdbmsTableName") String toRdbmsTableName,
-										@RequestHeader(value="batchCount", defaultValue = "0") String batchCount,
-										@RequestBody (required = false) String httpPayload) {
+	copyElasticDslResultToRdbmsTable(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+										@RequestHeader(value="fromElasticClusterName") final String fromElasticClusterName,
+										@RequestHeader(value="fromElasticHttpVerb", defaultValue = "GET") final String fromElasticHttpVerb,
+										@RequestHeader(value="fromElasticEndPoint") final String fromElasticEndPoint,
+										@RequestHeader(value="toRdbmsConnectionName") final String toRdbmsConnectionName,
+										@RequestHeader(value="toRdbmsSchemaName") final String toRdbmsSchemaName,
+										@RequestHeader(value="toRdbmsTableName") final String toRdbmsTableName,
+										@RequestBody (required = false) final String httpPayload) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(fromElasticClusterName);
 			if(clusterMap.size() == 1) {
@@ -1770,16 +1796,16 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/copy/elastic:sql", method = RequestMethod.PUT)
 	@Operation(summary = "Create/add records to collection from Elastic SQL query")
 	public ResponseEntity<RestObject> 
-	copyElasticSqlResultToRdbmsTable(@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="fromElasticClusterName") String fromElasticClusterName,
-									@RequestHeader(value="fromElasticFetchSize") Integer fromElasticFetchSize,
-									@RequestHeader(value="toRdbmsConnectionName") String toRdbmsConnectionName,
-									@RequestHeader(value="toRdbmsSchemaName") String toRdbmsSchemaName,
-									@RequestHeader(value="toRdbmsTableName") String toRdbmsTableName,
-									@RequestHeader(value="batchCount", defaultValue = "0") String batchCount,
-									@RequestBody String sqlContent) {
+	copyElasticSqlResultToRdbmsTable(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="fromElasticClusterName") final String fromElasticClusterName,
+									@RequestHeader(value="fromElasticFetchSize") final Integer fromElasticFetchSize,
+									@RequestHeader(value="toRdbmsConnectionName") final String toRdbmsConnectionName,
+									@RequestHeader(value="toRdbmsSchemaName") final String toRdbmsSchemaName,
+									@RequestHeader(value="toRdbmsTableName") final String toRdbmsTableName,
+									@RequestBody final String sqlContent) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(fromElasticClusterName);
 			if(clusterMap.size() == 1) {
@@ -1818,14 +1844,15 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/copy/sqlrepo:sql", method = RequestMethod.PUT)
 	@Operation(summary = "Copy Rdbms Sql result records to another Rdbms System Table")
 	public ResponseEntity<RestObject> 
-	copyRdbmsSqlResultToRdbmsTable(@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="fromRdbmsSchemaUniqueName") String fromRdbmsSchemaUniqueName,
-									@RequestHeader(value="toRdbmsConnectionName") String toRdbmsConnectionName,
-									@RequestHeader(value="toRdbmsSchemaName") String toRdbmsSchemaName,
-									@RequestHeader(value="toRdbmsTableName") String toRdbmsTableName,
-									@RequestBody String sqlContent) {
+	copyRdbmsSqlResultToRdbmsTable(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="fromRdbmsSchemaUniqueName") final String fromRdbmsSchemaUniqueName,
+									@RequestHeader(value="toRdbmsConnectionName") final String toRdbmsConnectionName,
+									@RequestHeader(value="toRdbmsSchemaName") final String toRdbmsSchemaName,
+									@RequestHeader(value="toRdbmsTableName") final String toRdbmsTableName,
+									@RequestBody final String sqlContent) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			TableFormatMap recordSet=
 					SqlMetadataWrapper.execAdhocForMigration(fromRdbmsSchemaUniqueName, sqlContent);
@@ -1853,15 +1880,16 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/copy/sqlrepo/csv:load", method = RequestMethod.PUT)
 	@Operation(summary = "Copy Csv to table")
 	public ResponseEntity<RestObject> 
-	copyCsvToRdbmsTable(@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="fileType", defaultValue = "N") String fileType,
-						@RequestHeader(value="tableScript", defaultValue = "") String tableScript,
-						@RequestHeader(value="toRdbmsConnectionName") String toRdbmsConnectionName,
-						@RequestHeader(value="toRdbmsSchemaName", required = false, defaultValue = "") String toRdbmsSchemaName,
-						@RequestHeader(value="toRdbmsTableName") String toRdbmsTableName,
-						@RequestParam("file") MultipartFile file) {
+	copyCsvToRdbmsTable(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="fileType", defaultValue = "N") final String fileType,
+						@RequestHeader(value="tableScript", defaultValue = "") final String tableScript,
+						@RequestHeader(value="toRdbmsConnectionName") final String toRdbmsConnectionName,
+						@RequestHeader(value="toRdbmsSchemaName", required = false, defaultValue = "") final String toRdbmsSchemaName,
+						@RequestHeader(value="toRdbmsTableName") final String toRdbmsTableName,
+						@RequestParam("file") final MultipartFile file) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		String fileName = StringUtils.generateUniqueString32();
 		
 		try	{
@@ -1870,7 +1898,7 @@ public class SqlRepoController {
 			String csvContent = CsvWrapper.readFile(fullFilePath);
 			SqlRepoDatabase db = SqlRepoUtils.sqlRepoDatabaseMap.get(toRdbmsConnectionName);
 			DbConnectionInfo connectionDetailInfo = DbConnectionInfo.makeDbConnectionInfo(db);
-			RecordsAffected recordsAffected = new RecordsAffected();
+			RecordsAffected recordsAffected;
 			try (Connection conn = connectionDetailInfo.getConnection()) {
 				
 				if(!tableScript.isEmpty() && !SqlMetadataWrapper.isTable(toRdbmsTableName, conn)) {
@@ -1915,9 +1943,10 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/validate:sql", method = RequestMethod.PUT)
 	@Operation(summary = "Validate Sql")
 	public ResponseEntity<RestObject> 
-	validateSql(@RequestHeader(value="requestId") String requestId,
-				@RequestBody String sqlContent) {
+	validateSql(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestBody final String sqlContent) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			GenericResponse g = new GenericResponse();
 			if(SqlParser.isSqlDQL(sqlContent)) {
@@ -1944,13 +1973,14 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/history/stm:get", method = RequestMethod.GET)
 	@Operation(summary = "Get the List of executed sql statements")
 	public ResponseEntity<RestObject> 
-	getSqlHistStm(  @RequestHeader(value="user") String user,
-				    @RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="type") String type,
-					@RequestHeader(value="stext", required = false, defaultValue = "") String stext) {
+	getSqlHistStm(  @RequestHeader(value="user") final String user,
+				    @RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="type") final String type,
+					@RequestHeader(value="stext", required = false, defaultValue = "") final String stext) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		List<HistoryStatement> lstSql = new ArrayList<HistoryStatement>();
+		requestId = StringUtils.generateRequestId(requestId);
+		List<HistoryStatement> lstSql = new ArrayList<>();
 		try	{
 			User u = authUtil.getUser(user);
 			long userId = u.getId();
@@ -1983,13 +2013,14 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/history/stm:copy", method = RequestMethod.POST)
 	@Operation(summary = "Copy sql statements to another user")
 	public ResponseEntity<RestObject> 
-	copySqlHistStm(	@RequestHeader(value="user") String user,
-					@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="toUserId") String toUserId,
-					@RequestHeader(value="shaHash") String shaHash,
-					@RequestHeader(value="type") String type) {
+	copySqlHistStm(	@RequestHeader(value="user") final String user,
+					@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="toUserId") final String toUserId,
+					@RequestHeader(value="shaHash") final String shaHash,
+					@RequestHeader(value="type") final String type) {
 		
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			User u = authUtil.getUser(user);
 			long userId = u.getId();
@@ -2008,12 +2039,13 @@ public class SqlRepoController {
 	@RequestMapping(value = "/sqlrepo/history/stm:remove", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete an executed sql statement from your profile")
 	public ResponseEntity<RestObject> 
-	deleteSqlHistStmt(  @RequestHeader(value="user") String user,
-					    @RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="shaHash") String shaHash,
-						@RequestHeader(value="type") String type) {
+	deleteSqlHistStmt(  @RequestHeader(value="user") final String user,
+					    @RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="shaHash") final String shaHash,
+						@RequestHeader(value="type") final String type) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			User u = authUtil.getUser(user);
 			long userId = u.getId();

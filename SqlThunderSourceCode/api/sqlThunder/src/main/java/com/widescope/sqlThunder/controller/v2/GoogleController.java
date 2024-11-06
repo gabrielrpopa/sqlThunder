@@ -25,6 +25,7 @@ import com.widescope.chat.users.ChatUser;
 import com.widescope.chat.users.OnOffLineThreadToFriends;
 import com.widescope.chat.users.UserToChat;
 import com.widescope.logging.AppLogger;
+import com.widescope.sqlThunder.utils.StringUtils;
 import com.widescope.sqlThunder.utils.user.UserShort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -90,9 +91,10 @@ public class GoogleController {
 	@Operation(summary = "Call Back to get the token")
 	public 
 	ResponseEntity<RestObject>  
-	getClientToken (@RequestHeader(value="requestId") String requestId, @RequestHeader(value="code") String code) {
+	getClientToken (@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="code") final String code) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			GoogleAuthorizationCodeTokenRequest tokenRequest =
 					 googleSignInConfiguration.getGoogleAuthorizationCodeFlow().newTokenRequest(code);
@@ -113,16 +115,17 @@ public class GoogleController {
 	@RequestMapping(value = "/google/authenticate", method = RequestMethod.POST)
 	@Operation(summary = "Authenticate by verifying token")
 	public ResponseEntity<RestObject> 
-	authenticateToken(	final @RequestHeader(value="token") String token, 
-						final @RequestHeader(value="email") String email,
-						@RequestHeader(value="firstName") String firstName,
-						@RequestHeader(value="lastName") String lastName,
-						@RequestHeader(value="avatarUrl") String avatarUrl) {
+	authenticateToken(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					  @RequestHeader(value="token") final String token,
+					  @RequestHeader(value="email") final String email,
+					  @RequestHeader(value="firstName")  String firstName,
+					  @RequestHeader(value="lastName")  String lastName,
+					  @RequestHeader(value="avatarUrl") final String avatarUrl) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+		requestId = StringUtils.generateRequestId(requestId);
 
         try {
-        	
+			requestId = StringUtils.generateRequestId(requestId);
         	if(googleSignInConfiguration.getGoogleIdTokenVerifier() == null 
         			|| googleSignInConfiguration.getGoogleAuthorizationCodeFlow() == null) {
         		return RestObject.retException(requestId, methodName, "ERROR");
@@ -182,13 +185,14 @@ public class GoogleController {
 	@RequestMapping(value = "/google/authenticate-new", method = RequestMethod.POST)
 	@Operation(summary = "Authenticate by verifying token")
 	public ResponseEntity<RestObject> 
-	authenticateTokenNew(	final @RequestHeader(value="token") String token, 
-							final @RequestHeader(value="email") String email,
-							@RequestHeader(value="firstName") String firstName,
-							@RequestHeader(value="lastName") String lastName,
-							@RequestHeader(value="avatarUrl") String avatarUrl) {
+	authenticateTokenNew(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						 @RequestHeader(value="token") final String token,
+						 @RequestHeader(value="email") final String email,
+						 @RequestHeader(value="firstName") String firstName,
+						 @RequestHeader(value="lastName") String lastName,
+						 @RequestHeader(value="avatarUrl") final String avatarUrl) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+		requestId = StringUtils.generateRequestId(requestId);
 
         try {
         	
@@ -251,8 +255,8 @@ public class GoogleController {
 	
 	
 
-	public boolean verifyGoogleIdToken(String idToken, String audience, String jwkUrl) {
-		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+	public boolean verifyGoogleIdToken(final String idToken, final String audience, final String jwkUrl) {
+
 		TokenVerifier tokenVerifier = TokenVerifier	.newBuilder()
 													.setAudience(audience)
 	            									//Optional, when verifying a Google ID token, the jwk url is set by default.

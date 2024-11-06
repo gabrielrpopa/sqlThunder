@@ -131,22 +131,23 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/copy/mongodb/search:simple", method = RequestMethod.PUT)
 	@Operation(summary = "Copy records from Mongodb simple search to Embedded table")
 	public ResponseEntity<RestObject> 
-	copyMongoSimpleSearchResultToEmbedded(	@RequestHeader(value="user") String user,
-										  	@RequestHeader(value="requestId") String requestId,
-											@RequestHeader(value="fromClusterUniqueName") String fromClusterUniqueName,
-											@RequestHeader(value="fromMongoDbName") String fromMongoDbName,
-											@RequestHeader(value="fromCollectionName") String fromCollectionName,
-											@RequestHeader(value="itemToSearch") String itemToSearch,
-											@RequestHeader(value="valueToSearch") String valueToSearch,
-											@RequestHeader(value="valueToSearchType") String valueToSearchType,
-											@RequestHeader(value="operator", defaultValue = "$eq") String operator,
-											@RequestHeader(value="toEmbeddedType", defaultValue = "H2") String toEmbeddedType,
-											@RequestHeader(value="toEmbeddedDatabaseName") String toEmbeddedDatabaseName,
-											@RequestHeader(value="toCluster") String toCluster,
-											@RequestHeader(value="toEmbeddedSchemaName") String toEmbeddedSchemaName,
+	copyMongoSimpleSearchResultToEmbedded(	@RequestHeader(value="user") final String user,
+										  	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+											@RequestHeader(value="fromClusterUniqueName") final String fromClusterUniqueName,
+											@RequestHeader(value="fromMongoDbName") final String fromMongoDbName,
+											@RequestHeader(value="fromCollectionName") final String fromCollectionName,
+											@RequestHeader(value="itemToSearch") final String itemToSearch,
+											@RequestHeader(value="valueToSearch") final String valueToSearch,
+											@RequestHeader(value="valueToSearchType") final String valueToSearchType,
+											@RequestHeader(value="operator", defaultValue = "$eq") final String operator,
+											@RequestHeader(value="toEmbeddedType", defaultValue = "H2") final String toEmbeddedType,
+											@RequestHeader(value="toEmbeddedDatabaseName") final String toEmbeddedDatabaseName,
+											@RequestHeader(value="toCluster") final String toCluster,
+											@RequestHeader(value="toEmbeddedSchemaName") final String toEmbeddedSchemaName,
 											@RequestHeader(value="toEmbeddedTableName", required = false) String toEmbeddedTableName) {
 
 		try	{
+			requestId = StringUtils.generateRequestId(requestId);
 			if(toEmbeddedTableName.isEmpty() || toEmbeddedTableName.isBlank()) {
 				toEmbeddedTableName = fromCollectionName;
 			}
@@ -207,21 +208,22 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/copy/mongodb/search:range", method = RequestMethod.PUT)
 	@Operation(summary = "Copy Mongodb collection(s) range search result to Embedded table") 
 	public ResponseEntity<RestObject> 
-	copyMongoRangeSearchResultToEmbedded(	@RequestHeader(value="user") String user,
-											@RequestHeader(value="requestId") String requestId,
-											@RequestHeader(value="fromClusterUniqueName") String fromClusterUniqueName,
-											@RequestHeader(value="fromMongoDbName") String fromMongoDbName,
-											@RequestHeader(value="fromCollectionName") String fromCollectionName,
-											@RequestHeader(value="itemToSearch") String itemToSearch,
-											@RequestHeader(value="fromValue") String fromValue,
-											@RequestHeader(value="toValue") String toValue,
-											@RequestHeader(value="valueSearchType") String valueSearchType,
-											@RequestHeader(value="toEmbeddedType", defaultValue = "H2") String toEmbeddedType,
-											@RequestHeader(value="toEmbeddedDatabaseName") String toEmbeddedDatabaseName,
-											@RequestHeader(value="toCluster") String toCluster,
-											@RequestHeader(value="toEmbeddedSchemaName") String toEmbeddedSchemaName,
-											@RequestHeader(value="toEmbeddedTableName", required = false) String toEmbeddedTableName) {
+	copyMongoRangeSearchResultToEmbedded(	@RequestHeader(value="user") final String user,
+											@RequestHeader(value="requestId", defaultValue = "") String requestId,
+											@RequestHeader(value="fromClusterUniqueName") final String fromClusterUniqueName,
+											@RequestHeader(value="fromMongoDbName") final String fromMongoDbName,
+											@RequestHeader(value="fromCollectionName") final String fromCollectionName,
+											@RequestHeader(value="itemToSearch") final String itemToSearch,
+											@RequestHeader(value="fromValue") final String fromValue,
+											@RequestHeader(value="toValue") final String toValue,
+											@RequestHeader(value="valueSearchType") final String valueSearchType,
+											@RequestHeader(value="toEmbeddedType", defaultValue = "H2") final String toEmbeddedType,
+											@RequestHeader(value="toEmbeddedDatabaseName") final String toEmbeddedDatabaseName,
+											@RequestHeader(value="toCluster") final String toCluster,
+											@RequestHeader(value="toEmbeddedSchemaName") final String toEmbeddedSchemaName,
+											@RequestHeader(value="toEmbeddedTableName", required = false)  String toEmbeddedTableName) {
 		try	{
+			requestId = StringUtils.generateRequestId(requestId);
 			if(toEmbeddedTableName.isEmpty() || toEmbeddedTableName.isBlank()) {
 				toEmbeddedTableName = fromCollectionName;
 			}
@@ -281,18 +283,18 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/copy/mongodb:collection", method = RequestMethod.PUT)
 	@Operation(summary = "Copy full Mongodb collection to Embedded table") 
 	public ResponseEntity<RestObject> 
-	copyMongoFullCollectionToEmbedded(@RequestHeader(value="user") String user,
-									  @RequestHeader(value="requestId") String requestId,
-									  @RequestHeader(value="fromMongoClusterName") String fromMongoClusterName,
-									  @RequestHeader(value="fromMongoDatabaseName") String fromMongoDatabaseName,
-									  @RequestHeader(value="fromMongoCollectionName") String fromMongoCollectionName,
-									  @RequestHeader(value="toEmbeddedType", defaultValue = "H2") String toEmbeddedType,
-									  @RequestHeader(value="toEmbeddedDatabaseName") String toEmbeddedDatabaseName,
-									  @RequestHeader(value="toCluster") String toCluster,
-									  @RequestHeader(value="toEmbeddedSchemaName") String toEmbeddedSchemaName,
+	copyMongoFullCollectionToEmbedded(@RequestHeader(value="user") final String user,
+									  @RequestHeader(value="requestId", defaultValue = "") String requestId,
+									  @RequestHeader(value="fromMongoClusterName") final String fromMongoClusterName,
+									  @RequestHeader(value="fromMongoDatabaseName") final String fromMongoDatabaseName,
+									  @RequestHeader(value="fromMongoCollectionName") final String fromMongoCollectionName,
+									  @RequestHeader(value="toEmbeddedType", defaultValue = "H2") final String toEmbeddedType,
+									  @RequestHeader(value="toEmbeddedDatabaseName") final String toEmbeddedDatabaseName,
+									  @RequestHeader(value="toCluster") final String toCluster,
+									  @RequestHeader(value="toEmbeddedSchemaName") final String toEmbeddedSchemaName,
 									  @RequestHeader(value="toEmbeddedTableName") String toEmbeddedTableName) {
 		try	{
-
+			requestId = StringUtils.generateRequestId(requestId);
 			if(toEmbeddedTableName.isEmpty() || toEmbeddedTableName.isBlank()) {
 				toEmbeddedTableName = fromMongoCollectionName;
 			}
@@ -346,19 +348,20 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/copy/mongodb:adhoc", method = RequestMethod.PUT)
 	@Operation(summary = "Copy Mongodb ad-hoc search result to Embedded table") 
 	public ResponseEntity<RestObject> 
-	copyMongoAdhocResultToEmbedded(	@RequestHeader(value="user") String user,
-									@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="fromClusterUniqueName") String fromMongoClusterName,
-									@RequestHeader(value="fromMongoDbName") String fromMongoDatabaseName,
-									@RequestHeader(value="fromCollectionName") String fromMongoCollectionName,
-									@RequestHeader(value="toEmbeddedType", defaultValue = "H2") String toEmbeddedType,
-									@RequestHeader(value="toEmbeddedDatabaseName") String toEmbeddedDatabaseName,
-									@RequestHeader(value="toClusterId") String toCluster,
-									@RequestHeader(value="toEmbeddedSchemaName") String toEmbeddedSchemaName,
+	copyMongoAdhocResultToEmbedded(	@RequestHeader(value="user") final String user,
+									@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="fromClusterUniqueName") final String fromMongoClusterName,
+									@RequestHeader(value="fromMongoDbName") final String fromMongoDatabaseName,
+									@RequestHeader(value="fromCollectionName") final String fromMongoCollectionName,
+									@RequestHeader(value="toEmbeddedType", defaultValue = "H2") final String toEmbeddedType,
+									@RequestHeader(value="toEmbeddedDatabaseName") final String toEmbeddedDatabaseName,
+									@RequestHeader(value="toClusterId") final String toCluster,
+									@RequestHeader(value="toEmbeddedSchemaName") final String toEmbeddedSchemaName,
 									@RequestHeader(value="toEmbeddedTableName", required = false) String toEmbeddedTableName,
-									@RequestBody String bsonQuery) {
+									@RequestBody final String bsonQuery) {
 
 		try	{
+			requestId = StringUtils.generateRequestId(requestId);
 			if(toEmbeddedTableName.isEmpty() || toEmbeddedTableName.isBlank()) {
 				toEmbeddedTableName = fromMongoCollectionName;
 			}
@@ -409,20 +412,20 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/copy/elastic:dsl", method = RequestMethod.PUT)
 	@Operation(summary = "Copy Elastic DSL query result to Embedded table")
 	public ResponseEntity<RestObject> 
-	copyElasticDslResultToEmbedded(	@RequestHeader(value="user") String user,
-									@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="fromElasticClusterName") String fromElasticClusterName,
-									@RequestHeader(value="fromElasticHttpVerb", defaultValue = "GET") String fromElasticHttpVerb,
-									@RequestHeader(value="fromElasticEndPoint") String fromElasticEndPoint,
-									@RequestHeader(value="toEmbeddedType", required = false, defaultValue = "H2") String toEmbeddedType,
-									@RequestHeader(value="toEmbeddedDatabaseName") String toEmbeddedDatabaseName,
-									@RequestHeader(value="toCluster") String toCluster,
-									@RequestHeader(value="toEmbeddedSchemaName") String toEmbeddedSchemaName,
-									@RequestHeader(value="toEmbeddedTableName") String toEmbeddedTableName,
-									@RequestBody String httpPayload) {
+	copyElasticDslResultToEmbedded(	@RequestHeader(value="user") final String user,
+									@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="fromElasticClusterName") final String fromElasticClusterName,
+									@RequestHeader(value="fromElasticHttpVerb", defaultValue = "GET") final String fromElasticHttpVerb,
+									@RequestHeader(value="fromElasticEndPoint") final String fromElasticEndPoint,
+									@RequestHeader(value="toEmbeddedType", required = false, defaultValue = "H2") final String toEmbeddedType,
+									@RequestHeader(value="toEmbeddedDatabaseName") final String toEmbeddedDatabaseName,
+									@RequestHeader(value="toCluster") final String toCluster,
+									@RequestHeader(value="toEmbeddedSchemaName") final String toEmbeddedSchemaName,
+									@RequestHeader(value="toEmbeddedTableName") final String toEmbeddedTableName,
+									@RequestBody final String httpPayload) {
 
 		try	{
-
+			requestId = StringUtils.generateRequestId(requestId);
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(fromElasticClusterName);
 			if(clusterMap.size() == 1) {
 				HttpHost[] httpHostArray = elasticClusterDb.getHostArray(clusterMap, fromElasticClusterName);
@@ -474,17 +477,18 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/copy/elastic:sql", method = RequestMethod.PUT)
 	@Operation(summary = "Copy Elastic SQL query result to Embedded table") 
 	public ResponseEntity<RestObject> 
-	copyElasticSqlResultToEmbedded(	@RequestHeader(value="user") String user,
-									@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="fromElasticClusterName") String fromElasticClusterName,
-									@RequestHeader(value="fromElasticFetchSize") Integer fromElasticFetchSize,
-									@RequestHeader(value="toEmbeddedType", defaultValue = "H2") String toEmbeddedType,
-									@RequestHeader(value="toEmbeddedDatabaseName") String toEmbeddedDatabaseName,
-									@RequestHeader(value="toCluster") String toCluster,
-									@RequestHeader(value="toEmbeddedSchemaName") String toEmbeddedSchemaName,
-									@RequestHeader(value="toEmbeddedTableName") String toEmbeddedTableName,
-									@RequestBody String sqlContent) {
+	copyElasticSqlResultToEmbedded(	@RequestHeader(value="user") final String user,
+									@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="fromElasticClusterName") final String fromElasticClusterName,
+									@RequestHeader(value="fromElasticFetchSize") final Integer fromElasticFetchSize,
+									@RequestHeader(value="toEmbeddedType", defaultValue = "H2") final String toEmbeddedType,
+									@RequestHeader(value="toEmbeddedDatabaseName") final String toEmbeddedDatabaseName,
+									@RequestHeader(value="toCluster") final String toCluster,
+									@RequestHeader(value="toEmbeddedSchemaName") final String toEmbeddedSchemaName,
+									@RequestHeader(value="toEmbeddedTableName") final String toEmbeddedTableName,
+									@RequestBody final String sqlContent) {
 		try	{
+			requestId = StringUtils.generateRequestId(requestId);
 			Map<String, ElasticCluster> clusterMap = elasticClusterDb.getElasticCluster(fromElasticClusterName);
 			if(clusterMap.size() == 1) {
 				HttpHost[] httpHostArray = elasticClusterDb.getHostArray(clusterMap, fromElasticClusterName);
@@ -538,16 +542,17 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/copy/sqlrepo:sql", method = RequestMethod.PUT)
 	@Operation(summary = "Copy Rdbms Sql result to Embedded table") 
 	public ResponseEntity<RestObject> 
-	copyRdbmsSqlResultToEmbedded(	@RequestHeader(value="user") String user,
-									@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="fromRdbmsSchemaUniqueName") String fromRdbmsSchemaUniqueName,
-									@RequestHeader(value="toEmbeddedType", defaultValue = "H2") String toEmbeddedType,
-									@RequestHeader(value="toClusterId") String toClusterId,
-									@RequestHeader(value="toEmbeddedDatabaseName") String toEmbeddedDatabaseName,
-									@RequestHeader(value="toEmbeddedSchemaName") String toEmbeddedSchemaName,
-									@RequestHeader(value="toEmbeddedTableName") String toEmbeddedTableName,
-									@RequestBody String sqlContent) {
+	copyRdbmsSqlResultToEmbedded(	@RequestHeader(value="user") final String user,
+									@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="fromRdbmsSchemaUniqueName") final String fromRdbmsSchemaUniqueName,
+									@RequestHeader(value="toEmbeddedType", defaultValue = "H2") final String toEmbeddedType,
+									@RequestHeader(value="toClusterId") final String toClusterId,
+									@RequestHeader(value="toEmbeddedDatabaseName") final String toEmbeddedDatabaseName,
+									@RequestHeader(value="toEmbeddedSchemaName") final String toEmbeddedSchemaName,
+									@RequestHeader(value="toEmbeddedTableName") final String toEmbeddedTableName,
+									@RequestBody final String sqlContent) {
 		try	{
+			requestId = StringUtils.generateRequestId(requestId);
 			long clusterId_ = Long.parseLong(toClusterId);
 			TableFormatMap recordSet=
 			SqlMetadataWrapper.execAdhocForMigration(fromRdbmsSchemaUniqueName, sqlContent);
@@ -594,21 +599,21 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/copy/embedded:sql", method = RequestMethod.PUT)
 	@Operation(summary = "Copy Rdbms Sql Embedded result to Embedded table")
 	public ResponseEntity<RestObject> 
-	copyEmbeddedSqlResultToEmbedded(@RequestHeader(value="user") String user,
-									@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="fromEmbeddedType", defaultValue = "H2") String fromEmbeddedType,
-									@RequestHeader(value="fromClusterId") String fromClusterId,
-									@RequestHeader(value="fromEmbeddedDatabaseName") String fromEmbeddedDatabaseName,
-									@RequestHeader(value="fromEmbeddedSchemaName") String fromEmbeddedSchemaName,
-									@RequestHeader(value="toEmbeddedType", defaultValue = "H2") String toEmbeddedType,
-									@RequestHeader(value="toClusterId") String toClusterId,
-									@RequestHeader(value="toEmbeddedDatabaseName") String toEmbeddedDatabaseName,
-									@RequestHeader(value="toEmbeddedSchemaName") String toEmbeddedSchemaName,
-									@RequestHeader(value="toEmbeddedTableName") String toEmbeddedTableName,
-									@RequestBody String sqlContent) {
+	copyEmbeddedSqlResultToEmbedded(@RequestHeader(value="user") final String user,
+									@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="fromEmbeddedType", defaultValue = "H2") final String fromEmbeddedType,
+									@RequestHeader(value="fromClusterId") final String fromClusterId,
+									@RequestHeader(value="fromEmbeddedDatabaseName") final String fromEmbeddedDatabaseName,
+									@RequestHeader(value="fromEmbeddedSchemaName") final String fromEmbeddedSchemaName,
+									@RequestHeader(value="toEmbeddedType", defaultValue = "H2") final String toEmbeddedType,
+									@RequestHeader(value="toClusterId") final String toClusterId,
+									@RequestHeader(value="toEmbeddedDatabaseName") final String toEmbeddedDatabaseName,
+									@RequestHeader(value="toEmbeddedSchemaName") final String toEmbeddedSchemaName,
+									@RequestHeader(value="toEmbeddedTableName") final String toEmbeddedTableName,
+									@RequestBody final String sqlContent) {
 
 		try	{
-			
+			requestId = StringUtils.generateRequestId(requestId);
 			H2Static h2Db = new H2Static(Long.parseLong(fromClusterId), fromEmbeddedDatabaseName );
 			TableFormatMap recordSet=
 					h2Db.execStaticQueryWithTableFormat(sqlContent);
@@ -654,17 +659,17 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/copy/embedded/csv:load", method = RequestMethod.PUT)
 	@Operation(summary = "Copy Csv to embedded table")
 	public ResponseEntity<RestObject> 
-	copyCsvToEmbeddedTable(	@RequestHeader(value="user") String user,
-							@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="tableScript", defaultValue = "") String tableScript,
-							@RequestHeader(value="toEmbeddedType", defaultValue = "H2") String toEmbeddedType,
-							@RequestHeader(value="toClusterId") String toClusterId,
-							@RequestHeader(value="toEmbeddedDatabaseName") String toEmbeddedDatabaseName,
-							@RequestHeader(value="toEmbeddedSchemaName") String toEmbeddedSchemaName,
-							@RequestHeader(value="toEmbeddedTableName") String toEmbeddedTableName,
-							@RequestParam("file") MultipartFile file  /*or @RequestPart*/) {
+	copyCsvToEmbeddedTable(	@RequestHeader(value="user") final String user,
+							@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="tableScript", defaultValue = "") final String tableScript,
+							@RequestHeader(value="toEmbeddedType", defaultValue = "H2") final String toEmbeddedType,
+							@RequestHeader(value="toClusterId") final String toClusterId,
+							@RequestHeader(value="toEmbeddedDatabaseName") final String toEmbeddedDatabaseName,
+							@RequestHeader(value="toEmbeddedSchemaName") final  String toEmbeddedSchemaName,
+							@RequestHeader(value="toEmbeddedTableName") final String toEmbeddedTableName,
+							@RequestParam("file") final MultipartFile file ) {
 		String fileName = StringUtils.generateUniqueString32();
-		
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			String fullFilePath = storageService.storeTmp(file, fileName);
 			String csvContent = CsvWrapper.readFile(fullFilePath);
@@ -737,14 +742,14 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/inmem/table:empty", method = RequestMethod.PUT)
     @Operation(summary = "Create empty table into in-mem db") 
 	public ResponseEntity<RestObject> 
-	createEmptyTablesInMemDb(	@RequestHeader(value="user") String user,
-								 @RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="session") String session,
-								@RequestHeader(value="comment", required = false, defaultValue = "") String comment,
-								@RequestBody List<TableDefinition> tableDefinition) {
+	createEmptyTablesInMemDb(	@RequestHeader(value="user") final String user,
+								 @RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="session") final String session,
+								@RequestHeader(value="comment", required = false, defaultValue = "") final String comment,
+								@RequestBody final List<TableDefinition> tableDefinition) {
 		String fileName = StringUtils.generateUniqueString32();
 		String toDbName = StringUtils.generateUniqueString16();
-		
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			User u = authUtil.getUser(user);
 			long userId = u.getId();
@@ -771,11 +776,12 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/inmem/table:append", method = RequestMethod.PUT)
 	@Operation(summary = "Append in-mem db table")
 	public ResponseEntity<RestObject> 
-	appendInMemDbTables(@RequestHeader(value="user") String user,
-						@RequestHeader(value="session") String session,
-						@RequestHeader(value="requestId") String requestId,
-						@RequestBody List<RowValue> tableDefinition) {
+	appendInMemDbTables(@RequestHeader(value="user") final String user,
+						@RequestHeader(value="session") final String session,
+						@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestBody final List<RowValue> tableDefinition) {
 		String toDbName = StringUtils.generateUniqueString16();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			H2InMem h2InMem = new H2InMem(session, requestId, user, toDbName);
 			try {
@@ -797,14 +803,14 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/inmem:cluster", method = RequestMethod.PUT)
     @Operation(summary = "Load cluster in memory") 
 	public ResponseEntity<RestObject> 
-	loadEmbeddedClusterInMem(@RequestHeader(value="user") String user,
-							 @RequestHeader(value="session") String session,
-							 @RequestHeader(value="requestId") String requestId,
-							 @RequestHeader(value="clusterId") String clusterId,
+	loadEmbeddedClusterInMem(@RequestHeader(value="user") final String user,
+							 @RequestHeader(value="session") final String session,
+							 @RequestHeader(value="requestId", defaultValue = "") String requestId,
+							 @RequestHeader(value="clusterId") final String clusterId,
 							 @RequestHeader(value="comment", required = false, defaultValue = "") String comment) {
 		
 		if(comment.isEmpty()) { comment = "In-mem cluster id: " + clusterId; }
-
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			ClusterTransfer ret = EmbeddedWrapper.loadH2ClusterInMem(Integer.parseInt(clusterId), session, requestId, user, comment);
 			return RestObject.retOKWithPayload(ret, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -820,13 +826,13 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/inmem:database", method = RequestMethod.PUT)
 	@Operation(summary = "Load database in memory.Database is part of a cluster")
 	public ResponseEntity<RestObject> 
-	loadEmbeddedDbInMem(@RequestHeader(value="user") String user,
-						@RequestHeader(value="session") String session,
-						@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="clusterId") String clusterId,
-						@RequestHeader(value="dbId") String dbId,
-						@RequestHeader(value="comment", required = false, defaultValue = "") String comment) {
-
+	loadEmbeddedDbInMem(@RequestHeader(value="user") final String user,
+						@RequestHeader(value="session") final String session,
+						@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="clusterId") final String clusterId,
+						@RequestHeader(value="dbId") final String dbId,
+						@RequestHeader(value="comment", required = false, defaultValue = "") final String comment) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			EmbeddedDbRecord eDbRec = embeddedDbRepo.getEmbeddedDb(Long.parseLong(clusterId), Long.parseLong(dbId));
 			ClusterTransfer clusterTransfer 
@@ -852,19 +858,19 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/inmem:query", method = RequestMethod.PUT)
 	@Operation(summary = "Load query result in memory")
 	public ResponseEntity<RestObject> 
-	loadEmbeddedQueryInMem(	@RequestHeader(value="user") String user,
-							@RequestHeader(value="session") String session,
-							@RequestHeader(value="fromEmbeddedType", defaultValue = "H2") String fromEmbeddedType,
-							@RequestHeader(value="fromClusterId") String fromClusterId,
-							@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="fromEmbeddedDatabaseName") String fromEmbeddedDatabaseName,
-							@RequestHeader(value="fromEmbeddedSchemaName") String fromEmbeddedSchemaName,
+	loadEmbeddedQueryInMem(	@RequestHeader(value="user") final String user,
+							@RequestHeader(value="session") final String session,
+							@RequestHeader(value="fromEmbeddedType", defaultValue = "H2") final String fromEmbeddedType,
+							@RequestHeader(value="fromClusterId") final String fromClusterId,
+							@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="fromEmbeddedDatabaseName") final String fromEmbeddedDatabaseName,
+							@RequestHeader(value="fromEmbeddedSchemaName") final String fromEmbeddedSchemaName,
 							@RequestHeader(value="comment", required = false, defaultValue = "") String comment,
-							@RequestBody String sqlContent) {
+							@RequestBody final String sqlContent) {
 		if(comment.isEmpty()) {
 			comment = "In-mem cluster id: " + fromClusterId + " sql :" + sqlContent;
 		}
-		
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			H2InMem h2InMem = new H2InMem(	Long.parseLong(fromClusterId), 
 											fromEmbeddedDatabaseName, 
@@ -886,17 +892,17 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/inmem/rdbms:query", method = RequestMethod.PUT)
 	@Operation(summary = "Load RDBMS query result in memory") 
 	public ResponseEntity<RestObject> 
-	loadRdbmsQueryInMem(@RequestHeader(value="user") String user,
-						@RequestHeader(value="session") String session,
-						@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="schemaUniqueName") String schemaUniqueName,
+	loadRdbmsQueryInMem(@RequestHeader(value="user") final String user,
+						@RequestHeader(value="session") final String session,
+						@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="schemaUniqueName") final String schemaUniqueName,
 						@RequestHeader(value="comment", required = false, defaultValue = "") String comment,
 						@RequestBody String sqlContent) {
 		if(comment.isEmpty()) {
 			comment = "In-mem query from : " + schemaUniqueName + " sql :" + sqlContent;
 		}
-		
-		
+
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			if(SqlParser.isSqlDQL(sqlContent)) {
 				TableFormatMap tableFormatMap = new TableFormatMap();
@@ -938,16 +944,16 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/inmem/rdbms:queries", method = RequestMethod.PUT)
 	@Operation(summary = "Load RDBMS query result in memory") 
 	public ResponseEntity<RestObject> 
-	loadRdbmsQueriesInMem(	@RequestHeader(value="user") String user,
-							@RequestHeader(value="session") String session,
-							@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="schemaUniqueName") String schemaUniqueName,
+	loadRdbmsQueriesInMem(	@RequestHeader(value="user") final String user,
+							@RequestHeader(value="session") final String session,
+							@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="schemaUniqueName") final String schemaUniqueName,
 							@RequestHeader(value="comment", required = false, defaultValue = "") String comment,
-							@RequestBody ListRdbmsCompoundQuery listRdbmsCompoundQuery) {
+							@RequestBody final ListRdbmsCompoundQuery listRdbmsCompoundQuery) {
 		if(comment.isEmpty()) {
 			comment = "in mem query from : " + schemaUniqueName ;
 		}
-		
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			for(RdbmsCompoundQuery r: listRdbmsCompoundQuery.getLst() ) {
 				if(!SqlParser.isSqlDQL(r.getSqlContent())) {
@@ -983,16 +989,16 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/inmem/rdbms:tables", method = RequestMethod.PUT)
 	@Operation(summary = "Load RDBMS query result in memory") 
 	public ResponseEntity<RestObject> 
-	loadRdbmsTablesInMem(	@RequestHeader(value="user") String user,
-							@RequestHeader(value="session") String session,
-							@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="schemaUniqueName") String schemaUniqueName,
+	loadRdbmsTablesInMem(	@RequestHeader(value="user") final String user,
+							@RequestHeader(value="session") final String session,
+							@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="schemaUniqueName") final String schemaUniqueName,
 							@RequestHeader(value="comment", required = false, defaultValue = "") String comment,
-							@RequestBody List<String> listRdbmsTables) {
+							@RequestBody final List<String> listRdbmsTables) {
 		if(comment.isEmpty()) {
 			comment = "In-mem query from : " + schemaUniqueName + " multiple tables " ;
 		}
-		
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			SqlRepoDatabase db = SqlRepoUtils.sqlRepoDatabaseMap.get(schemaUniqueName);
 			DbConnectionInfo connectionDetailInfo = DbConnectionInfo.makeDbConnectionInfo(db);
@@ -1024,22 +1030,22 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/inmem/elastic:dsl", method = RequestMethod.PUT)
 	@Operation(summary = "Load Elastic Index Dsl query result in memory") 
 	public ResponseEntity<RestObject> 
-	loadElasticIndexInMemViaDsl(@RequestHeader(value="user") String user,
-								@RequestHeader(value="session") String session,
-								@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="fromElasticClusterName") String fromElasticClusterName,
+	loadElasticIndexInMemViaDsl(@RequestHeader(value="user") final String user,
+								@RequestHeader(value="session") final String session,
+								@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="fromElasticClusterName") final String fromElasticClusterName,
 								@RequestHeader(value="fromIndexName", defaultValue = "") String fromIndexName,
-								@RequestHeader(value="fromHttpVerb") String fromHttpVerb,
-								@RequestHeader(value="fromElasticApi") String fromElasticApi,
-								@RequestHeader(value="fromEndPoint") String fromEndPoint,
-								@RequestHeader(value="batchValue", required = false, defaultValue = "0") String batchValue,
+								@RequestHeader(value="fromHttpVerb") final String fromHttpVerb,
+								@RequestHeader(value="fromElasticApi") final String fromElasticApi,
+								@RequestHeader(value="fromEndPoint") final String fromEndPoint,
+								@RequestHeader(value="batchValue", required = false, defaultValue = "0") final String batchValue,
 								@RequestHeader(value="comment", required = false, defaultValue = "") String comment,
-								@RequestBody (required = false) String dslStatement) {
+								@RequestBody (required = false) final String dslStatement) {
 
 		if(comment.isEmpty()) {
 			comment = "In-mem Elastic DSL query from : " + fromElasticClusterName + " dsl :" + dslStatement;
 		}
-		
+		requestId = StringUtils.generateRequestId(requestId);
 		if(fromIndexName.isEmpty()) {
 			fromIndexName = "elastic_" + StringUtils.generateUniqueString8();
 		}
@@ -1105,23 +1111,23 @@ public class EmbeddedController {
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/embedded/inmem/elastic:sql", method = RequestMethod.PUT)
 	@Operation(summary = "Load Elastic Index Sql query result in memory") 
-	public ResponseEntity<RestObject> 
-	loadElasticIndexInMemViaSql(@RequestHeader(value="user") String user,
-								@RequestHeader(value="session") String session,
-								@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="fromElasticClusterName") String fromElasticClusterName,
+	public ResponseEntity<RestObject>
+	loadElasticIndexInMemViaSql(@RequestHeader(value="user") final String user,
+								@RequestHeader(value="session") final String session,
+								@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="fromElasticClusterName") final String fromElasticClusterName,
 								@RequestHeader(value="fromIndexName", defaultValue = "") String fromIndexName,
-								@RequestHeader(value="fromHttpVerb") String fromHttpVerb,
-								@RequestHeader(value="fromElasticApi") String fromElasticApi,
-								@RequestHeader(value="fromEndPoint") String fromEndPoint,
-								@RequestHeader(value="batchValue", required = false, defaultValue = "0") String batchValue,
+								@RequestHeader(value="fromHttpVerb") final String fromHttpVerb,
+								@RequestHeader(value="fromElasticApi") final String fromElasticApi,
+								@RequestHeader(value="fromEndPoint") final String fromEndPoint,
+								@RequestHeader(value="batchValue", required = false, defaultValue = "0") final String batchValue,
 								@RequestHeader(value="comment", required = false, defaultValue = "") String comment,
-								@RequestBody (required = false) String sqlStatement) {
+								@RequestBody (required = false) final String sqlStatement) {
 		
 		if(comment.isEmpty()) {
 			comment = "In-mem Elastic Sql query from : " + fromElasticClusterName + " sql :" + sqlStatement;
 		}
-		
+		requestId = StringUtils.generateRequestId(requestId);
 		if(fromIndexName.isEmpty()) {
 			fromIndexName = "elastic_" + StringUtils.generateUniqueString8();
 		}
@@ -1194,23 +1200,23 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/inmem/mongodb/search:simple", method = RequestMethod.PUT)
 	@Operation(summary = "Load Simple Search Mongodb Result In Memory") 
 	public ResponseEntity<RestObject> 
-	loadMongoSimpleSearchResultInMem(@RequestHeader(value="user") String user,
-									 @RequestHeader(value="session") String session,
-									 @RequestHeader(value="requestId") String requestId,
-									 @RequestHeader(value="fromMongoClusterName") String fromMongoClusterName,
-									 @RequestHeader(value="fromMongoDatabaseName") String fromMongoDatabaseName,
-									 @RequestHeader(value="fromMongoCollectionName") String fromMongoCollectionName,
-									 @RequestHeader(value="itemToSearch") String itemToSearch,
-									 @RequestHeader(value="valueToSearch") String valueToSearch,
-									 @RequestHeader(value="valueToSearchType") String valueToSearchType,
-									 @RequestHeader(value="operator") String operator,
-									 @RequestHeader(value="batchCount", required = false, defaultValue = "0") String batchCount,
+	loadMongoSimpleSearchResultInMem(@RequestHeader(value="user") final String user,
+									 @RequestHeader(value="session") final String session,
+									 @RequestHeader(value="requestId", defaultValue = "") String requestId,
+									 @RequestHeader(value="fromMongoClusterName") final String fromMongoClusterName,
+									 @RequestHeader(value="fromMongoDatabaseName") final String fromMongoDatabaseName,
+									 @RequestHeader(value="fromMongoCollectionName") final String fromMongoCollectionName,
+									 @RequestHeader(value="itemToSearch") final String itemToSearch,
+									 @RequestHeader(value="valueToSearch") final String valueToSearch,
+									 @RequestHeader(value="valueToSearchType") final String valueToSearchType,
+									 @RequestHeader(value="operator") final String operator,
+									 @RequestHeader(value="batchCount", required = false, defaultValue = "0") final String batchCount,
 									 @RequestHeader(value="comment", required = false, defaultValue = "") String comment) {
 
 		if(comment.isEmpty()) {
 			comment = "In-mem Mongodb SimpleSearch from : " + fromMongoClusterName + ", database :" + fromMongoDatabaseName + ", collection" + fromMongoCollectionName;
 		}
-		
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 
 			MongoClusterRecord fromMongoClusterRecord = SqlRepoUtils.mongoDbMap.get(fromMongoClusterName);
@@ -1278,23 +1284,23 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/inmem/mongodb/search:range", method = RequestMethod.PUT)
 	@Operation(summary = "Copy records to RDBMS table from another Mongodb collection(s) range search") 
 	public ResponseEntity<RestObject> 
-	loadMongoRangeSearchResultInMem(@RequestHeader(value="user") String user,
-									@RequestHeader(value="session") String session,
-									@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="fromMongoClusterName") String fromMongoClusterName,
-									@RequestHeader(value="fromMongoDatabaseName") String fromMongoDatabaseName,
-									@RequestHeader(value="fromMongoCollectionName") String fromMongoCollectionName,
-									@RequestHeader(value="itemToSearch") String itemToSearch,
-									@RequestHeader(value="fromValue") String fromValue,
-									@RequestHeader(value="toValue") String toValue,
-									@RequestHeader(value="valueSearchType") String valueSearchType,
-									@RequestHeader(value="batchCount", defaultValue = "0") String batchCount,
+	loadMongoRangeSearchResultInMem(@RequestHeader(value="user") final String user,
+									@RequestHeader(value="session") final String session,
+									@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="fromMongoClusterName") final String fromMongoClusterName,
+									@RequestHeader(value="fromMongoDatabaseName") final String fromMongoDatabaseName,
+									@RequestHeader(value="fromMongoCollectionName") final String fromMongoCollectionName,
+									@RequestHeader(value="itemToSearch") final String itemToSearch,
+									@RequestHeader(value="fromValue") final String fromValue,
+									@RequestHeader(value="toValue") final String toValue,
+									@RequestHeader(value="valueSearchType") final String valueSearchType,
+									@RequestHeader(value="batchCount", defaultValue = "0") final String batchCount,
 									@RequestHeader(value="comment", required = false, defaultValue = "") String comment) {
 
 		if(comment.isEmpty()) {
 			comment = "In-mem Mongodb RangeSearch from : " + fromMongoClusterName + ", database :" + fromMongoDatabaseName + ", collection" + fromMongoCollectionName;
 		}
-		
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 
 			MongoClusterRecord fromMongoClusterRecord = SqlRepoUtils.mongoDbMap.get(fromMongoClusterName);
@@ -1358,19 +1364,19 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/inmem/mongodb:collection", method = RequestMethod.PUT)
 	@Operation(summary = "Load results in memory full Mongodb collection") 
 	public ResponseEntity<RestObject> 
-	loadMongoFullCollectionInMem(@RequestHeader(value="user") String user,
-								 @RequestHeader(value="session") String session,
-								 @RequestHeader(value="requestId") String requestId,
-								 @RequestHeader(value="fromMongoClusterName") String fromMongoClusterName,
-								 @RequestHeader(value="fromMongoDatabaseName") String fromMongoDatabaseName,
-								 @RequestHeader(value="fromMongoCollectionName") String fromMongoCollectionName,
-								 @RequestHeader(value="batchCount", defaultValue = "0") String batchCount,
+	loadMongoFullCollectionInMem(@RequestHeader(value="user") final String user,
+								 @RequestHeader(value="session") final String session,
+								 @RequestHeader(value="requestId", defaultValue = "") String requestId,
+								 @RequestHeader(value="fromMongoClusterName") final String fromMongoClusterName,
+								 @RequestHeader(value="fromMongoDatabaseName") final String fromMongoDatabaseName,
+								 @RequestHeader(value="fromMongoCollectionName") final String fromMongoCollectionName,
+								 @RequestHeader(value="batchCount", defaultValue = "0") final String batchCount,
 								 @RequestHeader(value="comment", required = false, defaultValue = "") String comment) {
 
 		if(comment.isEmpty()) {
 			comment = "In-mem Mongodb FullCollection from : " + fromMongoClusterName + ", database :" + fromMongoDatabaseName + ", collection" + fromMongoCollectionName;
 		}
-		
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 
 			MongoClusterRecord fromMongoClusterRecord = SqlRepoUtils.mongoDbMap.get(fromMongoClusterName);
@@ -1429,20 +1435,20 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/inmem/mongodb:adhoc", method = RequestMethod.PUT)
 	@Operation(summary = "Copy records to in-mem RDBMS table from Mongodb ad-hoc search")
 	public ResponseEntity<RestObject> 
-	loadMongoAdhocResultInMem(	@RequestHeader(value="user") String user,
-								@RequestHeader(value="session") String session,
-								@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="fromMongoClusterName") String fromMongoClusterName,
-								@RequestHeader(value="fromMongoDatabaseName") String fromMongoDatabaseName,
-								@RequestHeader(value="fromMongoCollectionName") String fromMongoCollectionName,
-								@RequestHeader(value="batchCount", defaultValue = "0") String batchCount,
+	loadMongoAdhocResultInMem(	@RequestHeader(value="user") final String user,
+								@RequestHeader(value="session") final String session,
+								@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="fromMongoClusterName") final String fromMongoClusterName,
+								@RequestHeader(value="fromMongoDatabaseName") final String fromMongoDatabaseName,
+								@RequestHeader(value="fromMongoCollectionName") final String fromMongoCollectionName,
+								@RequestHeader(value="batchCount", defaultValue = "0") final String batchCount,
 								@RequestHeader(value="comment", required = false, defaultValue = "") String comment,
-								@RequestBody String bsonQuery) {
+								@RequestBody final String bsonQuery) {
 
 		if(comment.isEmpty()) {
 			comment = "In-mem Mongodb Adhoc from : " + fromMongoClusterName + ", database :" + fromMongoDatabaseName + ", collection" + fromMongoCollectionName + ", query: "+ bsonQuery;
 		}
-		
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 
 			MongoClusterRecord fromMongoClusterRecord = SqlRepoUtils.mongoDbMap.get(fromMongoClusterName);
@@ -1507,17 +1513,17 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/inmem/csv:load", method = RequestMethod.PUT)
 	@Operation(summary = "Copy Csv to in mem table")
 	public ResponseEntity<RestObject> 
-	copyCsvToInMemDb(	@RequestHeader(value="user") String user,
-						@RequestHeader(value="session") String session,
-						@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="tableScript", required = false, defaultValue = "") String tableScript,
+	copyCsvToInMemDb(	@RequestHeader(value="user") final String user,
+						@RequestHeader(value="session") final String session,
+						@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="tableScript", required = false, defaultValue = "") final String tableScript,
 						@RequestHeader(value="comment", required = false, defaultValue = "") String comment,
-						@RequestParam("file") MultipartFile file) {
+						@RequestParam("file") final MultipartFile file) {
 
 		if(comment.isEmpty()) {
 			comment = "In-mem CSV : " + file.getName();
 		}
-		
+		requestId = StringUtils.generateRequestId(requestId);
 		String fileName = StringUtils.generateUniqueString32();
 		
 		String toDbName = StringUtils.generateUniqueString16();
@@ -1587,10 +1593,10 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/inmem/stores/remove:request", method = RequestMethod.POST)
 	@Operation(summary = "Remove all in-mem storage for request")
 	public ResponseEntity<RestObject> 
-	removeRequestInMemoryDbs(	@RequestHeader(value="sessionId") String sessionId,
-								@RequestHeader(value="requestId") String requestId) {
+	removeRequestInMemoryDbs(	@RequestHeader(value="sessionId") final String sessionId,
+								@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 
-
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			EmbeddedWrapper.removeInMemDbRequestId(sessionId, requestId);
 			return RestObject.retOKWithPayload(new GenericResponse("OK"), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -1605,7 +1611,8 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/inmem:stores", method = RequestMethod.GET)
 	@Operation(summary = "Get a list of in-mem db")
 	public ResponseEntity<RestObject> 
-	getInMemoryDbs(	@RequestHeader(value="requestId") String requestId) {
+	getInMemoryDbs(	@RequestHeader(value="requestId", defaultValue = "") String requestId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			InMemDbs ret = EmbeddedWrapper.getInMemDbs();
 			return RestObject.retOKWithPayload(ret, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -1621,12 +1628,12 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/execute/inmem/adhoc:single", method = RequestMethod.POST)
 	@Operation(summary = "Execute Adhoc Sql")
 	public ResponseEntity<RestObject>
-	executeInMemAdhocSql(	@RequestHeader(value="sessionId") String sessionId,
-							@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="dbName") String dbName,
-							@RequestHeader(value="sqlType", required = false, defaultValue = "") String sqlType, /*DQL/DML/DDL*/
-							@RequestBody String sqlContent)  {
-
+	executeInMemAdhocSql(	@RequestHeader(value="sessionId") final String sessionId,
+							@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="dbName") final String dbName,
+							@RequestHeader(value="sqlType", required = false, defaultValue = "") final String sqlType, /*DQL/DML/DDL*/
+							@RequestBody final String sqlContent)  {
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			EmbeddedInMemCluster inMemCluster =EmbeddedWrapper.getInmemDb(sessionId,requestId);
 			H2InMem inMem = (H2InMem)inMemCluster.getCluster().get(dbName);
@@ -1681,7 +1688,8 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/dbtypes:get", method = RequestMethod.GET)
 	@Operation(summary = "Get list of supported database types")
 	public ResponseEntity<RestObject> 
-	getEmbeddedDbTypes(	@RequestHeader(value="requestId") String requestId) {
+	getEmbeddedDbTypes(	@RequestHeader(value="requestId", defaultValue = "") String requestId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			return RestObject.retOKWithPayload(new EmbeddedDbTypes(), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 		} catch(Exception ex) {
@@ -1697,7 +1705,8 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/staticinfo:get", method = RequestMethod.GET)
 	@Operation(summary = "Get list of Sql Commands")
 	public ResponseEntity<RestObject> 
-	getEmbeddedSqlCommands(	@RequestHeader(value="requestId") String requestId) {
+	getEmbeddedSqlCommands(	@RequestHeader(value="requestId", defaultValue = "") String requestId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			return RestObject.retOKWithPayload(new EmbeddedStaticInfo(), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 		} catch(Exception ex) {
@@ -1716,12 +1725,13 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/execute/adhoc:single", method = RequestMethod.POST, consumes = "text/plain")
 	@Operation(summary = "Execute Adhoc Sql")
 	public ResponseEntity<RestObject>
-	executeEmbeddedAdhocSql(@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="sqlType", required = false, defaultValue = "") String sqlType, /*DQL/DML/DDL*/
-							@RequestHeader(value="clusterId") String clusterId,
-							@RequestHeader(value="dbId") String dbId,
-							@RequestBody String sqlContent)  {
+	executeEmbeddedAdhocSql(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="sqlType", required = false, defaultValue = "") final String sqlType, /*DQL/DML/DDL*/
+							@RequestHeader(value="clusterId") final String clusterId,
+							@RequestHeader(value="dbId") final String dbId,
+							@RequestBody final String sqlContent)  {
 
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			EmbeddedDbRecord e = embeddedDbRepo.getEmbeddedDb(Long.parseLong(clusterId) , Long.parseLong(dbId));
 			ResultQuery ret = new ResultQuery();
@@ -1771,11 +1781,11 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/execute/adhoc:cluster", method = RequestMethod.POST)
 	@Operation(summary = "Execute Adhoc Sql on a multiple dbs or an entire cluster")
 	public ResponseEntity<RestObject>
-	executeAdhocSqlOnCluster(	@RequestHeader(value="user") String user,
-								@RequestHeader(value="session") String session,
-								@RequestHeader(value="requestId") String requestId,
-								@Valid @RequestBody EmbeddedExecTableList cmd) {
-
+	executeAdhocSqlOnCluster(	@RequestHeader(value="user") final String user,
+								@RequestHeader(value="session") final String session,
+								@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@Valid @RequestBody final EmbeddedExecTableList cmd) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			ResponseEntity<RestObject> ret = EmbeddedParallelExec.checkClusterCommand(cmd, embeddedDbRepo,requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 			if(ret != null) {
@@ -1797,9 +1807,9 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/adhoc/cluster/validate", method = RequestMethod.POST)
 	@Operation(summary = "Validate Adhoc Sql on a multiple dbs or an entire cluster")
 	public ResponseEntity<RestObject>
-	validateAdhocSqlOnCluster(	@RequestHeader(value="requestId") String requestId,
-								@Valid @RequestBody EmbeddedExecTableList cmd) {
-
+	validateAdhocSqlOnCluster(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@Valid final @RequestBody EmbeddedExecTableList cmd) {
+		requestId = StringUtils.generateRequestId(requestId);
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		try {
 			if(null != EmbeddedParallelExec.checkClusterCommand(cmd, embeddedDbRepo, requestId, methodName) ) {
@@ -1821,8 +1831,9 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/clusters:get", method = RequestMethod.GET)
 	@Operation(summary = "Get list of Embedded Clusters")
 	public ResponseEntity<RestObject> 
-	getEmbeddedClusters(@RequestHeader(value="requestId") String requestId) {
+	getEmbeddedClusters(@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			EmbeddedClusterList e = embeddedDbRepo.getClusters();
 			return RestObject.retOKWithPayload(e, requestId, methodName);
@@ -1837,12 +1848,13 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/clusters:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add Embedded Cluster")
 	public ResponseEntity<RestObject> 
-	addEmbeddedCluster(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="clusterName") String clusterName,
-						@RequestHeader(value="description") String description,
-						@Valid @RequestBody EmbeddedClusterInfo clusterInfo) {
+	addEmbeddedCluster(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="clusterName") final String clusterName,
+						@RequestHeader(value="description") final String description,
+						@Valid @RequestBody final EmbeddedClusterInfo clusterInfo) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			EmbeddedClusterRecord embeddedClusterRecord = new EmbeddedClusterRecord(-1, clusterName, description, clusterInfo.getClusterRule(), clusterInfo.getSqlRule());
 			embeddedDbRepo.addEmbeddedCluster(embeddedClusterRecord);
@@ -1861,10 +1873,11 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/clusters:delete", method = RequestMethod.DELETE)
     @Operation(summary = "Delete Embedded Cluster")
 	public ResponseEntity<RestObject> 
-	deleteEmbeddedCluster(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="clusterId") String clusterId) {
+	deleteEmbeddedCluster(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="clusterId") final String clusterId) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			EmbeddedClusterRecord embeddedClusterRecord = embeddedDbRepo.getCluster(Long.parseLong(clusterId));
 			embeddedDbRepo.deleteCluster(Long.parseLong(clusterId));
@@ -1884,10 +1897,11 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/cluster/db:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add Embedded Databases to a cluster")
 	public ResponseEntity<RestObject> 
-	addEmbeddedDbToCluster( @RequestHeader(value="requestId") String requestId,
-							@Valid @RequestBody EmbeddedDbRecord embeddedDbRecord) {
+	addEmbeddedDbToCluster( @RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@Valid @RequestBody final EmbeddedDbRecord embeddedDbRecord) {
 		
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			embeddedDbRepo.addEmbeddedDb(embeddedDbRecord);
 			EmbeddedDbRecordList  r = embeddedDbRepo.getClusterEmbeddedDb(embeddedDbRecord.getClusterId());
@@ -1903,9 +1917,10 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/cluster/db:get", method = RequestMethod.GET)
 	@Operation(summary = "Get list of Embedded Databases for a cluster")
 	public ResponseEntity<RestObject> 
-	getEmbeddedDbToCluster(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="clusterId") String clusterId) {
+	getEmbeddedDbToCluster(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="clusterId") final String clusterId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			EmbeddedDbRecordList r = embeddedDbRepo.getClusterEmbeddedDb(Long.parseLong(clusterId));
 			return RestObject.retOKWithPayload(r, requestId, methodName);
@@ -1920,10 +1935,11 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/cluster/db:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete Embedded Databases of a cluster")
 	public ResponseEntity<RestObject> 
-	deleteEmbeddedDbToCluster(	@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="dbId") String dbId,
-								@RequestHeader(value="clusterId") String clusterId) {
+	deleteEmbeddedDbToCluster(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="dbId") final String dbId,
+								@RequestHeader(value="clusterId") final String clusterId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			EmbeddedDbRecord e = embeddedDbRepo.getEmbeddedDb(Long.parseLong(clusterId), Long.parseLong(dbId));
 			embeddedDbRepo.deleteEmbeddedDb(Long.parseLong(dbId));
@@ -1945,10 +1961,11 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/cluster/access:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add user permission to cluster")
 	public ResponseEntity<RestObject> 
-	addUserAccessToCluster( @RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="userId") String userId,
-							@RequestHeader(value="clusterId") String clusterId) {
+	addUserAccessToCluster( @RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="userId") final String userId,
+							@RequestHeader(value="clusterId") final String clusterId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			embeddedDbRepo.addEmbeddedDbAccess(Long.parseLong(clusterId), Long.parseLong(userId) );
 			return RestObject.retOK(requestId, methodName);
@@ -1964,9 +1981,10 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/cluster/access:get", method = RequestMethod.GET)
 	@Operation(summary = "Get list of Embedded Databases for a cluster")
 	public ResponseEntity<RestObject> 
-	getUserAccessToCluster(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="clusterId") String clusterId) {
+	getUserAccessToCluster(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="clusterId") final String clusterId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			EmbeddedClusterPermList r = embeddedDbRepo.getClusterPermission(Long.parseLong(clusterId));
 			return RestObject.retOKWithPayload(r, requestId, methodName);
@@ -1982,10 +2000,11 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/cluster/access:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete User access to cluster")
 	public ResponseEntity<RestObject> 
-	deleteUserAccessToCluster(	@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="userId") String userId,
-								@RequestHeader(value="clusterId") String clusterId) {
+	deleteUserAccessToCluster(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="userId") final String userId,
+								@RequestHeader(value="clusterId") final String clusterId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			EmbeddedDbRecordList r = embeddedDbRepo.getClusterEmbeddedDb(Long.parseLong(clusterId));
 			embeddedDbRepo.deleteEmbeddedDbAccess(Long.parseLong(clusterId), Long.parseLong(userId));
@@ -2002,10 +2021,11 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/cluster/database/schemas", method = RequestMethod.GET)
 	@Operation(summary = "Get Schemas of an embedded db belonging to a cluster")
 	public ResponseEntity<RestObject> 
-	getSchemas(	@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="clusterId") String clusterId,
-				@RequestHeader(value="dbId") String dbId) {
+	getSchemas(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="clusterId") final String clusterId,
+				@RequestHeader(value="dbId") final String dbId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			EmbeddedDbRecordList r = embeddedDbRepo.getClusterEmbeddedDb(Long.parseLong(clusterId));
 			Optional<EmbeddedDbRecord> db = r.getEmbeddedDbRecordList().stream().filter(c -> c.getDbId() == Long.parseLong(dbId) ).findFirst();
@@ -2024,12 +2044,13 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/cluster/database/tables", method = RequestMethod.GET)
 	@Operation(summary = "Get Db Tables")
 	public ResponseEntity<RestObject> 
-	getTables(	@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="clusterId") String clusterId,
-				@RequestHeader(value="dbId") String dbId,
-				@RequestHeader(value="schema") String schema) {
+	getTables(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="clusterId") final String clusterId,
+				@RequestHeader(value="dbId") final String dbId,
+				@RequestHeader(value="schema") final String schema) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			EmbeddedDbRecordList r = embeddedDbRepo.getClusterEmbeddedDb(Long.parseLong(clusterId));
 			Optional<EmbeddedDbRecord> db =	r.getEmbeddedDbRecordList()
@@ -2064,15 +2085,15 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/execute/adhoc:ddl", method = RequestMethod.POST, consumes = "text/plain")
 	@Operation(summary = "Execute Adhoc Ddl")
 	public ResponseEntity<RestObject>
-	executeDdl(	@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="clusterId") String clusterId,
-				@RequestHeader(value="fileName") String fileName,
-				@RequestHeader(value="type") String type,
-				@RequestHeader(value="schema") String schema,
+	executeDdl(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="clusterId") final String clusterId,
+				@RequestHeader(value="fileName") final String fileName,
+				@RequestHeader(value="type") final String type,
+				@RequestHeader(value="schema") final String schema,
 				@RequestBody String sqlContent)  {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			EmbeddedClusterRecord rec = embeddedDbRepo.getCluster(Long.parseLong(clusterId));
 			EmbeddedDbRecord embeddedDbRecord = new EmbeddedDbRecord(-1,
@@ -2113,10 +2134,11 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/execute/adhoc/statement/table:create", method = RequestMethod.POST, consumes = "text/plain")
 	@Operation(summary = "Execute Adhoc DDL")
 	public ResponseEntity<RestObject>
-	getCreateTableStmFromSql(@RequestHeader(value="requestId") String requestId,
-							 @RequestBody String sqlContent) {
+	getCreateTableStmFromSql(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							 @RequestBody final String sqlContent) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			String createTblStm = SqlParser.getCreateTableStatementFromSql(sqlContent);
 			return RestObject.retOKWithPayload(new GenericResponse(createTblStm), requestId, methodName);
@@ -2134,12 +2156,12 @@ public class EmbeddedController {
 	@RequestMapping(value = "/embedded/cluster/db:new", method = RequestMethod.PUT)
 	@Operation(summary = "Create an empty database as is part of a cluster ")
 	public ResponseEntity<RestObject> 
-	newEmbeddedDbToCluster( @RequestHeader(value="user") String user,
-						    @RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="clusterId") String clusterId,
-							@RequestHeader(value="dbName") String dbName,
-							@RequestHeader(value="dbType") String dbType) {
-
+	newEmbeddedDbToCluster( @RequestHeader(value="user") final String user,
+						    @RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="clusterId") final String clusterId,
+							@RequestHeader(value="dbName") final String dbName,
+							@RequestHeader(value="dbType") final String dbType) {
+		requestId = StringUtils.generateRequestId(requestId);
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		try	{
 			

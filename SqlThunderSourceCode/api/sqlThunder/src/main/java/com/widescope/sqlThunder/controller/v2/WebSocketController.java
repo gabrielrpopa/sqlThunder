@@ -38,19 +38,16 @@ public class WebSocketController {
     @Autowired
     private AuthUtil authUtil;
 
-
-
     @PostConstruct
     public void initialize() {
 
     }
 
-
     @MessageMapping("/chat.register") /*STOMP messages to be routed to @Controller*/
     public void
-    subscribe(@Payload UserRegistrationSocket message,
-              Principal user,
-              @Header("simpSessionId") String sessionId) {
+    subscribe(@Payload final UserRegistrationSocket message,
+              final Principal user,
+              @Header("simpSessionId") final String sessionId) {
 
         WebSocketsWrapper.addUserSession(message.getEmail(), user.getName());
         UserRegistrationSocket u = new UserRegistrationSocket(message.getEmail(), user.getName());
@@ -71,8 +68,8 @@ public class WebSocketController {
     @RequestMapping(value = "/push/user/queue/update", method = RequestMethod.POST)
     @Operation(summary = "Push Data to user",	description= "Push Data to user")
     public boolean
-    sendToIndividualUser(  @RequestBody WebsocketPayload message,
-                           HttpServletRequest request)	{
+    sendToIndividualUser(  @RequestBody final WebsocketPayload message,
+                           final HttpServletRequest request)	{
 
         if(!ConfigRepoDb.isLocalHost(request) ) {
             return false;
@@ -104,14 +101,14 @@ public class WebSocketController {
     @RequestMapping(value = "/push/user/queue/multipart", method = RequestMethod.POST)
     @Operation(summary = "Push Data to user with attachments")
     public boolean
-    sendToIndividualUserMultipart( @RequestHeader(value="fromUser", required = true) String fromUser,
-                                   @RequestHeader(value="fromId", required = true) String fromId,
-                                   @RequestHeader(value="session", required = true) String session,
-                                   @RequestHeader(value="toUser", required = true) String toUser,
-                                   @RequestHeader(value="toId", required = true) String toId,
-                                   @RequestHeader(value="message", required = true) String message,
-                                   @RequestParam("files") List<MultipartFile> files,
-                                   @RequestParam("filesMetadata") String fMetadata) 	{
+    sendToIndividualUserMultipart( @RequestHeader(value="fromUser") final String fromUser,
+                                   @RequestHeader(value="fromId") final String fromId,
+                                   @RequestHeader(value="session") final String session,
+                                   @RequestHeader(value="toUser") final String toUser,
+                                   @RequestHeader(value="toId") final String toId,
+                                   @RequestHeader(value="message") final String message,
+                                   @RequestParam("files") final List<MultipartFile> files,
+                                   @RequestParam("filesMetadata") final String fMetadata) 	{
 
 
         try {
@@ -143,7 +140,7 @@ public class WebSocketController {
     @RequestMapping(value = "/user/queue/typing", method = RequestMethod.POST)
     @Operation(summary = "Push Data to user")
     public boolean
-    sendTypingToIndividualUser(@RequestBody WebsocketPayload message)	{
+    sendTypingToIndividualUser(@RequestBody final WebsocketPayload message)	{
 
         try {
             String userName = WebSocketsWrapper.getUserName(message.getToUser()).trim();
@@ -168,7 +165,7 @@ public class WebSocketController {
     @RequestMapping(value = "/user/queue/video", method = RequestMethod.POST)
     @Operation(summary = "Push Video Data to individual user")
     public boolean
-    sendVideoStreamingToIndividualUser(@RequestBody WebsocketPayload message)	{
+    sendVideoStreamingToIndividualUser(@RequestBody final WebsocketPayload message)	{
 
         try {
             String userName = WebSocketsWrapper.getUserName(message.getToUser()).trim();
@@ -193,7 +190,7 @@ public class WebSocketController {
     @RequestMapping(value = "/user/queue/audio", method = RequestMethod.POST)
     @Operation(summary = "Push Sound Data to individual user")
     public boolean
-    sendSoundStreamingToIndividualUser(@RequestBody WebsocketPayload message)	{
+    sendSoundStreamingToIndividualUser(@RequestBody final WebsocketPayload message)	{
 
         try {
             String userName = WebSocketsWrapper.getUserName(message.getToUser()).trim();
@@ -217,7 +214,7 @@ public class WebSocketController {
     @RequestMapping(value = "/user/queue/control", method = RequestMethod.POST)
     @Operation(summary = "Push Command Data to Individual User")
     public boolean
-    sendControlCommandToIndividualUser(@RequestBody WebsocketPayload message)	{
+    sendControlCommandToIndividualUser(@RequestBody final WebsocketPayload message)	{
 
         try {
             String userName = WebSocketsWrapper.getUserName(message.getToUser()).trim();
@@ -266,7 +263,7 @@ public class WebSocketController {
     @RequestMapping(value = "/push/topic/room/", method = RequestMethod.POST)
     @Operation(summary = "Push Data to all users")
     public boolean
-    sendToAllUsers(@RequestBody WebsocketPayload message) {
+    sendToAllUsers(@RequestBody final WebsocketPayload message) {
         try {
             SimpMessageHeaderAccessor accessor = SimpMessageHeaderAccessor.create();
             accessor.setContentType(MimeTypeUtils.APPLICATION_JSON);

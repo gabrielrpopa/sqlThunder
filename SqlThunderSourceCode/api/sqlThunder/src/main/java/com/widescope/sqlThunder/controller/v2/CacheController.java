@@ -85,13 +85,14 @@ public class CacheController {
 	
 	
 	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/cache/store:clear", method = RequestMethod.POST)
-	@Operation(summary = "Set an object in the cache") 
+	@RequestMapping(value = "/cache/store:clear", method = RequestMethod.DELETE)
+	@Operation(summary = "Clear the entire cache")
 	public ResponseEntity<RestObject>
-	clearStore (@RequestHeader(value="internalAdmin") String internalAdmin,
-				@RequestHeader(value="internalAdminPasscode") String internalAdminPasscode) {
+	clearCacheStore (@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					 @RequestHeader(value="internalAdmin") final String internalAdmin,
+					 @RequestHeader(value="internalAdminPasscode") final String internalAdminPasscode) {
 
-		String requestId = StaticUtils.getUUID();
+		requestId = StringUtils.generateRequestId(requestId);
 		if( !authUtil.isInternalAdminAuthenticated(internalAdmin, internalAdminPasscode) )	{
 			return RestObject.retAuthError(requestId);
 		}
@@ -110,14 +111,15 @@ public class CacheController {
 	
 	
 	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/cache/keys:query", method = RequestMethod.POST)
-	@Operation(summary = "Set an object in the cache") /*response = String.class*/
+	@RequestMapping(value = "/cache/keys:query", method = RequestMethod.GET)
+	@Operation(summary = "Get all keys with associated value stored in the cache") /*response = String.class*/
 	public ResponseEntity<RestObject> 
-	getAllKeys (@RequestHeader(value="internalAdmin") String internalAdmin,
-				@RequestHeader(value="internalAdminPasscode") String internalAdminPasscode,
-				@RequestHeader(value="keyList", required = false) String keyList) {
+	getAllCacheKeys (@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					 @RequestHeader(value="internalAdmin") final String internalAdmin,
+					 @RequestHeader(value="internalAdminPasscode") final String internalAdminPasscode,
+					 @RequestHeader(value="keyList", required = false) final String keyList) {
 
-		String requestId = StaticUtils.getUUID();
+		requestId = StringUtils.generateRequestId(requestId);
 		if( !authUtil.isInternalAdminAuthenticated(internalAdmin, internalAdminPasscode) )	{
 			return RestObject.retAuthError(requestId);
 		}
@@ -145,10 +147,10 @@ public class CacheController {
 	
 
 	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/cache/store:set", method = RequestMethod.POST, 
+	@RequestMapping(value = "/cache/store:set", method = RequestMethod.PUT,
 					produces = { MediaType.APPLICATION_JSON_VALUE }, 
 					consumes = { MediaType.APPLICATION_JSON_VALUE })
-	@Operation(summary = "Set string to cache")
+	@Operation(summary = "Set a new key with its value to cache")
 	@ApiResponses(value = {
 							@ApiResponse(responseCode = "200",
 										description = "Ok",
@@ -159,16 +161,19 @@ public class CacheController {
 							@ApiResponse(responseCode = "500", description = "Internal server error", content =
 							{ @Content(mediaType = "application/json", schema =	@Schema(implementation = String.class)) }) })
 	public ResponseEntity<RestObject> 
-	set(@RequestHeader(value="user")  String user,
-		@RequestHeader(value="requestId") String requestId,
-        @RequestHeader(value="validFor", required = false)  String validFor,
-        @RequestHeader(value="notificationProxy", required = false)  JSONObject notificationProxy,
-        @RequestBody JSONObject jsonObj) {
+	setCacheKey(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="fromUser")  final String user,
+				@RequestHeader(value="validFor", required = false)  final String validFor,
+				@RequestHeader(value="notificationProxy", required = false)  final JSONObject notificationProxy,
+				@RequestBody final JSONObject jsonObj) {
 
+
+		requestId = StringUtils.generateRequestId(requestId);
 		if(GlobalStorage.internalFreeMemory < appConstants.getCacheFreeMemory()) {
 			RestObject.retException(requestId,Thread.currentThread().getStackTrace()[1].getMethodName(), "HEAP_ERROR");
 		}
-		
+
+
 		String key = StringUtils.generateKey(user);
         assert key != null;
         if(key.isBlank() || key.isEmpty()) {
@@ -209,15 +214,16 @@ public class CacheController {
 					consumes = { MediaType.APPLICATION_JSON_VALUE })
 	@Operation(summary = "Delete a key and its value")
 	public ResponseEntity<RestObject>
-	delete(	@RequestHeader(value="user")  String user,
-			@RequestHeader(value="requestId") String requestId,
-			@RequestHeader(value="key")  String key) {
+	deleteCacheKey(@RequestHeader(value="user")  final String user,
+				   @RequestHeader(value="requestId", defaultValue = "") String requestId,
+				   @RequestHeader(value="key")  final String key) {
 
+		requestId = StringUtils.generateRequestId(requestId);
 		if(key.isBlank() || key.isEmpty()) {
 			CacheResponse cResp = new CacheResponse(key,"", user,  "ERROR_KEY");
 			return RestObject.retOKWithPayload(cResp, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 		}
-		
+
 		try	{
 			String keyToSearch = StringUtils.getKey(key, user);
 			if(GlobalStorage.stringMap.containsKey(keyToSearch)) {
@@ -241,18 +247,18 @@ public class CacheController {
 					method = RequestMethod.POST, 
 					produces = { MediaType.APPLICATION_JSON_VALUE }, 
 					consumes = { MediaType.APPLICATION_JSON_VALUE })
-	@Operation(summary = "Update Validity")
+	@Operation(summary = "Update validity period of a key")
 	public ResponseEntity<RestObject> 
-	updateValidFor(	@RequestHeader(value="user")  String user,
-					@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="key")  String key,
-					@RequestHeader(value="validFor", required = false)  String validFor) {
-
+	updateCacheKeyValidFor(@RequestHeader(value="user")  final String user,
+						   @RequestHeader(value="requestId", defaultValue = "") String requestId,
+						   @RequestHeader(value="key")  final String key,
+						   @RequestHeader(value="validFor", required = false)  final String validFor) {
+		requestId = StringUtils.generateRequestId(requestId);
 		if(key.isBlank() || key.isEmpty()) {
 			CacheResponse cResp = new CacheResponse(key,"", user,  "ERROR_KEY");
 			return RestObject.retOKWithPayload(cResp, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 		}
-		
+
 		try	{
 			CacheStringPayload stringPayload;
 			String keyToSearch = StringUtils.getKey(key, user);
@@ -283,13 +289,14 @@ public class CacheController {
 					method = RequestMethod.POST, 
 					produces = { MediaType.APPLICATION_JSON_VALUE }, 
 					consumes = { MediaType.APPLICATION_JSON_VALUE })
-	@Operation(summary = "Update Value")
+	@Operation(summary = "Update Value of a key")
 	public ResponseEntity<RestObject> 
-	updateValue(@RequestHeader(value="user")  String user,
-				@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="key")  String key,
-				@RequestBody JSONObject jsonObj)  {
+	updateCacheKeyValue(@RequestHeader(value="user")  final String user,
+						@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="key")  final String key,
+						@RequestBody final JSONObject jsonObj)  {
 
+		requestId = StringUtils.generateRequestId(requestId);
 		if(key.isBlank() || key.isEmpty()) {
 			CacheResponse cResp = new CacheResponse(key,"", user,  "ERROR_KEY");
 			return RestObject.retOKWithPayload(cResp, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -319,15 +326,15 @@ public class CacheController {
 					method = RequestMethod.POST, 
 					produces = { MediaType.APPLICATION_JSON_VALUE }, 
 					consumes = { MediaType.APPLICATION_JSON_VALUE })
-	@Operation(summary = "Update entire object")
+	@Operation(summary = "Update entire object of a key")
 	public ResponseEntity<RestObject>
-	update(	@RequestHeader(value="user")  String user,
-			@RequestHeader(value="requestId") String requestId,
-			@RequestHeader(value="key")  String key,
-			@RequestHeader(value="validFor", required = false)  String validFor,
-			@RequestBody JSONObject jsonObj) {
-		
+	updateCacheKey(@RequestHeader(value="user")  final String user,
+				   @RequestHeader(value="requestId", defaultValue = "") String requestId,
+				   @RequestHeader(value="key")  final String key,
+				   @RequestHeader(value="validFor", required = false)  final String validFor,
+				   @RequestBody final JSONObject jsonObj) {
 
+		requestId = StringUtils.generateRequestId(requestId);
 		if(key.isBlank() || key.isEmpty()) {
 			CacheResponse cResp = new CacheResponse(key,"", user,  "ERROR_KEY");
 			return RestObject.retOKWithPayload(cResp, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -371,12 +378,13 @@ public class CacheController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/cache/store:get", method = RequestMethod.GET)
-	@Operation(summary = "Get an object from the cache")
+	@Operation(summary = "Get an object from the cache key")
 	public ResponseEntity<RestObject> 
-	get(	@RequestHeader(value="user")  String user,
-			@RequestHeader(value="requestId") String requestId,
-			@RequestHeader(value="key")  String key) {
-		
+	getCacheKey(@RequestHeader(value="user")  final String user,
+				@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="key")  final String key) {
+
+		requestId = StringUtils.generateRequestId(requestId);
 		if(key.isBlank() || key.isEmpty()) {
 			CacheResponse cResp = new CacheResponse(key,"", user,  "ERROR_KEY");
 			return RestObject.retOKWithPayload(cResp, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -414,12 +422,13 @@ public class CacheController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/cache/store:isKey", method = RequestMethod.GET)
-	@Operation(summary = "Check if an object by key exists in the cache") /*response = String.class*/
+	@Operation(summary = "Check if a key exists in the cache")
 	public ResponseEntity<RestObject> 
-	isKey(	@RequestHeader(value="user")  String user,
-			@RequestHeader(value="requestId") String requestId,
-	        @RequestHeader(value="key")  String key) {
+	isCacheKey(@RequestHeader(value="user")  final String user,
+			   @RequestHeader(value="requestId", defaultValue = "") String requestId,
+			   @RequestHeader(value="key")  final String key) {
 
+		requestId = StringUtils.generateRequestId(requestId);
 		if(key.isBlank() || key.isEmpty()) {
 			CacheResponse cResp = new CacheResponse(key,"", user,  "ERROR_KEY");
 			return RestObject.retOKWithPayload(cResp, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());		}

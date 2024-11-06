@@ -17,6 +17,7 @@
 package com.widescope.sqlThunder.controller.v2;
 
 import com.widescope.logging.AppLogger;
+import com.widescope.sqlThunder.utils.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -53,8 +54,9 @@ public class SqlRepoEnvironmentController {
 	@RequestMapping(value = "/repos", method = RequestMethod.GET)
 	@Operation(summary = "Get Repo List")
 	public ResponseEntity<RestObject> 
-	getRepoDbList(@RequestHeader(value="requestId") String requestId) {
+	getRepoDbList(@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			DatabaseList ret = new DatabaseList(DbUtil.getDatabaseList());
 			return RestObject.retOKWithPayload(ret, requestId, methodName);
@@ -71,8 +73,9 @@ public class SqlRepoEnvironmentController {
 	@RequestMapping(value = "/db-types", method = RequestMethod.GET)
 	@Operation(summary = "Get Database Types List")
 	public ResponseEntity<RestObject> 
-	getDatabaseTypes(@RequestHeader(value="requestId") String requestId) {
+	getDatabaseTypes(@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			DatabaseTypeList ret = new DatabaseTypeList(SqlRepoUtils.databaseTypesMap);
 			return RestObject.retOKWithPayload(ret, requestId, methodName);

@@ -30,13 +30,12 @@ import com.widescope.logging.management.EnvironmentManagement;
 import com.widescope.logging.repo.ApplicationPartitionRecord;
 import com.widescope.logging.repo.ApplicationRecord;
 import com.widescope.logging.repo.ApplicationRecordList;
+import com.widescope.sqlThunder.utils.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -48,7 +47,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.widescope.rest.RestObject;
 import com.widescope.sqlThunder.config.AppConstants;
-import com.widescope.sqlThunder.config.configRepo.ConfigRepoDb;
 import com.widescope.sqlThunder.rest.about.LogContent;
 import com.widescope.sqlThunder.utils.DateTimeUtils;
 import com.widescope.sqlThunder.utils.StaticUtils;
@@ -77,15 +75,17 @@ public class LoggingController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/logging/internal/logs:get", method = RequestMethod.GET)
-	@Operation(summary = "Query internal logs")
+	@Operation(summary = "Query internal log")
 	public 
 	ResponseEntity<RestObject> 
-	queryInternalLog(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="startTime") String startTime,
-						@RequestHeader(value="endTime") String endTime,
-						@RequestHeader(value="stringToSearch") String stringToSearch) {
+	queryInternalLog(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="startTime") final long startTime,
+						@RequestHeader(value="endTime") final long endTime,
+						@RequestHeader(value="stringToSearch") final String stringToSearch) {
+
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		LogContent logList = new LogContent();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			List<String> allLines = Files.readAllLines(Paths.get(appConstants.getLoggingFile()));
 			if(!stringToSearch.isEmpty()) {
@@ -97,9 +97,9 @@ public class LoggingController {
 					try {
 						String dateTime = line.substring(0, Math.min(line.length(), 19)); // 2023-03-14 10:05:55
 						dateLog = sf.parse(dateTime);
-						dStart = DateTimeUtils.epochMillisecToDate(Long.parseLong(startTime));
-						dEnd = DateTimeUtils.epochMillisecToDate(Long.parseLong(endTime));
-						if( line.contains(stringToSearch) && dateLog.compareTo(dStart) == 1 && dateLog.compareTo(dEnd) == -1) {
+						dStart = DateTimeUtils.epochMillisecToDate(startTime);
+						dEnd = DateTimeUtils.epochMillisecToDate(endTime);
+						if( line.contains(stringToSearch) && dateLog.compareTo(dStart) > 0 && dateLog.compareTo(dEnd) < 0) {
 							logList.addLogContent(line);
 						}
 					} catch(Exception ignored) {	}
@@ -126,16 +126,16 @@ public class LoggingController {
 	@Operation(summary = "Set application")
 	public 
 	ResponseEntity<RestObject> 
-	setApplication(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="application") String application,
-					@RequestHeader(value="partitionType") String partitionType,
-					@RequestHeader(value="repositoryType") String repositoryType,
-					@RequestHeader(value="repositoryId") String repositoryId) {
+	setApplication(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="application") final String application,
+					@RequestHeader(value="partitionType") final String partitionType,
+					@RequestHeader(value="repositoryType") final String repositoryType,
+					@RequestHeader(value="repositoryId") final long repositoryId) {
 		
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
-			
 			if(!EnvironmentManagement.repositoryTypes.contains(repositoryType)) {
 				throw new Exception ("Wrong repository type");
 			}
@@ -143,7 +143,7 @@ public class LoggingController {
 				throw new Exception ("Wrong partition type");
 			}
 			
-			ApplicationRecord ret = EnvironmentManagement.setApplication(application, partitionType, repositoryType, Long.parseLong(repositoryId));
+			ApplicationRecord ret = EnvironmentManagement.setApplication(application, partitionType, repositoryType, repositoryId);
 			return RestObject.retOKWithPayload(ret, requestId, methodName);
 		} catch(Exception ex) {
 			return RestObject.retException(requestId, methodName, AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
@@ -158,9 +158,11 @@ public class LoggingController {
 	@Operation(summary = "Remove Application Logs")
 	public 
 	ResponseEntity<RestObject> 
-	deleteApplication(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="applicationId") String applicationId) {
+	deleteApplication(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="applicationId") final String applicationId) {
+
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			boolean isOk  = EnvironmentManagement.removeApplication( Long.parseLong(applicationId) );
 			if(isOk)
@@ -179,8 +181,9 @@ public class LoggingController {
 	@Operation(summary = "Get All Applications")
 	public 
 	ResponseEntity<RestObject> 
-	getAllApplications(	@RequestHeader(value="requestId") String requestId) {
+	getAllApplications(	@RequestHeader(value="requestId", defaultValue = "") String requestId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			List<ApplicationRecord> lst = EnvironmentManagement.getAllApplications();
 			ApplicationRecordList applicationRecordList = new ApplicationRecordList(lst);
@@ -198,12 +201,13 @@ public class LoggingController {
 	@Operation(summary = "Get All Partitions of an application")
 	public 
 	ResponseEntity<RestObject> 
-	getApplicationPartitions(	@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="applicationId") String applicationId) {
+	getApplicationPartitions(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="applicationId") final long applicationId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
-			ApplicationRecord applicationRecord = EnvironmentManagement.getApplication(Long.parseLong(applicationId) );
-			List<ApplicationPartitionRecord> appPartitionList = EnvironmentManagement.getAllApplicationPartitions(Long.parseLong(applicationId));
+			ApplicationRecord applicationRecord = EnvironmentManagement.getApplication(applicationId);
+			List<ApplicationPartitionRecord> appPartitionList = EnvironmentManagement.getAllApplicationPartitions(applicationId);
 			applicationRecord.setApplicationPartitionRecordList(appPartitionList);
 			return RestObject.retOKWithPayload(applicationRecord, requestId, methodName);
 		} catch(Exception ex) {
@@ -218,20 +222,19 @@ public class LoggingController {
 	@Operation(summary = "Remove Application Logs")
 	public 
 	ResponseEntity<RestObject> 
-	deleteApplicationLogs(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="applicationId") String applicationId,
-							@RequestHeader(value="fromEpochMilliseconds") String fromEpochMilliseconds,
-							@RequestHeader(value="toEpochMilliseconds") String toEpochMilliseconds) {
+	deleteApplicationLogs(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="applicationId") final long applicationId,
+							@RequestHeader(value="fromEpochMilliseconds") final long fromEpochMilliseconds,
+							@RequestHeader(value="toEpochMilliseconds") final long toEpochMilliseconds) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
-			
-			if(Long.parseLong(fromEpochMilliseconds) > Long.parseLong(toEpochMilliseconds)) {
-				throw new Exception ("Range of periods issue. From greater than to");
+			if(fromEpochMilliseconds > toEpochMilliseconds) {
+				throw new Exception ("Periods range issue. From greater than to");
 			}
-			boolean isOk  = EnvironmentManagement.removeApplicationLogs(Long.parseLong(applicationId), 
-																		Long.parseLong(fromEpochMilliseconds), 
-																		Long.parseLong(toEpochMilliseconds) );
+			boolean isOk  = EnvironmentManagement.removeApplicationLogs(applicationId,
+																		fromEpochMilliseconds,
+																		toEpochMilliseconds);
 			if(isOk)
 				return RestObject.retOK(requestId, methodName);
 			else
@@ -253,25 +256,26 @@ public class LoggingController {
 	@Operation(summary = "Add new log entry")
 	public 
 	ResponseEntity<RestObject> 
-	addLogEntry(@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="applicationId") String applicationId,
-				@RequestHeader(value="message") String message,
-				@RequestHeader(value="messageType") String messageType,
+	addLogEntry(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="applicationId") final long applicationId,
+				@RequestHeader(value="message") final String message,
+				@RequestHeader(value="messageType") final String messageType,
 				HttpServletRequest request) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
  		String host = request.getRemoteHost();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			if(!EnvironmentManagement.messageType.contains(messageType)) {
 				throw new Exception ("Wrong message type");
 			}
-			if(!EnvironmentManagement.isApplication(Long.parseLong(applicationId))) {
+			if(!EnvironmentManagement.isApplication(applicationId)) {
 				throw new Exception ("Wrong application Id");
 			}
 			final long timestamp = DateTimeUtils.millisecondsSinceEpoch();
-			if(!EnvironmentManagement.createH2LogDatabase(Long.parseLong(applicationId), timestamp)) {
+			if(!EnvironmentManagement.createH2LogDatabase(applicationId, timestamp)) {
 				throw new Exception("Cannot create log partition");
 			} else {
-				boolean isOk = 	EnvironmentManagement.addNewLogEntry( Long.parseLong(applicationId), host, timestamp, message, messageType,	timestamp,"","");
+				boolean isOk = 	EnvironmentManagement.addNewLogEntry( applicationId, host, timestamp, message, messageType,	timestamp,"","");
 				if(isOk)
 					return RestObject.retOK(requestId, methodName);
 				else
@@ -289,16 +293,16 @@ public class LoggingController {
 	@Operation(summary = "Add new log entry with artifact/attached file")
 	public 
 	ResponseEntity<RestObject> 
-	addLogEntryWithArtifact(@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="applicationId") String applicationId,
-							@RequestHeader(value="message") String message,
-							@RequestHeader(value="messageType") String messageType,
-							@RequestHeader(value="artifactName") String artifactName,
-							@RequestHeader(value="artifactType") String artifactType,
-							HttpServletRequest request
-							) {
-		String host = request.getRemoteHost();
+	addLogEntryWithArtifact(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="applicationId") final long applicationId,
+							@RequestHeader(value="message") final String message,
+							@RequestHeader(value="messageType") final String messageType,
+							@RequestHeader(value="artifactName") final String artifactName,
+							@RequestHeader(value="artifactType") final String artifactType,
+							HttpServletRequest request) {
 
+		String host = request.getRemoteHost();
+		requestId = StringUtils.generateRequestId(requestId);
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		try {
 			if(!EnvironmentManagement.messageType.contains(messageType)) {
@@ -308,24 +312,24 @@ public class LoggingController {
 				throw new Exception ("Wrong artifact type");
 			}
 			
-			if(!EnvironmentManagement.isApplication(Long.parseLong(applicationId))) {
+			if(!EnvironmentManagement.isApplication(applicationId)) {
 				throw new Exception ("Wrong application Id");
 			}
 			
 			final long timestamp = DateTimeUtils.millisecondsSinceEpoch();
-			if(!EnvironmentManagement.createH2LogDatabase(Long.parseLong(applicationId), timestamp)) {
+			if(!EnvironmentManagement.createH2LogDatabase(applicationId, timestamp)) {
 				throw new Exception("Cannot create log partition");
 			} else {
 				
 				boolean isOk = 
-				EnvironmentManagement.addNewLogEntry( Long.parseLong(applicationId), 
-												host, 
-												timestamp, 
-												message,
-												messageType, 
-												timestamp, 
-												artifactName,
-												artifactType);
+				EnvironmentManagement.addNewLogEntry( 	applicationId,
+														host,
+														timestamp,
+														message,
+														messageType,
+														timestamp,
+														artifactName,
+														artifactType);
 				if(isOk)
 					return RestObject.retOK(requestId, methodName);
 				else
@@ -345,31 +349,31 @@ public class LoggingController {
 	@Operation(summary = "Query logs")
 	public 
 	ResponseEntity<RestObject> 
-	queryLogs(	@RequestHeader(value="user") String user,
-				@RequestHeader(value="session") String session,
-				@RequestHeader(value="applicationId") String applicationId,
-				@RequestHeader(value="fromEpochMilliseconds") String fromEpochMilliseconds,
-				@RequestHeader(value="toEpochMilliseconds") String toEpochMilliseconds,
-				@RequestHeader(value="textToSearch") String textToSearch) {
+	queryLogs(@RequestHeader(value="user") final String user,
+			  @RequestHeader(value="session") final String session,
+			  @RequestHeader(value="requestId", defaultValue = "") String requestId,
+			  @RequestHeader(value="applicationId") final long applicationId,
+			  @RequestHeader(value="fromEpochMilliseconds") final long fromEpochMilliseconds,
+			  @RequestHeader(value="toEpochMilliseconds") final long toEpochMilliseconds,
+			  @RequestHeader(value="textToSearch") final String textToSearch) {
 		
 
 		
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
-		//String host = incomingHeaders.getHost().getHostName();
+		requestId = StringUtils.generateRequestId(requestId);
 		if( !authUtil.isSessionAuthenticated(user, session) ) {
 			return RestObject.retAuthError(requestId);
 		}
 
 		try {
 			ApplicationRecord appRecord 
-			= EnvironmentManagement.getLogFiles(Long.parseLong(applicationId), 
-												Long.parseLong( fromEpochMilliseconds ), 
-												Long.parseLong( toEpochMilliseconds ));
+			= EnvironmentManagement.getLogFiles(applicationId,
+												fromEpochMilliseconds,
+												toEpochMilliseconds);
 			LogRecordList lst 
 			= EnvironmentManagement.getLogEntries(	appRecord, 
-													Long.parseLong( fromEpochMilliseconds ), 
-													Long.parseLong( toEpochMilliseconds ), 
+													fromEpochMilliseconds,
+													toEpochMilliseconds,
 													textToSearch);
 			return RestObject.retOKWithPayload(lst, requestId, methodName);
 		} catch(Exception ex) {
@@ -384,24 +388,23 @@ public class LoggingController {
 	@Operation(summary = "Query logs")
 	public 
 	ResponseEntity<RestObject> 
-	getLogEntry(@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="applicationId") String applicationId,
-				@RequestHeader(value="timestampMilliseconds") String timestampMilliseconds, 
-				@RequestHeader(value="entryId") String entryId) {
+	getLogEntry(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="applicationId") final long applicationId,
+				@RequestHeader(value="timestampMilliseconds") final long timestampMilliseconds,
+				@RequestHeader(value="entryId") final long entryId) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
-			ApplicationRecord appRecord 
-			= EnvironmentManagement.getLogFiles(Long.parseLong(applicationId), 
-												Long.parseLong( timestampMilliseconds ), 
-												Long.parseLong( timestampMilliseconds ));
+			ApplicationRecord appRecord = EnvironmentManagement.getLogFiles(applicationId,
+																			timestampMilliseconds,
+																			timestampMilliseconds);
 			
 			
-			LogRecordList lst 
-			= EnvironmentManagement.getLogEntries(	appRecord, 
-													Long.parseLong( timestampMilliseconds ), 
-													Long.parseLong( timestampMilliseconds ), 
-													Long.parseLong(entryId));
+			LogRecordList lst = EnvironmentManagement.getLogEntries(	appRecord,
+																		timestampMilliseconds,
+																		timestampMilliseconds,
+																		entryId);
 			return RestObject.retOKWithPayload(lst, requestId, methodName);
 		} catch(Exception ex) {
 			return RestObject.retException(requestId, methodName, AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
@@ -410,38 +413,32 @@ public class LoggingController {
 		}
 	}
 	
-	
+	/*TO-BE-REWRITTEN*/
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/logging/application/artifact:get", method = RequestMethod.GET)
 	@Operation(summary = "Query logs")
 	public 
 	ResponseEntity<RestObject> 
-	getLogArtifact( @RequestHeader(value="user") String user,
-					@RequestHeader(value="session") String session,
-					@RequestHeader(value="applicationId") String applicationId,
-					@RequestHeader(value="timestampMilliseconds") String timestampMilliseconds, 
-					@RequestHeader(value="entryId") String entryId,
-					@RequestHeader(value="artifactName") String artifactName,
-					@RequestHeader(value="artifactType") String artifactType) {
+	getLogArtifact( @RequestHeader(value="user") final String user,
+					@RequestHeader(value="session") final String session,
+					@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="applicationId") final long applicationId,
+					@RequestHeader(value="timestampMilliseconds") final long timestampMilliseconds,
+					@RequestHeader(value="entryId") final long entryId) {
 		
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		String requestId = StaticUtils.getUUID();
+		requestId = StringUtils.generateRequestId(requestId);
 		if( !authUtil.isSessionAuthenticated(user, session) ) {
 			return RestObject.retAuthError(requestId);
 		}
 		try {
 			ApplicationRecord appRecord
-			= EnvironmentManagement.getLogFiles(Long.parseLong(applicationId), 
-												Long.parseLong( timestampMilliseconds ), 
-												Long.parseLong( timestampMilliseconds ));
+			= EnvironmentManagement.getLogFiles(applicationId, timestampMilliseconds, timestampMilliseconds);
 			
 			
 			LogRecordList lst
-			= EnvironmentManagement.getLogEntries(	appRecord,
-													Long.parseLong( timestampMilliseconds ), 
-													Long.parseLong( timestampMilliseconds ), 
-													Long.parseLong(entryId));
+			= EnvironmentManagement.getLogEntries(	appRecord, timestampMilliseconds, timestampMilliseconds, entryId);
 			return RestObject.retOKWithPayload(lst, requestId, methodName);
 		} catch(Exception ex) {
 			return RestObject.retException(requestId, methodName, AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));

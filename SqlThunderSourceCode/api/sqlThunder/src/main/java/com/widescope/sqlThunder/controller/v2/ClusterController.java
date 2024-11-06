@@ -25,6 +25,7 @@ import com.widescope.cluster.management.ListOfPingResult;
 import com.widescope.cluster.management.healthCheck.PingResult;
 import com.widescope.logging.AppLogger;
 import com.widescope.sqlThunder.config.AppConstants;
+import com.widescope.sqlThunder.utils.StringUtils;
 import com.widescope.sqlThunder.utils.internet.InternetProtocolUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -77,7 +78,9 @@ public class ClusterController {
 	@RequestMapping(value = "/cluster/node:query", method = RequestMethod.GET)
 	@Operation(summary = "Get All Registered Nodes") 
 	public ResponseEntity<RestObject> 
-	getAllNodes(@RequestHeader(value="requestId") String requestId) {
+	getAllNodes(@RequestHeader(value="requestId", defaultValue = "") String requestId) {
+
+		requestId = StringUtils.generateRequestId(requestId);
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		List<MachineNode> allServers;
 		MachineNodeList retList = new MachineNodeList();
@@ -105,8 +108,9 @@ public class ClusterController {
 	@RequestMapping(value = "/cluster/node:get", method = RequestMethod.GET)
 	@Operation(summary = "Get node by id") 
 	public ResponseEntity<RestObject> 
-	getNodeById(@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="id") String id) {
+	getNodeById(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="id") final String id) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			MachineNode c = clusterDb.getNode(Integer.parseInt(id));
 			c.setIsPong(Objects.requireNonNull(RestApiCluster.ping(c.getBaseUrl())));
@@ -124,8 +128,10 @@ public class ClusterController {
 	@RequestMapping(value = "/cluster/node:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete Node (User action)") 
 	public ResponseEntity<RestObject> 
-	deleteNode(	@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="id") String id) {
+	deleteNode(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="id") final String id) {
+
+		requestId = StringUtils.generateRequestId(requestId);
 
 		try {
 			MachineNode node  = clusterDb.getNode(id);
@@ -148,9 +154,10 @@ public class ClusterController {
 	@RequestMapping(value = "/cluster/node:add", method = RequestMethod.PUT)
 	@Operation(summary = "Register node to a particular cluster node (User action)") 
 	public ResponseEntity<RestObject> 
-	addNode(@RequestHeader(value="requestId") String requestId,
-			@RequestHeader(value="baseUrl") String baseUrl,
-			@RequestHeader(value="type") String type) {
+	addNode(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+			@RequestHeader(value="baseUrl") final String baseUrl,
+			@RequestHeader(value="type") final String type) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			MachineNode c = clusterDb.getNode(baseUrl);
 			if(c.getBaseUrl()!= null) {
@@ -173,8 +180,9 @@ public class ClusterController {
 	@RequestMapping(value = "/cluster/node/multiple:add", method = RequestMethod.PUT)
 	@Operation(summary = "Register multiple nodes") 
 	public ResponseEntity<RestObject> 
-	addNodes(@RequestHeader(value="requestId") String requestId,
-			 @Valid @RequestBody MachineNodeList nodesList) {
+	addNodes(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+			 @Valid @RequestBody final MachineNodeList nodesList) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			clusterDb.addNodes(nodesList);
 			List<MachineNode> allServers = clusterDb.getAllNodesFromDb();
@@ -189,13 +197,101 @@ public class ClusterController {
 			return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
 		}
 	}
-	
+
+
+	@CrossOrigin(origins = "*")
+	@RequestMapping(value = "/cluster/scan:network", method = RequestMethod.POST)
+	@Operation(summary = "Scan all free nodes in the subnet")
+	public ResponseEntity<RestObject>
+	scanClusterNodes (	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="ipStart") final String ipStart,
+						@RequestHeader(value="ipEnd") final String ipEnd) {
+		requestId = StringUtils.generateRequestId(requestId);
+		List<PingResult> retList = PingNodes.pingClusterHttp(	InternetProtocolUtils.ipToLong(ipStart),
+																InternetProtocolUtils.ipToLong(ipEnd),
+																Integer.parseInt(appConstants.getServerPort()));
+		PingResult local = PingNodes.pingLocal();
+		if(local!=null) {
+			retList.add(local);
+		}
+		return RestObject.retOKWithPayload(new ListOfPingResult(retList), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
+	}
+
+	@CrossOrigin(origins = "*")
+	@RequestMapping(value = "/cluster/node:register", method = RequestMethod.PUT)
+	@Operation(summary = "Register node to a particular cluster node (User action)")
+	public ResponseEntity<RestObject>
+	registerNode(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="baseUrl") String baseUrl,
+					@RequestHeader(value="type") String type) {
+		requestId = StringUtils.generateRequestId(requestId);
+		try	{
+			MachineNode c = clusterDb.getNode(baseUrl);
+			if(c.getBaseUrl() != null) {
+				return RestObject.retException(requestId,  Thread.currentThread().getStackTrace()[1].getMethodName(), "url already exists");
+			}
+
+			clusterDb.addNode(baseUrl, type, "N", "Y");
+			c = clusterDb.getNode(baseUrl);
+			c.setIsPong(Objects.requireNonNull(RestApiCluster.ping(c.getBaseUrl())));
+			return RestObject.retOKWithPayload(c, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
+		} catch(Exception ex)	{
+			return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+		} catch(Throwable ex)	{
+			return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+		}
+	}
+
+
+	@CrossOrigin(origins = "*")
+	@RequestMapping(value = "/cluster/node:info", method = RequestMethod.GET)
+	@Operation(summary = "Pong back to ping") /*response = String.class*/
+	public ResponseEntity<MachineNode>
+	info () throws Exception	{
+		try {
+			return new ResponseEntity<>(SystemInfo.getHealthCheck(ClusterDb.ownBaseUrl, appConstants.getInstanceType()), HttpStatus.OK);
+		} catch(Exception ex)	{
+			AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
+			return new ResponseEntity<>(new MachineNode(), HttpStatus.OK);
+		} catch(Throwable ex)	{
+			AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
+			return new ResponseEntity<> (new MachineNode(), HttpStatus.OK);
+		}
+	}
+
+
+	@CrossOrigin(origins = "*")
+	@RequestMapping(value = "/cluster/node/test/account:admin", method = RequestMethod.GET)
+	@Operation(summary = "Test admin account") /*response = String.class*/
+	public ResponseEntity<String>
+	testAdminAccount (@RequestHeader(value="admin") final String admin,
+					  @RequestHeader(value="passcode") final String adminPasscode) {
+		if( !authUtil.isInternalUserAuthenticated(admin, adminPasscode) )
+			return new ResponseEntity<> ("ERROR", HttpStatus.OK);
+		else
+			return new ResponseEntity<> ("OK", HttpStatus.OK);
+	}
+
+
+	@CrossOrigin(origins = "*")
+	@RequestMapping(value = "/cluster/node/test/account:user", method = RequestMethod.GET)
+	@Operation(summary = "Test User account") /*response = String.class*/
+	public ResponseEntity<String>
+	testUserAccount (	@RequestHeader(value="user") final String user,
+						@RequestHeader(value="passcode") final String userPasscode) {
+		if( authUtil.isUserAuthenticated(user, userPasscode, "", ClusterDb.ownBaseUrl, "", "").getId() > 0 )
+			return new ResponseEntity<> ("ERROR", HttpStatus.OK);
+		else
+			return new ResponseEntity<> ("OK", HttpStatus.OK);
+	}
+
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/cluster/node/broadcast:replace", method = RequestMethod.PUT)
 	@Operation(summary = "Broadcast replace mode") 
 	public ResponseEntity<RestObject> 
-	broadcastReplace(	@RequestHeader(value="requestId") String requestId,
-						@Valid @RequestBody MachineNodeList nodesList) {
+	broadcastReplace(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@Valid @RequestBody final MachineNodeList nodesList) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			clusterDb.addNodes(nodesList);
 			List<MachineNode> allServers = clusterDb.getAllNodesFromDb();
@@ -216,8 +312,9 @@ public class ClusterController {
 	@RequestMapping(value = "/cluster/node/broadcast:update", method = RequestMethod.PUT)
 	@Operation(summary = "Broadcast update node") 
 	public ResponseEntity<RestObject> 
-	broadcastUpdate(	@RequestHeader(value="requestId") String requestId,
-						@Valid @RequestBody MachineNodeList nodesList) {
+	broadcastUpdate(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@Valid @RequestBody final MachineNodeList nodesList) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			clusterDb.addNodes(nodesList);
 			List<MachineNode> allServers = clusterDb.getAllNodesFromDb();
@@ -233,39 +330,14 @@ public class ClusterController {
 		}
 	}
 	
-	
-	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/cluster/node:register", method = RequestMethod.PUT)
-	@Operation(summary = "Register node to a particular cluster node (User action)") 
-	public ResponseEntity<RestObject> 
-	registerNode(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="baseUrl") String baseUrl,
-					@RequestHeader(value="type") String type) {
-
-		try	{
-			MachineNode c = clusterDb.getNode(baseUrl);
-			if(c.getBaseUrl() != null) {
-				return RestObject.retException(requestId,  Thread.currentThread().getStackTrace()[1].getMethodName(), "url already exists");
-			}
-				 
-			clusterDb.addNode(baseUrl, type, "N", "Y");
-			c = clusterDb.getNode(baseUrl);
-			c.setIsPong(Objects.requireNonNull(RestApiCluster.ping(c.getBaseUrl())));
-			return RestObject.retOKWithPayload(c, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
-		} catch(Exception ex)	{
-			return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-		} catch(Throwable ex)	{
-			return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-		}
-	}
-	
 
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/cluster/node:ping", method = RequestMethod.POST)
 	@Operation(summary = "Ping a node") /*response = String.class*/
 	public ResponseEntity<RestObject> 
-	ping(	@RequestHeader(value="requestId") String requestId,
-			 @RequestHeader(value="baseUrl") String baseUrl)	{
+	ping(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+			 @RequestHeader(value="baseUrl") final String baseUrl)	{
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			String response = RestApiCluster.ping(baseUrl);
 			return RestObject.retOKWithPayload(new GenericResponse(response), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -275,13 +347,9 @@ public class ClusterController {
 			return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
 		}
 	}
-	
-	
-	
-	
-	
+
 	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/cluster/node/ping:pong", method = RequestMethod.GET)
+	@RequestMapping(value = "/cluster/node:pong", method = RequestMethod.GET)
 	@Operation(summary = "Pong back to ping")
 	public ResponseEntity<String>
 	pong () {
@@ -290,65 +358,8 @@ public class ClusterController {
 	
 	
 	
-	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/cluster/node:info", method = RequestMethod.GET)
-	@Operation(summary = "Pong back to ping") /*response = String.class*/
-	public ResponseEntity<MachineNode> 
-	info () throws Exception	{
-	    try {
-	    	return new ResponseEntity<>(SystemInfo.getHealthCheck(ClusterDb.ownBaseUrl, appConstants.getInstanceType()), HttpStatus.OK);
-	    } catch(Exception ex)	{
-			AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-			return new ResponseEntity<>(new MachineNode(), HttpStatus.OK);
-		} catch(Throwable ex)	{
-			AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-            return new ResponseEntity<> (new MachineNode(), HttpStatus.OK);
-		}
-	}
 
 
-	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/cluster/node/test/account:admin", method = RequestMethod.GET)
-	@Operation(summary = "Test admin account") /*response = String.class*/
-	public ResponseEntity<String> 
-	testAdminAccount (	@RequestHeader(value="admin") String admin,
-						@RequestHeader(value="passcode") String adminPasscode) {
-		if( !authUtil.isInternalUserAuthenticated(admin, adminPasscode) )
-			return new ResponseEntity<> ("ERROR", HttpStatus.OK);
-		else
-			return new ResponseEntity<> ("OK", HttpStatus.OK);
-	}
-	
-	
-	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/cluster/node/test/account:user", method = RequestMethod.GET)
-	@Operation(summary = "Test User account") /*response = String.class*/
-	public ResponseEntity<String> 
-	testUserAccount (	@RequestHeader(value="user") String user,
-						@RequestHeader(value="passcode") String userPasscode) {
-		if( authUtil.isUserAuthenticated(user, userPasscode, "", ClusterDb.ownBaseUrl, "", "").getId() > 0 )
-			return new ResponseEntity<> ("ERROR", HttpStatus.OK);
-		else
-			return new ResponseEntity<> ("OK", HttpStatus.OK);
-	}
 
-
-	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/cluster/scan:network", method = RequestMethod.POST)
-	@Operation(summary = "Scan all free nodes in the subnet")
-	public ResponseEntity<RestObject>
-	getClusterNodes (	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="ipStart") String ipStart,
-						@RequestHeader(value="ipEnd") String ipEnd) {
-
-        List<PingResult> retList = PingNodes.pingClusterHttp(	InternetProtocolUtils.ipToLong(ipStart),
-                                                                InternetProtocolUtils.ipToLong(ipEnd),
-                                                                Integer.parseInt(appConstants.getServerPort()));
-        PingResult local = PingNodes.pingLocal();
-        if(local!=null) {
-            retList.add(local);
-        }
-        return RestObject.retOKWithPayload(new ListOfPingResult(retList), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
-    }
 
 }

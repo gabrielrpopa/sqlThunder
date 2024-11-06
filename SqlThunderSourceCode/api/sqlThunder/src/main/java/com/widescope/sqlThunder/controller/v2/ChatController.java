@@ -16,8 +16,8 @@ import com.widescope.rest.GenericResponse;
 import com.widescope.rest.RestObject;
 import com.widescope.sqlThunder.config.AppConstants;
 import com.widescope.sqlThunder.tcpServer.TCPCommands;
+import com.widescope.sqlThunder.utils.StringUtils;
 import com.widescope.sqlThunder.utils.firebase.FirebaseWrapper;
-import com.widescope.sqlThunder.utils.StaticUtils;
 import com.widescope.sqlThunder.utils.user.AuthUtil;
 import com.widescope.sqlThunder.utils.user.User;
 import com.widescope.webSockets.userStreamingPortal.WebSocketsWrapper;
@@ -26,9 +26,7 @@ import com.widescope.webSockets.userStreamingPortal.objects.payload.WebsocketPay
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.PostConstruct;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -80,14 +78,15 @@ public class ChatController {
     @RequestMapping(value = "/fromUser/toUser/text:send", method = RequestMethod.PUT)
     @Operation(summary = "Send a message to a particular user")
     public ResponseEntity<RestObject>
-    sendMessageToUserWithText(  @RequestHeader(value="requestId") String requestId,
-                                @RequestHeader(value="fromUser") String fromUser,
-                                @RequestHeader(value="fromId") String fromId,
-                                @RequestHeader(value="toUser") String toUser,
-                                @RequestHeader(value="toId") String toId,
-                                @RequestHeader(value="message") String message,
-                                @RequestHeader(value="isEncrypt") String isEncrypt) {
+    sendTextMessageToUser(  @RequestHeader(value="requestId", defaultValue = "") String requestId,
+                            @RequestHeader(value="user") final String fromUser,
+                            @RequestHeader(value="userId") final String fromId,
+                            @RequestHeader(value="toUser") final String toUser,
+                            @RequestHeader(value="toUserId") final String toId,
+                            @RequestHeader(value="message") final String message,
+                            @RequestHeader(value="isEncrypt") final String isEncrypt) {
 
+        requestId = StringUtils.generateRequestId(requestId);
         long timestampN = InMemoryChat.getMillisecondsSinceEpoch();
         try	{
             ChatMessage chatMessage = new ChatMessage(message, fromUser, Long.parseLong(fromId), toUser, Long.parseLong(toId), timestampN, isEncrypt);
@@ -114,19 +113,20 @@ public class ChatController {
 
     /*The message notification is sent via websockets to the other user, which in turn pulls it from server, once notification is received*/
     @CrossOrigin(origins = "*")
-    @RequestMapping(value = "/fromUser/toUser/attachments:send", method = RequestMethod.PUT)
-    @Operation(summary = "Send a message to a particular user")
+    @RequestMapping(value = "/fromUser/toUser/multipart:send", method = RequestMethod.PUT)
+    @Operation(summary = "Send a message to a particular user with attachments")
     public ResponseEntity<RestObject>
-    sendMessageToUserMultipart( @RequestHeader(value="requestId") String requestId,
-                                @RequestHeader(value="fromUser") String fromUser,
-                                @RequestHeader(value="fromId") String fromId,
-                                @RequestHeader(value="toUser") String toUser,
-                                @RequestHeader(value="toId") String toId,
-                                @RequestHeader(value="message") String message,
-                                @RequestHeader(value="isEncrypt") String isEncrypt,
-                                @RequestParam(value="filesMetadata") String fMetadata,
-                                @RequestParam(value ="files", required = false) MultipartFile[] files)	{
+    sendMultipartMessageToUser( @RequestHeader(value="requestId", defaultValue = "") String requestId,
+                                @RequestHeader(value="user") final String fromUser,
+                                @RequestHeader(value="userId") final String fromId,
+                                @RequestHeader(value="toUser") final String toUser,
+                                @RequestHeader(value="toUserId") final String toUserId,
+                                @RequestHeader(value="message") final String message,
+                                @RequestHeader(value="isEncrypt") final String isEncrypt,
+                                @RequestParam(value="filesMetadata") final String fMetadata,
+                                @RequestParam(value ="files", required = false) final MultipartFile[] files)	{
 
+        requestId = StringUtils.generateRequestId(requestId);
         long timestamp = InMemoryChat.getMillisecondsSinceEpoch();
         try	{
             MessageMetadataList metadataList = MessageMetadataList.toMessageMetadataList(fMetadata);
@@ -135,14 +135,14 @@ public class ChatController {
                                                         metadataList,
                                                         fromUser,
                                                         Long.parseLong(fromId),
-                                                        toUser, Long.parseLong(toId) ,
+                                                        toUser, Long.parseLong(toUserId) ,
                                                         timestamp,
                                                         isEncrypt,
                                                         requestId,
                                                         2);
 
             InMemoryChat.addChatRecord(fromUser, toUser, requestId, chatMessage);
-            boolean isWebSent =  sendMultipartNotificationToUser(fromUser, Long.parseLong(fromId), requestId, toUser, Long.parseLong(toId), message, timestamp, isEncrypt);
+            boolean isWebSent =  sendMultipartNotificationToUser(fromUser, Long.parseLong(fromId), requestId, toUser, Long.parseLong(toUserId), message, timestamp, isEncrypt);
             boolean isTCPSent =  TCPCommands.sendTcpMessageToUserMultipart(chatMessage, requestId);
             String isDelivered = String.valueOf(isWebSent || isTCPSent);
             String isSaved = chatPersistence.addMessage(chatDb, appConstants, chatMessage, requestId, isDelivered, chatMessage.toString().length(), toUser);
@@ -164,13 +164,13 @@ public class ChatController {
 
     @CrossOrigin(origins = "*")
     @RequestMapping(value = "/fromUser/toUser/message:get", method = RequestMethod.POST)
-    @Operation(summary = "Get a multipart message after receiving notification")
+    @Operation(summary = "Retrieve a multipart message after receiving notification")
     public ResponseEntity<RestObject>
-    getMessageToUser(  @RequestHeader(value="fromUser") String fromUser,
-                       @RequestHeader(value="toUser") String toUser,
-                       @RequestHeader(value="requestId") String requestId,
-                       @RequestBody ChatRecord chatRecord)	{
-
+    getMessageToUser(  @RequestHeader(value="user") final String fromUser,
+                       @RequestHeader(value="toUser") final String toUser,
+                       @RequestHeader(value="requestId", defaultValue = "") String requestId,
+                       @RequestBody final ChatRecord chatRecord)	{
+        requestId = StringUtils.generateRequestId(requestId);
         try	{
             ChatMessage cm = InMemoryChat.getChatRecord(fromUser, toUser, requestId); /*This must be the reverse order*/
             if(cm == null) { /*If not in mem anymore lets search in MongoDB*/
@@ -197,12 +197,13 @@ public class ChatController {
 
     @CrossOrigin(origins = "*")
     @RequestMapping(value = "/fromUser/toUser/messages/new:get", method = RequestMethod.POST)
-    @Operation(summary = "Get a list of messages from a specific user if any")
+    @Operation(summary = "Retrieve a list of messages from a specific user if any")
     public ResponseEntity<RestObject>
-    getNewMessagesFromUser(  @RequestHeader(value="requestId") String requestId,
-                             @RequestHeader(value="fromUser") String fromUser,
-                             @RequestHeader(value="toUser") String toUser,
-                             @RequestHeader(value="fromDate") String fromDate)	{
+    getNewMessagesFromUser(  @RequestHeader(value="requestId", defaultValue = "") String requestId,
+                             @RequestHeader(value="user") final String fromUser,
+                             @RequestHeader(value="toUser") final String toUser,
+                             @RequestHeader(value="fromDate") final String fromDate)	{
+        requestId = StringUtils.generateRequestId(requestId);
         try	{
             List<ChatMessage> lstFromStore = chatPersistence.getNewMessagesFromStore(chatDb,appConstants, fromUser, toUser, Long.parseLong(fromDate));
             return RestObject.retOKWithPayload(new ChatMessageList(lstFromStore), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -221,19 +222,21 @@ public class ChatController {
     @RequestMapping(value = "/server/time:get", method = RequestMethod.GET)
     @Operation(summary = "Get server time in milliseconds since EPOCH")
     public ResponseEntity<RestObject>
-    getServerTime(  @RequestHeader(value="requestId") String requestId) 	{
-       long timestampN = InMemoryChat.getMillisecondsSinceEpoch();
-       return RestObject.retOKWithPayload(new GenericResponse(String.valueOf(timestampN)), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
+    getServerTime(  @RequestHeader(value="requestId", defaultValue = "") String requestId) 	{
+        requestId = StringUtils.generateRequestId(requestId);
+        long timestampN = InMemoryChat.getMillisecondsSinceEpoch();
+        return RestObject.retOKWithPayload(new GenericResponse(String.valueOf(timestampN)), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
     }
 
 
 
     @CrossOrigin(origins = "*")
     @RequestMapping(value = "/toUser/messages/new:get", method = RequestMethod.POST)
-    @Operation(summary = "Get a list of users sending messages to user")
+    @Operation(summary = "Get users with outstanding messages")
     public ResponseEntity<RestObject>
-    getUsersWithOutstandingMessages(@RequestHeader(value="requestId") String requestId,
-                                    @RequestHeader(value="toUser") String toUser) {
+    getUsersWithOutstandingMessages(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+                                    @RequestHeader(value="toUser") final String toUser) {
+        requestId = StringUtils.generateRequestId(requestId);
         try	{
             List<UserPairValue> lstFromStore = chatPersistence.getListOfUsersWithNewMessages(chatDb,appConstants, toUser);
             return RestObject.retOKWithPayload(new UserPairValueList(lstFromStore), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -252,8 +255,9 @@ public class ChatController {
     @RequestMapping(value = "/fromUser/toUser/message:set", method = RequestMethod.POST)
     @Operation(summary = "Set transfer status for a message(received or read)")
     public ResponseEntity<RestObject>
-    setTransferFlag(@RequestHeader(value="requestId") String requestId,
-                    @RequestBody ChatRecord chatRecord)	{
+    setTransferFlag(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+                    @RequestBody final ChatRecord chatRecord)	{
+        requestId = StringUtils.generateRequestId(requestId);
         try	{
             ChatRecord ret = chatPersistence.setReadMessageStatus(chatDb, appConstants, chatRecord);
             return RestObject.retOKWithPayload(ret, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -271,8 +275,9 @@ public class ChatController {
     @RequestMapping(value = "/fromUser/toUser/message:delete", method = RequestMethod.POST)
     @Operation(summary = "Delete message permanently")
     public ResponseEntity<RestObject>
-    deleteMessage(@RequestHeader(value="requestId") String requestId,
-                  @RequestBody ChatRecord chatRecord) {
+    deleteMessage(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+                  @RequestBody final ChatRecord chatRecord) {
+        requestId = StringUtils.generateRequestId(requestId);
         try	{
             ChatRecord ret = chatPersistence.deleteMessage(chatDb, appConstants, chatRecord);
             /*send notification to all parties that this message is no longer available*/
@@ -295,10 +300,11 @@ public class ChatController {
     @RequestMapping(value = "/fromUser/toUser:get", method = RequestMethod.POST)
     @Operation(summary = "Get unread message list for a particular user")
     public ResponseEntity<RestObject>
-    getUnreadMessageList(@RequestHeader(value="requestId") String requestId,
-                         @RequestHeader(value="fromUser") String fromUser,
-                         @RequestHeader(value="toUser") String toUser,
-                         @RequestHeader(value="fromDate") String fromDate) {
+    getUnreadMessageList(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+                         @RequestHeader(value="user") final String fromUser,
+                         @RequestHeader(value="toUser") final String toUser,
+                         @RequestHeader(value="fromDate") final String fromDate) {
+        requestId = StringUtils.generateRequestId(requestId);
         try	{
             ChatRecordList ret = chatPersistence.getUnreadMessageList(chatDb, fromUser, toUser, Long.parseLong(fromDate));
             return RestObject.retOKWithPayload(ret, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -317,15 +323,16 @@ public class ChatController {
 
     @CrossOrigin(origins = "*")
     @RequestMapping(value = "/fromUser/toUser/history:get", method = RequestMethod.GET)
-    @Operation(summary = "Get a multipart message after receiving notification")
+    @Operation(summary = "Get message history")
     public ResponseEntity<RestObject>
-    getHistMessageList(@RequestHeader(value="user") String user,
-                       @RequestHeader(value="requestId") String requestId,
-                       @RequestHeader(value="fromUser") String fromUser,
-                       @RequestHeader(value="fromDate") String fromDate,
-                       @RequestHeader(value="toDate") String toDate)	{
+    getHistMessageList(@RequestHeader(value="user") final String user,
+                       @RequestHeader(value="requestId", defaultValue = "") String requestId,
+                       @RequestHeader(value="toUser") final String toUser,
+                       @RequestHeader(value="fromDate") final String fromDate,
+                       @RequestHeader(value="toDate") final String toDate)	{
+        requestId = StringUtils.generateRequestId(requestId);
         try	{
-            ChatRecordList ret = chatPersistence.getMessageHistList(chatDb, fromUser, user, Long.parseLong(fromDate), Long.parseLong(toDate));
+            ChatRecordList ret = chatPersistence.getMessageHistList(chatDb, user, toUser, Long.parseLong(fromDate), Long.parseLong(toDate));
             return RestObject.retOKWithPayload(ret, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
         } catch(Exception ex)	{
             AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
@@ -334,19 +341,19 @@ public class ChatController {
         }
         long timestampN = InMemoryChat.getMillisecondsSinceEpoch();
 
-        ChatMessage t = new ChatMessage(null, fromUser, -1, user, -1, timestampN, "N");
+        ChatMessage t = new ChatMessage(null, user, -1, toUser, -1, timestampN, "N");
         return RestObject.retOKWithPayload(t, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 
     }
 
     @CrossOrigin(origins = "*")
     @RequestMapping(value = "/fromUser/toUser/count:get", method = RequestMethod.GET)
-    @Operation(summary = "Check if freshly connected user has any new messages")
+    @Operation(summary = "Get the count of unread messages")
     public ResponseEntity<RestObject>
-    getCountUnreadMessages( @RequestHeader(value="user") String user,
-                            @RequestHeader(value="requestId") String requestId) {
+    getCountUnreadMessages( @RequestHeader(value="user") final String user,
+                            @RequestHeader(value="requestId", defaultValue = "") String requestId) {
 
-
+        requestId = StringUtils.generateRequestId(requestId);
         long count;
         try	{
             count = chatPersistence.getUreadMessagesCount(chatDb, user);
@@ -361,12 +368,13 @@ public class ChatController {
 
 
     @CrossOrigin(origins = "*")
-    @RequestMapping(value = "/users:query", method = RequestMethod.POST)
-    @Operation(summary = "Get All available users")
+    @RequestMapping(value = "/users:query", method = RequestMethod.GET)
+    @Operation(summary = "Get all available users that match a pattern")
     public ResponseEntity<RestObject>
-    searchChatUsers(@RequestHeader(value="user") String user,
-                    @RequestHeader(value="requestId") String requestId,
-                    @RequestHeader(value="patternToSearch") String patternToSearch) {
+    searchChatUsers(@RequestHeader(value="user") final String user,
+                    @RequestHeader(value="requestId", defaultValue = "") String requestId,
+                    @RequestHeader(value="patternToSearch") final String patternToSearch) {
+        requestId = StringUtils.generateRequestId(requestId);
         try {
             UserToChatList uList = chatPersistence.searchChatUsers(user, patternToSearch, authUtil);
             return RestObject.retOKWithPayload(uList, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -375,22 +383,112 @@ public class ChatController {
         } catch(Throwable ex)	{
             return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
         }
+    }
+
+    @CrossOrigin(origins = "*")
+    @RequestMapping(value = "/user:get", method = RequestMethod.POST)
+    @Operation(summary = "Get a specific Chat User")
+    public ResponseEntity<RestObject>
+    getChatUser(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+                @RequestHeader(value="userName") final String userName) {
+        requestId = StringUtils.generateRequestId(requestId);
+        try {
+            /*Fix this to also use InternalUsersPersistenceRef*/
+            UserToChat ret =  chatPersistence.getUserToChat(userName, authUtil);
+            return RestObject.retOKWithPayload(ret, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
+        } catch(Exception ex) {
+            return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+        } catch(Throwable ex)	{
+            return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+        }
+
+    }
+
+
+    @CrossOrigin(origins = "*")
+    @RequestMapping(value = "/user:add", method = RequestMethod.POST)
+    @Operation(summary = "Add new chat user")
+    public ResponseEntity<RestObject>
+    addChatUser( @RequestHeader(value="user") final String user,
+                        @RequestHeader(value="userId") final String userId,
+                        @RequestHeader(value="toId") final String toId,
+                        @RequestHeader(value="toUser") final String toUser,
+                        @RequestHeader(value="requestId", defaultValue = "") String requestId) {
+        requestId = StringUtils.generateRequestId(requestId);
+        try {
+            chatPersistence.addChatUser(chatDb, authUtil, Long.parseLong(userId), user, Long.parseLong(toId), toUser);
+            GenericResponse response =  new GenericResponse("OK");
+            return RestObject.retOKWithPayload(response, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
+        } catch(Exception ex) {
+            return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+        } catch(Throwable ex)	{
+            return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+        }
+
+    }
+
+
+
+    @CrossOrigin(origins = "*")
+    @RequestMapping(value = "/users:chat", method = RequestMethod.POST)
+    @Operation(summary = "Get Users in the chat")
+    public ResponseEntity<RestObject>
+    getChatUsers(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+                 @RequestHeader(value="user") final String fromUser) {
+        requestId = StringUtils.generateRequestId(requestId);
+        try {
+            UserToChatList uList =  chatPersistence.getUserToChatList(chatDb, fromUser, authUtil);
+            return RestObject.retOKWithPayload(uList, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
+        } catch(Exception ex) {
+            AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
+            List<User> u = new ArrayList<>();
+            UserToChatList uList = UserToChatList.populate(u);
+            return RestObject.retOKWithPayload(uList, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
+        } catch(Throwable ex)	{
+            return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+        }
 
     }
 
     @CrossOrigin(origins = "*")
-    @RequestMapping(value = "/fromUser/toGroup:send", method = RequestMethod.PUT)
+    @RequestMapping(value = "/fromUser/toGroup/text:send", method = RequestMethod.PUT)
     @Operation(summary = "Send a message to a particular user")
     public ResponseEntity<RestObject>
-    sendMessageToGroup( @RequestHeader(value="fromUser") String fromUser,
-                        @RequestHeader(value="fromId") String fromId,
-                        @RequestHeader(value="session") String session,
-                        @RequestHeader(value="toGroup") String toGroup,
-                        @RequestHeader(value="toGroupId") String toGroupId,
-                        @RequestHeader(value="requestId") String requestId,
-                        /*@RequestParam("files") MultipartFile[] files,*/
-                        @RequestHeader(value="message") String message) {
+    sendTextMessageToGroup( @RequestHeader(value="user") final String fromUser,
+                            @RequestHeader(value="userId") final String fromId,
+                            @RequestHeader(value="toGroup") final String toGroup,
+                            @RequestHeader(value="toGroupId") final String toGroupId,
+                            @RequestHeader(value="requestId", defaultValue = "") String requestId,
+                            @RequestHeader(value="message") final String message) {
+        requestId = StringUtils.generateRequestId(requestId);
+        long timestamp = InMemoryChat.getMillisecondsSinceEpoch();
+        String isSaved = "N";
+        String isDelivered = "N";
+        try	{
+            ChatMessage chatMessage = new ChatMessage(message, fromUser, Long.parseLong(fromId), toGroup, Long.parseLong(toGroupId), timestamp, "N");
+            chatMessage.setIsGroup(true);
+            ChatConfirmation cc = new ChatConfirmation(timestamp, isDelivered, isSaved);
+            return RestObject.retOKWithPayload(cc, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
+        } catch(Exception ex)	{
+            return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+        } catch(Throwable ex)	{
+            return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+        }
+    }
 
+
+    @CrossOrigin(origins = "*")
+    @RequestMapping(value = "/fromUser/toGroup/multipart:send", method = RequestMethod.PUT)
+    @Operation(summary = "Send a text message to a particular group")
+    public ResponseEntity<RestObject>
+    sendMultipartMessageToGroup(  @RequestHeader(value="user") final String fromUser,
+                                  @RequestHeader(value="userId") final String fromId,
+                                  @RequestHeader(value="toGroup") final String toGroup,
+                                  @RequestHeader(value="toGroupId") final String toGroupId,
+                                  @RequestHeader(value="requestId", defaultValue = "") String requestId,
+                                  @RequestHeader(value="message") final String message,
+                                  @RequestParam(value ="files", required = false) final MultipartFile[] files) {
+        requestId = StringUtils.generateRequestId(requestId);
         long timestamp = InMemoryChat.getMillisecondsSinceEpoch();
         String isSaved = "N";
         String isDelivered = "N";
@@ -411,75 +509,13 @@ public class ChatController {
 
 
 
-    @CrossOrigin(origins = "*")
-    @RequestMapping(value = "/user:get", method = RequestMethod.POST)
-    @Operation(summary = "Get a specific Chat User")
-    public ResponseEntity<RestObject>
-    getChatUser(@RequestHeader(value="requestId") String requestId,
-                @RequestHeader(value="userName") String userName) {
-        try {
-            /*Fix this to also use InternalUsersPersistenceRef*/
-            UserToChat ret =  chatPersistence.getUserToChat(userName, authUtil);
-            return RestObject.retOKWithPayload(ret, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
-        } catch(Exception ex) {
-            return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-        } catch(Throwable ex)	{
-            return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-        }
 
-    }
-
-
-    @CrossOrigin(origins = "*")
-    @RequestMapping(value = "/user:add", method = RequestMethod.POST)
-    @Operation(summary = "Get Users minus current")
-    public ResponseEntity<RestObject>
-    addChatUser(@RequestHeader(value="user") String user,
-                @RequestHeader(value="fromId") String fromId,
-                @RequestHeader(value="toId") String toId,
-                @RequestHeader(value="toUser") String toUser,
-                @RequestHeader(value="requestId") String requestId) {
-
-        try {
-            chatPersistence.addChatGroup(chatDb, authUtil, Long.parseLong(fromId), user, Long.parseLong(toId), toUser);
-            GenericResponse response =  new GenericResponse("OK");
-            return RestObject.retOKWithPayload(response, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
-        } catch(Exception ex) {
-            return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-        } catch(Throwable ex)	{
-            return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-        }
-
-    }
-
-
-
-    @CrossOrigin(origins = "*")
-    @RequestMapping(value = "/users:chat", method = RequestMethod.POST)
-    @Operation(summary = "Get Users in the chat")
-    public ResponseEntity<RestObject>
-    getChatUsers(@RequestHeader(value="requestId") String requestId,
-                 @RequestHeader(value="fromUser") String fromUser) {
-
-        try {
-            UserToChatList uList =  chatPersistence.getUserToChatList(chatDb, fromUser, authUtil);
-            return RestObject.retOKWithPayload(uList, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
-        } catch(Exception ex) {
-            AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-            List<User> u = new ArrayList<>();
-            UserToChatList uList = UserToChatList.populate(u);
-            return RestObject.retOKWithPayload(uList, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
-        } catch(Throwable ex)	{
-            return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-        }
-
-    }
 
 
 
     private boolean sendTextNotificationToUser(   final String fromUser,
                                                   final long fromId,
-                                                  final String requestId,
+                                                  String requestId,
                                                   final String toUser,
                                                   final long toId,
                                                   final String message,
@@ -489,6 +525,7 @@ public class ChatController {
             return false;
         }
 
+        requestId = StringUtils.generateRequestId(requestId);
 
         ChatMessage chatMessage = new ChatMessage(  message, fromUser, fromId,  toUser, toId, timeStampN, "N");
         WebsocketPayload wsPayload = new WebsocketPayload(  requestId,
@@ -525,7 +562,7 @@ public class ChatController {
     boolean
     sendMultipartNotificationToUser(final String fromUser,
                                     final long fromId,
-                                    final String requestId,
+                                    String requestId,
                                     final String toUser,
                                     final long toId,
                                     final String message,
@@ -535,7 +572,7 @@ public class ChatController {
         if( WebSocketsWrapper.isUser(toUser)) {
             return false;
         }
-
+        requestId = StringUtils.generateRequestId(requestId);
         ChatMessage chatMessage = new ChatMessage(  message, fromUser, fromId, toUser, toId, timestampN, isEncrypt );
         WebsocketPayload wsPayload = new WebsocketPayload(  requestId,
                                                             fromUser,
@@ -575,11 +612,12 @@ public class ChatController {
     void
     sendNotificationToUser(final String fromUser,
                             final long fromId,
-                            final String requestId,
+                            String requestId,
                             final String toUser,
                             final long toId,
                             final String operation,
                             final ChatRecord chatRecord) {
+
 
         WebsocketPayload wsPayload = new WebsocketPayload(  requestId,
                                                             fromUser,
@@ -611,6 +649,7 @@ public class ChatController {
 
     private void sendNotificationDeleteMessage(ChatRecord chatRecord) {
         try {
+
             if( WebSocketsWrapper.isUser(chatRecord.getToUser())) {
                 sendNotificationToUser(chatRecord.getFromUser(), -1, chatRecord.getRequestId(), chatRecord.getToUser(), -1, WebsocketMessageType.chatMessageDelete, chatRecord);
             }

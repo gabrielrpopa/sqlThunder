@@ -27,6 +27,7 @@ package com.widescope.sqlThunder.controller.v2;
 
 import java.util.List;
 import com.widescope.logging.AppLogger;
+import com.widescope.sqlThunder.utils.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.PostConstruct;
@@ -70,10 +71,11 @@ public class MachineLearningController {
 	@RequestMapping(value = "/ml/model:run", method = RequestMethod.PUT)
 	@Operation(summary = "Run Model")
 	public ResponseEntity<RestObject>
-	runModel(	@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="mlApiUniqueName") String interpreterName,
-				@RequestHeader(value="interpreterVersion") String interpreterVersion) {
+	runModel(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="mlApiUniqueName") final String interpreterName,
+				@RequestHeader(value="interpreterVersion") final String interpreterVersion) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<InterpreterType> scriptInfo = scriptingInternalDb.interpreterByNameAndVersionGet(interpreterName, interpreterVersion);
 																				
@@ -96,9 +98,10 @@ public class MachineLearningController {
 	@RequestMapping(value = "/ml/mlApi:get", method = RequestMethod.PUT)
 	@Operation(summary = "Get information about ML APi installed")
 	public ResponseEntity<RestObject> 
-	getAllMlApiServer(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="mlApiUniqueName") String mlApiUniqueName) {
+	getAllMlApiServer(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="mlApiUniqueName") final String mlApiUniqueName) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			return RestObject.retOK(requestId, methodName);
 		} catch(Exception ex) {
@@ -114,11 +117,11 @@ public class MachineLearningController {
 	@RequestMapping(value = "/ml/mlApi:start", method = RequestMethod.PUT)
 	@Operation(summary = "Start ML API Server")
 	public ResponseEntity<RestObject> 
-	startMlApiServer(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="interpreterName") String interpreterName,
-						@RequestHeader(value="interpreterVersion") String interpreterVersion,
-						@RequestHeader(value="interpreterPath") String interpreterPath) {
+	startMlApiServer(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="interpreterName") final String interpreterName,
+						@RequestHeader(value="interpreterVersion") final String interpreterVersion) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<InterpreterType> scriptInfo = scriptingInternalDb.interpreterByNameAndVersionGet(interpreterName, interpreterVersion);
 			if(scriptInfo.isEmpty()) {
@@ -137,11 +140,11 @@ public class MachineLearningController {
 	@RequestMapping(value = "/ml/mlApi:new", method = RequestMethod.PUT)
 	@Operation(summary = "Create New ML API Server")
 	public ResponseEntity<RestObject> 
-	createNewMlApiServer(	@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="interpreterName") String interpreterName,
-							@RequestHeader(value="interpreterVersion") String interpreterVersion,
-							@RequestHeader(value="interpreterPath") String interpreterPath) {
+	createNewMlApiServer(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestHeader(value="interpreterName") final String interpreterName,
+							@RequestHeader(value="interpreterVersion") final String interpreterVersion) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<InterpreterType> scriptInfo = scriptingInternalDb.interpreterByNameAndVersionGet(interpreterName, interpreterVersion);
 			if(scriptInfo.isEmpty()) {
@@ -160,11 +163,11 @@ public class MachineLearningController {
 	@RequestMapping(value = "/ml/mlApi:stop", method = RequestMethod.PUT)
 	@Operation(summary = "Stop ML API Server")
 	public ResponseEntity<RestObject> 
-	stopMlApiServer(@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="interpreterName") String interpreterName,
-					@RequestHeader(value="interpreterVersion") String interpreterVersion,
-					@RequestHeader(value="interpreterPath") String interpreterPath) {
+	stopMlApiServer(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="interpreterName") final String interpreterName,
+					@RequestHeader(value="interpreterVersion") final String interpreterVersion) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<InterpreterType> scriptInfo = scriptingInternalDb.interpreterByNameAndVersionGet(interpreterName, interpreterVersion);
 																									
@@ -184,10 +187,11 @@ public class MachineLearningController {
 	@RequestMapping(value = "/ml/mlApi/deployment:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add ML API Stub")
 	public ResponseEntity<RestObject> 
-	addMlApiStub(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="interpreterName") String interpreterName,
-					@RequestHeader(value="interpreterVersion") String interpreterVersion) {
+	addMlApiStub(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="interpreterName") final String interpreterName,
+					@RequestHeader(value="interpreterVersion") final String interpreterVersion) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<InterpreterType> scriptInfo = scriptingInternalDb.interpreterByNameAndVersionGet(interpreterName, interpreterVersion);
 			if(scriptInfo.isEmpty()) {
@@ -207,11 +211,11 @@ public class MachineLearningController {
 	@RequestMapping(value = "/ml/mlApi/deployment:delete", method = RequestMethod.PUT)
 	@Operation(summary = "Delete ML API Stub")
 	public ResponseEntity<RestObject> 
-	deleteMlApiStub(@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="interpreterName") String interpreterName,
-					@RequestHeader(value="interpreterVersion") String interpreterVersion,
-					@RequestHeader(value="interpreterPath") String interpreterPath) {
+	deleteMlApiStub(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="interpreterName") final String interpreterName,
+					@RequestHeader(value="interpreterVersion") final String interpreterVersion) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<InterpreterType> scriptInfo = scriptingInternalDb.interpreterByNameAndVersionGet(interpreterName, interpreterVersion);
 			if(scriptInfo.isEmpty()) {

@@ -23,6 +23,7 @@ import com.widescope.rest.RestObject;
 import com.widescope.restApi.repo.Objects.restApiRequest.UserRestApiRequest;
 import com.widescope.restApi.repo.Objects.restApiRequest.UserRestApiRequestDetail;
 import com.widescope.restApi.repo.Objects.restApiRequest.UserRestApiRequestDetailList;
+import com.widescope.sqlThunder.utils.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.PostConstruct;
@@ -57,10 +58,12 @@ public class RestApiController {
 	@RequestMapping(value = "/restapi/requests:get", method = RequestMethod.GET)
 	@Operation(summary = "Get all user saved requests")
 	public ResponseEntity<RestObject>
-	getAllRequests(	@RequestHeader(value="user") String user,
-					@RequestHeader(value="requestId") String requestId)	{
+	getAllRequests(	@RequestHeader(value="user") final String user,
+					@RequestHeader(value="requestId", defaultValue = "") String requestId)	{
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
+
 			UserRestApiRequestDetailList userRestApiRequestDetailList
 			= restApiDb.getUserRestApiRequests(authUtil.getUser(user).getId(), false);
 			return RestObject.retOKWithPayload(userRestApiRequestDetailList, requestId, methodName);
@@ -76,10 +79,12 @@ public class RestApiController {
 	@RequestMapping(value = "/restapi/request:get", method = RequestMethod.GET)
 	@Operation(summary = "Get saved request")
 	public ResponseEntity<RestObject> 
-	getRequest(	@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="restApiId") String restApiId) {
+	getRequest(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="restApiId") final String restApiId) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
+
 			UserRestApiRequestDetail userRestApiRequestDetail
 			= restApiDb.getUserRestApiRequest(Integer.parseInt(restApiId));
 			return RestObject.retOKWithPayload(userRestApiRequestDetail, requestId, methodName);
@@ -96,14 +101,16 @@ public class RestApiController {
 	@RequestMapping(value = "/restapi/request:save", method = RequestMethod.GET)
 	@Operation(summary = "Save request")
 	public ResponseEntity<RestObject> 
-	saveRequest(@RequestHeader(value="user") String user,
-				@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="name") String name,
-				@RequestHeader(value="description") String description,
-				@RequestHeader(value="verbId") String verbId,
-				@RequestHeader(value="userRestApiRequest") String userRestApiRequest) {
+	saveRequest(@RequestHeader(value="user") final String user,
+				@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="name") final String name,
+				@RequestHeader(value="description") final String description,
+				@RequestHeader(value="verbId") final String verbId,
+				@RequestHeader(value="userRestApiRequest") final String userRestApiRequest) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
+
 			long restApiId = restApiDb.addUserRestApiRequest(	name, 
 																description,
 																Integer.parseInt(verbId),

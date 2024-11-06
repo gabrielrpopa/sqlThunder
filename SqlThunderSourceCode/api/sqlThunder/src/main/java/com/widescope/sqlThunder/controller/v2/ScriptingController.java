@@ -133,12 +133,13 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/interpreter:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add Interpreter with associated information",	description= "...")
 	public ResponseEntity<RestObject> 
-	interpreterAdd(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="interpreterName") String interpreterName,
-					@RequestHeader(value="interpreterVersion") String interpreterVersion,
-					@RequestHeader(value="interpreterPath") String interpreterPath,
-					@RequestHeader(value="command") String command,
-					@RequestHeader(value="fileExtensions") String fileExtensions) {
+	interpreterAdd(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="interpreterName") final String interpreterName,
+					@RequestHeader(value="interpreterVersion") final String interpreterVersion,
+					@RequestHeader(value="interpreterPath") final String interpreterPath,
+					@RequestHeader(value="command") final String command,
+					@RequestHeader(value="fileExtensions") final String fileExtensions) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			scriptingInternalDb.interpreterAdd(interpreterName, interpreterVersion, interpreterPath, command, fileExtensions);
 			List<InterpreterType> lstInterpreter = scriptingInternalDb.interpreterByNameAndVersionGet(interpreterName, interpreterVersion);
@@ -156,13 +157,14 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/interpreter:update", method = RequestMethod.POST)
 	@Operation(summary = "Update Interpreter",	description= "...")
 	public ResponseEntity<RestObject> 
-	interpreterUpdate(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="interpreterId") String interpreterId,
-						@RequestHeader(value="interpreterName") String interpreterName,
-						@RequestHeader(value="interpreterVersion") String interpreterVersion,
-						@RequestHeader(value="interpreterPath") String interpreterPath,
-						@RequestHeader(value="command") String command,
-						@RequestHeader(value="fileExtensions") String fileExtensions) {
+	interpreterUpdate(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="interpreterId") final String interpreterId,
+						@RequestHeader(value="interpreterName") final String interpreterName,
+						@RequestHeader(value="interpreterVersion") final String interpreterVersion,
+						@RequestHeader(value="interpreterPath") final String interpreterPath,
+						@RequestHeader(value="command") final String command,
+						@RequestHeader(value="fileExtensions") final String fileExtensions) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			scriptingInternalDb.interpreterUpdate(Integer.parseInt(interpreterId),  interpreterName, interpreterVersion, interpreterPath, command, fileExtensions);
 			InterpreterType lstInterpreter = scriptingInternalDb.interpreterByIdGet(Integer.parseInt(interpreterId));
@@ -179,8 +181,9 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/interpreter:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete Interpreter",	description= "...")
 	public ResponseEntity<RestObject> 
-	interpreterDelete(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="interpreterId") String interpreterId) {
+	interpreterDelete(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="interpreterId") final String interpreterId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			scriptingInternalDb.interpreterDelete( Integer.parseInt(interpreterId) );
 			return RestObject.retOKWithPayload(new GenericResponse("DELETED"), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -196,8 +199,9 @@ public class ScriptingController {
 					method = RequestMethod.GET)
 	@Operation(summary = "Get A List Of Interpreter Versions providing a filter for the name",	description= "...")
 	public ResponseEntity<RestObject> 
-	searchInterpreter(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="interpreterName") String interpreterName) {
+	searchInterpreter(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="interpreterName") final String interpreterName) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<InterpreterType> InterpreterList = scriptingInternalDb.interpreterByNameGet(interpreterName);
 			InterpreterList interpreterDetailList = new InterpreterList(InterpreterList);
@@ -215,7 +219,8 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/interpreter:list", method = RequestMethod.GET)
 	@Operation(summary = "Get List of Interpreters",	description= "...")
 	public ResponseEntity<RestObject> 
-	listAllInterpreters(@RequestHeader(value="requestId") String requestId) {
+	listAllInterpreters(@RequestHeader(value="requestId", defaultValue = "") String requestId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<InterpreterType> InterpreterList = scriptingInternalDb.interpreterAllGet();
 			InterpreterList interpreterDetailList = new InterpreterList(InterpreterList);
@@ -237,14 +242,15 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/script:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add Script to Repository",	description= "...")
 	public ResponseEntity<RestObject> 
-	addScript(	@RequestHeader(value="user") String user,
-				@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="scriptName") String scriptName,
-				@RequestHeader(value="paramString", required = false, defaultValue = "") String paramString,
-				@RequestHeader(value="mainFile") String mainFile,
+	addScript(	@RequestHeader(value="user") final String user,
+				@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="scriptName") final String scriptName,
+				@RequestHeader(value="paramString", required = false, defaultValue = "") final String paramString,
+				@RequestHeader(value="mainFile") final String mainFile,
 				@RequestHeader(value="interpreterId") String interpreterId,
-				@RequestHeader(value="fileType") String fileType,
-				@RequestParam("attachment") MultipartFile attachment) {
+				@RequestHeader(value="fileType") final String fileType,
+				@RequestParam("attachment") final MultipartFile attachment) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<ScriptDetail> lstScripts = scriptingInternalDb.getScriptByName(scriptName);
 
@@ -315,13 +321,14 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/script/content:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add Script to Repository",	description= "...")
 	public ResponseEntity<RestObject> 
-	addScriptByContent(	@RequestHeader(value="user") String user,
-						@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="scriptName") String scriptName,
-						@RequestHeader(value="comment") String comment,
-						@RequestHeader(value="paramString", required = false, defaultValue = "") String paramString,
-						@RequestHeader(value="interpreterId") String interpreterId,
-						@RequestBody String scriptContent) {
+	addScriptByContent(	@RequestHeader(value="user") final String user,
+						@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="scriptName") final String scriptName,
+						@RequestHeader(value="comment") final String comment,
+						@RequestHeader(value="paramString", required = false, defaultValue = "") final String paramString,
+						@RequestHeader(value="interpreterId") final String interpreterId,
+						@RequestBody final String scriptContent) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<ScriptDetail> lstScripts = scriptingInternalDb.getScriptByName(scriptName);
 			
@@ -367,10 +374,11 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/script:content", method = RequestMethod.GET)
 	@Operation(summary = "Get Script and versions, scriptName can also be only part of name to wider range for searching",	description= "...")
 	public ResponseEntity<Resource> 
-	getScriptContent(	@RequestHeader(value="user") String user,
-						@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="scriptId", required = false) String scriptId) {
+	getScriptContent(	@RequestHeader(value="user") final String user,
+						@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="scriptId", required = false) final String scriptId) {
 		DownloadScriptStructureList res = new DownloadScriptStructureList();
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			ScriptDetail scriptDetail = scriptingInternalDb.getScript(Integer.parseInt(scriptId));
 			String separator = FileSystems.getDefault().getSeparator(); // or FileSystem.getSeparator()
@@ -434,8 +442,9 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/script:search", method = RequestMethod.GET)
 	@Operation(summary = "Get Script and versions, scriptName can also be only part of name to wider range for searching",	description= "...")
 	public ResponseEntity<RestObject>
-	scriptSearch(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="scriptName", required = false) String scriptName) {
+	scriptSearch(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="scriptName", required = false) final String scriptName) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<ScriptDetail> lstScripts = scriptingInternalDb.getScriptByName(scriptName);		
 			List<Long> userIds =  lstScripts.stream().map(ScriptDetail::getUserCreatorId).distinct().collect(Collectors.toList()); 
@@ -465,8 +474,9 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/script:user", method = RequestMethod.GET)
 	@Operation(summary = "Get Scripts, specific to a user",	description= "...")
 	public ResponseEntity<RestObject> 
-	userScripts(@RequestHeader(value="user") String user,
-				@RequestHeader(value="requestId") String requestId)	{
+	userScripts(@RequestHeader(value="user") final String user,
+				@RequestHeader(value="requestId", defaultValue = "") String requestId)	{
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			long userId = authUtil.getUser(user).getId();
 			scriptingInternalDb.getUserAccessByUser(userId);
@@ -483,8 +493,9 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/script:get", method = RequestMethod.GET)
 	@Operation(summary = "Get Specific Script Information",	description= "...")
 	public ResponseEntity<RestObject> 
-	getScript(	@RequestHeader(value="requestId") String requestId,
-				@RequestHeader(value="scriptId") String scriptId) {
+	getScript(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+				@RequestHeader(value="scriptId") final String scriptId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			ScriptingInternalDb scriptingInternalDb = new ScriptingInternalDb();
 			ScriptDetail script = scriptingInternalDb.getScript(Integer.parseInt(scriptId));
@@ -504,9 +515,10 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/script:remove", method = RequestMethod.DELETE)
 	@Operation(summary = "Remove Script and All its versions from Repository",	description= "...")
 	public ResponseEntity<RestObject> 
-	scriptRemove(	@RequestHeader(value="user") String user,
-					@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="scriptId") String scriptId) {
+	scriptRemove(	@RequestHeader(value="user") final String user,
+					@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="scriptId") final String scriptId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			User u = authUtil.getUser(user);
 			long userId = u.getId();
@@ -517,9 +529,6 @@ public class ScriptingController {
 			
 			if(isScriptHomeFolderDeleted) {
 				scriptingInternalDb.scriptDeleteAll(Integer.parseInt(scriptId));
-				//scriptingInternalDb.scriptParamDelete(Integer.valueOf(scriptId));
-				//scriptingInternalDb.userAccessDeleteToScript(Integer.valueOf(scriptId));
-				//scriptingInternalDb.scriptDelete(Integer.valueOf(scriptId));
 				return RestObject.retOKWithPayload(scriptDetail, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 			} 
 			
@@ -533,23 +542,18 @@ public class ScriptingController {
 
 	}
 	
-	
-	
-	
-	
-	
 
-	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/script/version:remove", method = RequestMethod.DELETE)
 	@Operation(summary = "Remove Script Version Of A Script from Repository")
 	public ResponseEntity<RestObject> 
-	scriptVersionRemove(@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="scriptName") String scriptName,
-						@RequestHeader(value="scriptVersion") String scriptVersion) {
+	scriptVersionRemove(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="scriptName") final String scriptName,
+						@RequestHeader(value="scriptVersion") final String scriptVersion) {
 		
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-		boolean isScriptVersionHomeFolderDeleted = false ;
+		boolean isScriptVersionHomeFolderDeleted ;
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			scriptingInternalDb.scriptVersionDelete(scriptName, Integer.parseInt(scriptVersion) );
 			isScriptVersionHomeFolderDeleted = ScriptingHelper.removeScriptVersionFromFS(	appConstants.getScriptStoragePath(),
@@ -575,9 +579,10 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/script/param:get", method = RequestMethod.GET)
 	@Operation(summary = "Get Script Parameters in either form, detailed or for execution, or both",	description= "...")
 	public ResponseEntity<RestObject>
-	getScriptParam( @RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="scriptName") String scriptName,
-					@RequestHeader(value="scriptVersion", 	required = true) String scriptVersion){
+	getScriptParam( @RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="scriptName") final String scriptName,
+					@RequestHeader(value="scriptVersion") final String scriptVersion){
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			ScriptingInternalDb scriptingInternalDb = new ScriptingInternalDb();
 			ScriptParamCompoundObject ret =  scriptingInternalDb.getScriptParams(scriptName, Integer.parseInt(scriptVersion) );
@@ -593,14 +598,15 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/script/param:add", method = RequestMethod.PUT)
 	@Operation(summary = "Add Script Param for a corresponding Script",	description= "...")
 	public ResponseEntity<RestObject> 
-	scriptParamAdd(	@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="scriptId") String scriptId,
-					@RequestHeader(value="paramName") String paramName,
-					@RequestHeader(value="paramType") String paramType,
-					@RequestHeader(value="paramDimension", 	required = true) String paramDimension,
-					@RequestHeader(value="paramDefaultValue",required = true) String paramDefaultValue,
-					@RequestHeader(value="paramPosition", 	required = true) String paramPosition,
-					@RequestHeader(value="paramOrder") String paramOrder)	{
+	scriptParamAdd(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					@RequestHeader(value="scriptId") final String scriptId,
+					@RequestHeader(value="paramName") final String paramName,
+					@RequestHeader(value="paramType") final String paramType,
+					@RequestHeader(value="paramDimension") final String paramDimension,
+					@RequestHeader(value="paramDefaultValue") final String paramDefaultValue,
+					@RequestHeader(value="paramPosition") final String paramPosition,
+					@RequestHeader(value="paramOrder") final String paramOrder)	{
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			ScriptParamDetail ret = scriptingInternalDb.scriptParamAdd(	Integer.parseInt(scriptId) , 
 																		paramName, 
@@ -623,11 +629,11 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/script/param:delete", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete Script Param",	description= "...")
 	public ResponseEntity<RestObject> 
-	scriptParamDelete(	@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="scriptId") String scriptId,
-						@RequestHeader(value="scriptParamId", 	required = true) String scriptParamId) {
+	scriptParamDelete(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="scriptId") final String scriptId,
+						@RequestHeader(value="scriptParamId") final String scriptParamId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
-			
 			ScriptingInternalDb scriptingInternalDb = new ScriptingInternalDb();
 			scriptingInternalDb.scriptParamDelete(Integer.parseInt(scriptParamId), Integer.parseInt(scriptId));
 			return RestObject.retOKWithPayload(new GenericResponse("Script Param deleted"), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -646,11 +652,12 @@ public class ScriptingController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/bridge:add", method = RequestMethod.PUT)
-	@Operation(summary = "Add Bridge To Script association to Repository",	description= "...")
+	@Operation(summary = "Add association of a Script to machine node",	description= "...")
 	public ResponseEntity<RestObject> 
-	machineNodeBridgeToScriptAdd(	@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="nodeId ") String nodeId ,
-									@RequestHeader(value="scriptId") String scriptId) {
+	machineNodeBridgeToScriptAdd(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+									@RequestHeader(value="nodeId ") final String nodeId ,
+									@RequestHeader(value="scriptId") final String scriptId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			scriptingInternalDb.machineNodeBridgeToScriptAdd(Integer.parseInt(nodeId), Integer.parseInt(scriptId) ) ;
 			List<MachineNodeToScriptBridge> machineNodeToScriptBridgeList = scriptingInternalDb.machineNodesBridgeToScriptGet(Integer.parseInt(nodeId), Integer.parseInt(scriptId));
@@ -665,10 +672,11 @@ public class ScriptingController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/bridge:delete", method = RequestMethod.DELETE)
-	@Operation(summary = "Delete Bridge To Script association",	description= "...")
+	@Operation(summary = "Delete association of a script to machine node",	description= "...")
 	public ResponseEntity<RestObject> 
-	machineNodeBridgeToScriptDelete(	@RequestHeader(value="requestId") String requestId,
-										@RequestHeader(value="id") String id) {
+	machineNodeBridgeToScriptDelete(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+										@RequestHeader(value="id") final String id) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			scriptingInternalDb.machineNodeBridgeToScriptDelete( Integer.parseInt(id) );
 			return RestObject.retOKWithPayload(new GenericResponse("DELETED"), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -683,10 +691,11 @@ public class ScriptingController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/bridge/node:get", method = RequestMethod.GET)
-	@Operation(summary = "Get Bridges to scripts for node",	description= "...")
+	@Operation(summary = "Get associations to scripts for a node",	description= "...")
 	public ResponseEntity<RestObject> 
-	nodeBridgeToScriptForNode(	@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="nodeId") String nodeId) {
+	nodeBridgeToScriptForNode(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="nodeId") final String nodeId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<MachineNodeToScriptBridge> machineNodeToScriptBridgeList = scriptingInternalDb.machineNodesBridgeToScriptByNodeGet(Integer.parseInt(nodeId));
 			MachineNodeToScriptBridgeList lst = new MachineNodeToScriptBridgeList(machineNodeToScriptBridgeList);
@@ -701,10 +710,11 @@ public class ScriptingController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/bridge/script:get", method = RequestMethod.DELETE)
-	@Operation(summary = "Get Bridges of script for nodes",	description= "...")
+	@Operation(summary = "Get associations of script for nodes",	description= "...")
 	public ResponseEntity<RestObject> 
-	nodeBridgeToScriptForScript(@RequestHeader(value="requestId") String requestId,
-								@RequestHeader(value="scriptId") String scriptId) {
+	nodeBridgeToScriptForScript(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+								@RequestHeader(value="scriptId") final String scriptId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			List<MachineNodeToScriptBridge> machineNodeToScriptBridgeList = scriptingInternalDb.machineNodesBridgeToScriptByScriptGet(Integer.parseInt(scriptId));
 			MachineNodeToScriptBridgeList lst = new MachineNodeToScriptBridgeList(machineNodeToScriptBridgeList);
@@ -720,14 +730,15 @@ public class ScriptingController {
 
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/script/repo:run", method = RequestMethod.POST)
-	@Operation(summary = "Run/Execute Repo Script Version with same set of parameters",	description= "...")
+	@Operation(summary = "Run/Execute Repo Script Version with a set of parameters",	description= "...")
 	public ResponseEntity<RestObject> 
-	runRepoScript(	@RequestHeader(value="user") String user,
-					@RequestHeader(value="session") String session,
-					@RequestHeader(value="scriptId") String scriptId,
-					@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="machineList") String machineList, /*comma separated */
-					@RequestBody String scriptParameters) {
+	runRepoScript(@RequestHeader(value="user") final String user,
+				  @RequestHeader(value="session") final String session,
+				  @RequestHeader(value="requestId", defaultValue = "") String requestId,
+				  @RequestHeader(value="scriptId") final String scriptId,
+				  @RequestHeader(value="machineList") final String machineList, /*comma separated */
+				  @RequestBody final String scriptParameters) {
+		requestId = StringUtils.generateRequestId(requestId);
 		if(machineList.isEmpty()) {
 			return RestObject.retOKWithPayload("Error ", requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 		}
@@ -836,11 +847,11 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/script/repo/multiple:run", method = RequestMethod.POST)
 	@Operation(summary = "Run/Execute Repo Script Version with individual set of parameters",	description= "...")
 	public ResponseEntity<RestObject> 
-	runRepoScriptMultiple(	@RequestHeader(value="user") String user,
-							@RequestHeader(value="session") String session,
-							@RequestHeader(value="requestId") String requestId,
-							@RequestBody ScriptParamRepoList scriptParameters) {
-
+	runRepoScriptMultiple(	@RequestHeader(value="user") final String user,
+							@RequestHeader(value="session") final String session,
+							@RequestHeader(value="requestId", defaultValue = "") String requestId,
+							@RequestBody final ScriptParamRepoList scriptParameters) {
+		requestId = StringUtils.generateRequestId(requestId);
 		if(scriptParameters.getRequestId() == null || scriptParameters.getRequestId().trim().isEmpty()) {
 			scriptParameters.setRequestId(UUID.randomUUID().toString());
 		} 
@@ -948,17 +959,19 @@ public class ScriptingController {
 
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/script/adhoc:run", method = RequestMethod.POST)
-	@Operation(summary = "Run/Execute Script Version",	description= "...")
+	@Operation(summary = "Run/Execute Script Version via client",	description= "...")
 	public ResponseEntity<RestObject> 
-	runAdhocScriptViaClient(@RequestHeader(value="user") String user,
-							@RequestHeader(value="session") String session,
-							@RequestHeader(value="scriptName") String scriptName,
-							@RequestHeader(value="interpreterId") String interpreterId,
-							@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="machineList") String machineList, /*comma separated */
+	runAdhocScriptViaClient(@RequestHeader(value="user") final String user,
+							@RequestHeader(value="session") final String session,
+							@RequestHeader(value="requestId", defaultValue = "") String requestId_,
+							@RequestHeader(value="scriptName") final String scriptName,
+							@RequestHeader(value="interpreterId") final String interpreterId,
+							@RequestHeader(value="machineList")  final String machineList, /*comma separated */
 							@RequestBody String scriptContent) {
+		final String requestId = StringUtils.generateRequestId(requestId_);
 		ScriptingReturnObject scriptRet = new ScriptingReturnObject();
 		ScriptingSharedData.addEmptyEntryLog(session,requestId);
+
 
 		String auth = SpringSecurityWrapper.getUserAuthorization();
 		if(scriptContent.toLowerCase().contains(updateGlobalVars.toLowerCase())) {
@@ -1079,17 +1092,16 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/script/adhoc/node:run", method = RequestMethod.POST)
 	@Operation(summary = "Run/Execute Script Version via another node ",	description= "...")
 	public ResponseEntity<RestObjectShort> 
-	runAdhocScriptViaNode(	@RequestHeader(value="user") String user,
-							@RequestHeader(value="session") String session,
-							@RequestHeader(value="internalUser") String internalUser,
-							@RequestHeader(value="internalPassword") String internalPassword,
-							
-							@RequestHeader(value="scriptName") String scriptName,
-							@RequestHeader(value="interpreterId") String interpreterId,
-							@RequestHeader(value="requestId") String requestId,
-							@RequestHeader(value="baseUrl", required = false) String baseUrl,
-							@RequestBody String scriptContent) {
-		
+	runAdhocScriptViaNode(@RequestHeader(value="user") final String user,
+						  @RequestHeader(value="session") final String session,
+						  @RequestHeader(value="requestId", defaultValue = "") String requestId_,
+						  @RequestHeader(value="internalUser") final String internalUser,
+						  @RequestHeader(value="internalPassword") final String internalPassword,
+						  @RequestHeader(value="scriptName") final String scriptName,
+						  @RequestHeader(value="interpreterId") final String interpreterId,
+						  @RequestHeader(value="baseUrl", required = false) final String baseUrl,
+						  @RequestBody String scriptContent) {
+		final String requestId = StringUtils.generateRequestId(requestId_);
 		if( !authUtil.isInternalUserAuthenticated(internalUser, internalPassword) )	{
 			return RestObjectShort.retAuthError(requestId);
 		}
@@ -1181,16 +1193,18 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/script/repo/multipart/node:run", method = RequestMethod.POST)
 	@Operation(summary = "Execute Repo Script Version via cluster gate node",	description= "...")
 	public ResponseEntity<RestObjectShort> 
-	runRepoScriptViaNodeMultipart(	@RequestHeader(value="user") String user,
-									@RequestHeader(value="session") String session,
-									@RequestHeader(value="internalUser") String internalUser,
-									@RequestHeader(value="internalPassword") String internalPassword,
-									@RequestHeader(value="mainFileName") String mainFileName,
-									@RequestHeader(value="interpreterId") String interpreterId,
-									@RequestHeader(value="requestId") String requestId,
-									@RequestHeader(value="baseUrl", required = false) String baseUrl,
-									@RequestHeader(value="baseFolder", required = false) String baseFolder,
-									@RequestParam("file") MultipartFile attachment) {
+	runRepoScriptViaNodeMultipart(@RequestHeader(value="user") final String user,
+								  @RequestHeader(value="session") final String session,
+								  @RequestHeader(value="requestId", defaultValue = "") String requestId,
+								  @RequestHeader(value="internalUser") final String internalUser,
+								  @RequestHeader(value="internalPassword") final String internalPassword,
+								  @RequestHeader(value="mainFileName") final String mainFileName,
+								  @RequestHeader(value="interpreterId") final String interpreterId,
+								  @RequestHeader(value="baseUrl", required = false) final String baseUrl,
+								  @RequestHeader(value="baseFolder", required = false) final String baseFolder,
+								  @RequestParam("file") final MultipartFile attachment) {
+
+		requestId = StringUtils.generateRequestId(requestId);
 		if( !authUtil.isInternalUserAuthenticated(internalUser, internalPassword) )	{
 			return RestObjectShort.retAuthError(requestId);
 		}
@@ -1264,11 +1278,12 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/loopback/data:header", method = RequestMethod.POST)
 	@Operation(summary = "Loopback output from executing scripts in String or json format",	description= "...")
 	public ResponseEntity<RestObjectShort>
-	loopbackScriptDataHeader(	@RequestHeader(value="user") String user,
-								@RequestHeader(value="session") String session,
-								@RequestHeader(value="requestId") String requestId, /*from script:run or repo:run*/
-								@RequestBody String tDefinition) {
+	loopbackScriptDataHeader(	@RequestHeader(value="user") final String user,
+								@RequestHeader(value="session") final String session,
+								@RequestHeader(value="requestId", defaultValue = "") String requestId, /*from script:run or repo:run*/
+								@RequestBody final String tDefinition) {
 		boolean isHttpSessionId = false;
+		requestId = StringUtils.generateRequestId(requestId);
 		UserShort uShort = authUtil.isUserAuthenticated(session);
 		if(uShort.getBaseUrl().compareTo(ClusterDb.ownBaseUrl) == 0) {
 			try {
@@ -1314,11 +1329,12 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/loopback/data:footer", method = RequestMethod.POST)
 	@Operation(summary = "Loopback output from executing scripts in String or json format",	description= "...")
 	public ResponseEntity<RestObjectShort>
-	loopbackScriptDataFooter(	@RequestHeader(value="user") String user,
-								@RequestHeader(value="session") String session,
-								@RequestHeader(value="requestId") String requestId, /*from script:run or repo:run*/
-								@RequestBody String rValue) {
+	loopbackScriptDataFooter(	@RequestHeader(value="user") final String user,
+								@RequestHeader(value="session") final String session,
+								@RequestHeader(value="requestId", defaultValue = "") String requestId, /*from script:run or repo:run*/
+								@RequestBody final String rValue) {
 		boolean isHttpSessionId = false;
+		requestId = StringUtils.generateRequestId(requestId);
 		UserShort uShort = authUtil.isUserAuthenticated(session);
 		if(uShort.getBaseUrl().compareTo(ClusterDb.ownBaseUrl) == 0) {
 			isHttpSessionId = WebSocketsWrapper.isUser(user);
@@ -1357,11 +1373,12 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/loopback/data:detail", method = RequestMethod.POST)
 	@Operation(summary = "Loopback output from executing scripts in String or json format",	description= "...")
 	public ResponseEntity<RestObjectShort>
-	loopbackScriptDataDetail(	@RequestHeader(value="user") String user,
-								@RequestHeader(value="session") String session,
-								@RequestHeader(value="requestId") String requestId, /*from script:run or repo:run*/
-								@RequestBody String rValue) {
+	loopbackScriptDataDetail(	@RequestHeader(value="user") final String user,
+								@RequestHeader(value="session") final String session,
+								@RequestHeader(value="requestId", defaultValue = "") String requestId, /*from script:run or repo:run*/
+								@RequestBody final String rValue) {
 		boolean isHttpSessionId = false;
+		requestId = StringUtils.generateRequestId(requestId);
 		UserShort uShort = authUtil.isUserAuthenticated(session);
 		if(uShort.getBaseUrl().compareTo(ClusterDb.ownBaseUrl) == 0) {
 			isHttpSessionId = WebSocketsWrapper.isUser(user);
@@ -1400,11 +1417,12 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/loopback/data:details", method = RequestMethod.POST)
 	@Operation(summary = "Loopback output from executing scripts in String or json format",	description= "...")
 	public ResponseEntity<RestObjectShort>
-	loopbackScriptDataDetails(	@RequestHeader(value="user") String user,
-								@RequestHeader(value="session") String session,
-								@RequestHeader(value="requestId") String requestId, /*from script:run or repo:run*/
-								@RequestBody List<RowValue> rowValues) {
+	loopbackScriptDataDetails(	@RequestHeader(value="user") final String user,
+								@RequestHeader(value="session") final String session,
+								@RequestHeader(value="requestId", defaultValue = "") String requestId, /*from script:run or repo:run*/
+								@RequestBody final List<RowValue> rowValues) {
 		boolean isHttpSessionId = false;
+		requestId = StringUtils.generateRequestId(requestId);
 		UserShort uShort = authUtil.isUserAuthenticated(session);
 		if(uShort.getBaseUrl().compareTo(ClusterDb.ownBaseUrl) == 0) {
 			isHttpSessionId = WebSocketsWrapper.isUser(user);
@@ -1437,15 +1455,15 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/loopback/log:stdin", method = RequestMethod.POST)
 	@Operation(summary = "Loopback output from executing scripts in String or json format",	description= "...")
 	public ResponseEntity<RestObjectShort>
-	loopbackScriptStdin(@RequestHeader(value="user") String user,
-						@RequestHeader(value="session") String session,
-						@RequestHeader(value="internalUser") String internalUser,
-						@RequestHeader(value="internalPassword") String internalPassword,
-						@RequestHeader(value="requestId") String requestId, /*from script:run or repo:run*/
-						@RequestHeader(value="baseUrl") String baseUrl, /*source Url*/
-						@RequestHeader(value="websocketMessageType") String websocketMessageType, /* hs/ds/fs */
-						@RequestBody String line /*for header is script time, for footer is count*/) {
-		
+	loopbackScriptStdin(@RequestHeader(value="user") final String user,
+						@RequestHeader(value="session") final String session,
+						@RequestHeader(value="requestId", defaultValue = "") String requestId, /*from script:run or repo:run*/
+						@RequestHeader(value="internalUser")final  String internalUser,
+						@RequestHeader(value="internalPassword") final String internalPassword,
+						@RequestHeader(value="baseUrl") final String baseUrl, /*source Url*/
+						@RequestHeader(value="websocketMessageType") final String websocketMessageType, /* hs/ds/fs */
+						@RequestBody final String line /*for header is script time, for footer is count*/) {
+		requestId = StringUtils.generateRequestId(requestId);
 		if( !authUtil.isInternalUserAuthenticated(internalUser, internalPassword) )	{
 			return RestObjectShort.retAuthError(requestId);
 		}
@@ -1484,13 +1502,13 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/script/streaming/adhoc:accept", method = RequestMethod.POST)
 	@Operation(summary = "Accept streams of table rows",	description= "...")
 	public void
-	acceptStream(	@RequestHeader(value="sessionId") String sessionId,
-					@RequestHeader(value="requestId") String requestId,
+	acceptStream(	@RequestHeader(value="sessionId") final String sessionId,
+					@RequestHeader(value="requestId", defaultValue = "") String requestId,
 					/*type = "H" - header, "M" - middle, "F" = finished/done*/
-					@RequestHeader(value="type", required = false, defaultValue = "H") String type, 
-					@RequestBody String rowOrHeader) {
+					@RequestHeader(value="type", required = false, defaultValue = "H") final String type,
+					@RequestBody final String rowOrHeader) {
 
-
+		requestId = StringUtils.generateRequestId(requestId);
 		try {
 			if(type.equalsIgnoreCase("H")) {
 				HeaderDef h = HeaderDef.toHeaderDef(rowOrHeader);
@@ -1515,14 +1533,14 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/script/streaming/adhoc:run", method = RequestMethod.POST)
 	@Operation(summary = "Run/Execute Script Version with Streaming",	description= "...")
 	public ResponseEntity<RestObject>
-	streamAdhocScript(	@RequestHeader(value="user") String user,
-						@RequestHeader(value="session") String session,
-						@RequestHeader(value="scriptName") String scriptName,
-						@RequestHeader(value="interpreterId") String interpreterId,
-						@RequestHeader(value="requestId") String requestId,
-						@RequestBody String scriptContent,
-						HttpServletRequest request) {
-		
+	streamAdhocScript(@RequestHeader(value="user") final String user,
+					  @RequestHeader(value="session") final String session,
+					  @RequestHeader(value="requestId", defaultValue = "") String requestId,
+					  @RequestHeader(value="scriptName") final String scriptName,
+					  @RequestHeader(value="interpreterId") final String interpreterId,
+					  @RequestBody final String scriptContent,
+					  HttpServletRequest request) {
+		requestId = StringUtils.generateRequestId(requestId);
 		if(	!ConfigRepoDb.isIpInLocalList(request) 
 				&& !ConfigRepoDb.isExactIpAllowed(request)
 				&& !ConfigRepoDb.isIpInAllowedClusterNodesList(request)
@@ -1556,17 +1574,11 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/history/script:get", method = RequestMethod.GET)
 	@Operation(summary = "Get the List of executed scripts",	description= "...")
 	public ResponseEntity<RestObject> 
-	getScriptHist(	@RequestHeader(value="user") String user,
-					@RequestHeader(value="session") String session,
-					@RequestHeader(value="type") String type,
-					@RequestHeader(value="interpreterName") String interpreterName,
-					@RequestHeader(value="stext", required = false, defaultValue = "") String stext) {
-		
-		String requestId = StaticUtils.getUUID();
-		if( !authUtil.isSessionAuthenticated(user, session) )	{
-			return RestObject.retAuthError(requestId);
-		}
-		
+	getScriptHist(@RequestHeader(value="user") final String user,
+				  @RequestHeader(value="requestId", defaultValue = "") String requestId,
+				  @RequestHeader(value="type") final String type,
+				  @RequestHeader(value="interpreterName") final String interpreterName) {
+		requestId = StringUtils.generateRequestId(requestId);
 		HistScriptList ret;
 		try	{
 			User u = authUtil.getUser(user);
@@ -1580,21 +1592,20 @@ public class ScriptingController {
 			return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
 		} 
 	}
-	
-	
-	
+
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/history/adhoc/script:copy", method = RequestMethod.POST)
-	@Operation(summary = "Get the List of executed scripts",	description= "...")
+	@Operation(summary = "Copy historical adhoc scripts",	description= "...")
 	public ResponseEntity<RestObject>
-	copyAdhocScriptHist(@RequestHeader(value="user") String user,
-						@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="toUserId") String toUserId,
-						@RequestHeader(value="type") String type,
-						@RequestHeader(value="interpreterName") String interpreterName,
-						@RequestHeader(value="scriptName") String scriptName,
-						@RequestHeader(value="shaHash") String shaHash) {
+	copyAdhocScriptHist(@RequestHeader(value="user") final String user,
+						@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="toUserId") final String toUserId,
+						@RequestHeader(value="type") final String type,
+						@RequestHeader(value="interpreterName") final String interpreterName,
+						@RequestHeader(value="scriptName") final String scriptName,
+						@RequestHeader(value="shaHash") final String shaHash) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			User u = authUtil.getUser(user);
 			long fromUserId = u.getId();
@@ -1617,13 +1628,14 @@ public class ScriptingController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/history/repo/script:copy", method = RequestMethod.POST)
-	@Operation(summary = "Copy Repo Script to another user",	description= "...")
+	@Operation(summary = "Copy Repo Scripts to another user",	description= "...")
 	public ResponseEntity<RestObject> 
-	copyRepoScriptHist( @RequestHeader(value="user") String user,
-					    @RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="toUserId") String toUserId,
-						@RequestHeader(value="interpreterId") String interpreterId,
-						@RequestHeader(value="scriptId") String scriptId) {
+	copyRepoScriptHist( @RequestHeader(value="user") final String user,
+					    @RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="toUserId") final String toUserId,
+						@RequestHeader(value="interpreterId") final String interpreterId,
+						@RequestHeader(value="scriptId") final String scriptId) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			User u = authUtil.getUser(user);
 			long fromUserId = u.getId();
@@ -1670,11 +1682,12 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/history/script:remove", method = RequestMethod.DELETE)
 	@Operation(summary = "Delete script from your profile")
 	public ResponseEntity<RestObject> 
-	deleteScriptHist(	@RequestHeader(value="user") String user,
-						@RequestHeader(value="requestId") String requestId,
-						@RequestHeader(value="type") String type,
-						@RequestHeader(value="interpreterName") String interpreterName,
-						@RequestHeader(value="scriptName") String scriptName) {
+	deleteScriptHist(	@RequestHeader(value="user") final String user,
+						@RequestHeader(value="requestId", defaultValue = "") String requestId,
+						@RequestHeader(value="type") final String type,
+						@RequestHeader(value="interpreterName") final String interpreterName,
+						@RequestHeader(value="scriptName") final String scriptName) {
+		requestId = StringUtils.generateRequestId(requestId);
 		try	{
 			User u = authUtil.getUser(user);
 			long userId = u.getId();
@@ -1695,10 +1708,9 @@ public class ScriptingController {
 	@RequestMapping(value = "/scripting/script:download", method = RequestMethod.GET)
 	@Operation(summary = "Download script",	description= "...")
 	public ResponseEntity<Resource> 
-	downloadScript(	@RequestHeader(value="user") String user,
-					@RequestHeader(value="requestId") String requestId,
-					@RequestHeader(value="scriptId") String scriptId,
-					@RequestHeader(value="interpreterId") String interpreterId) {
+	downloadScript(	@RequestHeader(value="user") final String user,
+					@RequestHeader(value="scriptId") final String scriptId) {
+
 		String separator = FileSystems.getDefault().getSeparator(); // or FileSystem.getSeparator()
 		User u = authUtil.getUser(user);
 		long userId = u.getId();
