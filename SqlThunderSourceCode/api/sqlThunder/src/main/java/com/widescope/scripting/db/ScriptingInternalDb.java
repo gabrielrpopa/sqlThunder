@@ -188,27 +188,27 @@ public class ScriptingInternalDb {
 
 	public static String 
 	interpreterType1 = "INSERT INTO interpreterType (interpreterName, interpreterVersion, interpreterPath, command, fileExtensions) "
-						+ "VALUES 					('GROOVY', 			'3.0', 				'update-me', 	'groovy', 'groovy') ";
+						+ "VALUES 					('GROOVY', 			'3.0', 				'D:\\Interpreter\\Groovy\\Groovy30', 	'groovy', 'groovy') ";
 	
 	public static String 
 	interpreterType2 = "INSERT INTO interpreterType (interpreterName, interpreterVersion, interpreterPath, command, fileExtensions) "
-						+ "VALUES 					('PERL', 			'3.8.1', 			'update-me', 	'perl', 'pl') ";
+						+ "VALUES 					('PERL', 			'3.8.1', 			'D:\\Interpreter\\Perl\\Perl381', 	'perl', 'pl') ";
 	
 	public static String 
 	interpreterType3 = "INSERT INTO interpreterType (interpreterName, interpreterVersion, interpreterPath, command, fileExtensions) "
-						+ "VALUES 					('PYTHON2', 			'2.7.1', 			'D:/Python/Python310', 	'python', 'py') ";
+						+ "VALUES 					('PYTHON2', 			'2.7.1', 			'D:\\Interpreter\\Python\\Python271', 	'python', 'py') ";
 	
 	public static String 
 	interpreterType4 = "INSERT INTO interpreterType (interpreterName, interpreterVersion, interpreterPath, command, fileExtensions) "
-						+ "VALUES 					('PYTHON3', 			'3.8.1', 			'D:/Python/Python310', 	'python', 'py') ";
+						+ "VALUES 					('PYTHON3', 			'3.8.1', 			'D:\\Interpreter\\Python\\Python381', 	'python', 'py') ";
 	
 	public static String 
 	interpreterType5 = "INSERT INTO interpreterType (interpreterName, interpreterVersion, interpreterPath, command, fileExtensions) "
-						+ "VALUES 					('R', 				'4.1.0', 			'update-me', 	'Rscript', 'r') ";
+						+ "VALUES 					('R', 				'4.1.0', 			'D:\\Interpreter\\R\\R410', 	'Rscript', 'r') ";
 	
 	public static String 
 	interpreterType6 = "INSERT INTO interpreterType (interpreterName, interpreterVersion, interpreterPath, command, fileExtensions) "
-						+ "VALUES 					('RUBY', 			'3.0.2', 			'update-me', 	'ruby', 'rb') ";
+						+ "VALUES 					('RUBY', 			'3.0.2', 			'D:\\Interpreter\\Ruby\\Ruby302', 	'ruby', 'rb') ";
 	
 	public static String 
 	interpreterType7 = "INSERT INTO interpreterType (interpreterName, interpreterVersion, interpreterPath, command, fileExtensions) "
@@ -216,7 +216,7 @@ public class ScriptingInternalDb {
 	
 	public static String 
 	interpreterType8 = "INSERT INTO interpreterType (interpreterName, interpreterVersion, interpreterPath, command, fileExtensions) "
-						+ "VALUES 					('BASH', 			'5.1', 				'update-me', 	'bash', 'sh') ";
+						+ "VALUES 					('BASH', 			'5.1', 				'', 	'bash', 'sh') ";
 	
 		
 	public static String 
@@ -225,12 +225,12 @@ public class ScriptingInternalDb {
 
 	public static String 
 	interpreterType10 = "INSERT INTO interpreterType (interpreterName, interpreterVersion, interpreterPath, command, fileExtensions) "
-						+ "VALUES 					('JULIA', 		'1.6.2', 				'update-me', 	'', 	'jl') ";	
+						+ "VALUES 					('JULIA', 		'1.6.2', 				'D:\\Interpreter\\Julia\\Julia162', 	'', 	'jl') ";
 	
 	
 	public static String 
 	interpreterType11 = "INSERT INTO interpreterType (interpreterName, interpreterVersion, interpreterPath, command, fileExtensions) "
-						+ "VALUES 					('UNKNOWN', 		'0.0.0', 				'update-me', 	'', 	'jl') ";	
+						+ "VALUES 					('UNKNOWN', 		'0.0.0', 				'', 	'', 	'') ";
 
 	
 	
