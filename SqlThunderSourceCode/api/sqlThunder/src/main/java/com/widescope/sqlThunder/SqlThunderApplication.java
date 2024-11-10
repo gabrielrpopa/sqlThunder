@@ -24,6 +24,7 @@ import com.widescope.scripting.db.ScriptingInternalDb;
 import com.widescope.sqlThunder.config.AppConstants;
 import com.widescope.sqlThunder.config.configRepo.ConfigRepoDb;
 import com.widescope.sqlThunder.config.configRepo.ConfigRepoDbRecord;
+import com.widescope.sqlThunder.service.ResourceService;
 import com.widescope.sqlThunder.tcpServer.TCPServer;
 import com.widescope.sqlThunder.utils.Ip4NetUtils;
 import com.widescope.sqlThunder.utils.user.AuthUtil;
@@ -81,6 +82,8 @@ public class SqlThunderApplication {
 	@Autowired
 	private TCPServer tcpServer;
 
+	@Autowired
+	private ResourceService resourceService;
 
 	public static void main(String[] args) {
 		ConfigurableApplicationContext context = SpringApplication.run(SqlThunderApplication.class, args);
@@ -89,237 +92,15 @@ public class SqlThunderApplication {
 
 
 	private void populateRepos() {
-
-		updateStaticApplicationProperties();
 		try {
-			String fileName = "./exchangeRepo.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					ConfigRepoDbRecord owner =  ConfigRepoDb.getConfigVar("owner");
-					ExchangeDb.generateSchema(owner.getConfigValue());
-                	AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.ctrl, "ExchangeDb created ");
-				} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-
-			fileName = "./chatDb.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					ChatDb.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "ChatDb created");
- 				} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-
-			fileName = "./cluster.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					ClusterDb.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.ctrl, "ClusterDb created ");
-				} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-
-
-
-			fileName = "./storageRepo.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					InternalStorageRepoDb.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "StorageRepoDb created");
-      			} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-			fileName = "./warehouseRepoDb.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					WarehouseRepoDb.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "WarehouseRepoDb created");
-				} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-			fileName = "./mongoRepo.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					MongoClusterDb.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "MongoClusterDb created");
-				} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
+			updateStaticApplicationProperties();
 			MongoClusterDb mongoClusterDb = new MongoClusterDb();
 			SqlRepoUtils.mongoDbMap = mongoClusterDb.getAllCluster();
-
-
-			fileName = "./elasticRepo.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					ElasticClusterDb.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "ElasticClusterDb created");
-				} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
 			ElasticClusterDb elasticClusterDb = new ElasticClusterDb();
 			SqlRepoUtils.elasticDbMap = elasticClusterDb.getElasticClusters();
-
-
-			fileName = "./userRepo.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					InternalUserDb.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "InternalUserDb created");
-      			} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-
-
-			fileName = "./scriptRepo.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					ScriptingInternalDb.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "ScriptingInternalDb created");
-    			} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-			fileName = "./restApiRepo.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					RestApiDb.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "RestApiDb created");
-				} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-			fileName = "./mongoToH2SqlRepo.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					MongoToH2SqlRepo.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "MongoToH2SqlRepo created");
-				} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-			fileName = "./mongoToRdbmsSqlRepo.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					MongoToRdbmsSqlRepo.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "MongoToRdbmsSqlRepo");
-				} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-			fileName = "./embeddedDbRepo.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					EmbeddedDbRepo.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "EmbeddedDbRepo created");
-				} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-			fileName = "./snapshotsDbRepo.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					SnapshotDbRepo.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "SnapshotDbRepo created");
-     			} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-			fileName = "./snapshotsMongoDbRepo.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					SnapshotMongoDbRepo.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "SnapshotMongoDbRepo created");
-        		} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-			fileName = "./snapshotsElasticDbRepo.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					SnapshotElasticDbRepo.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "SnapshotElasticDbRepo created");
-				} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-			fileName = "./embeddedRepoGenericSql.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					EmbeddedRepoGenericSql.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "EmbeddedRepoGenericSql created");
-				} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-			fileName = "./logRepo.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					H2LogRepoDb.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "H2LogRepoDb created");
-				} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-
-			fileName = "./elasticExecutedQueriesRepoDb.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					ElasticExecutedQueriesRepoDb.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "ElasticExecutedQueriesRepoDb created");
-				} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-			fileName = "./mongoExecutedQueriesRepoDb.mv.db";
-			if(!FileUtilWrapper.isFilePresent(fileName)) {
-				try {
-					MongoExecutedQueriesRepoDb.generateSchema();
-					AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "MongoExecutedQueriesRepoDb created");
-				} catch(Exception e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-				}
-			}
-			AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "Embedded DB creation complete");
-
-			try {
-				SqlRepoUtils.populateRepo(appConstants.getActiveRepo());
-
-
-				fileName = "./dataWhaleDb.json";
-				if(FileUtilWrapper.isFilePresent(fileName)) {
-					try {
-						DataWhalesJson jsonUserWhales = DataWhalesJson.loadDataWhalesJson(fileName);
-						InternalUserDb.dataWhales.loadWhaleRef(jsonUserWhales,
-																appConstants.getSuperUser(),
-																appConstants.getSuperPasscode(),
-																appConstants.getTestUser(),
-																appConstants.getTestPasscode() );
-						AppLogger.logInfo(Thread.currentThread().getStackTrace()[1], AppLogger.main, "UserWhales created");
-          			} catch(Exception e) {
-						AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-					}
-				} else {
-					DataWhalesJson d = new DataWhalesJson();
-					d.getSqlDbRefsList().add(SqlRepoStorageDb.schema_unique_user_name);
-					d.getMongoClusterList().add("localMongoDb");
-					String r = d.toString();
-					FileUtilWrapper.writeFile(fileName, r.getBytes());
-				}
-
-
-			} catch (Exception e) {
-				AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-			}
+			SqlRepoUtils.populateRepo(appConstants.getActiveRepo());
+			resourceService.loadResourceFiles();
+			resourceService.generateEmbeddedSchemas(appConstants);
 		} catch (Exception e) {
 			AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
 		}
@@ -367,7 +148,6 @@ public class SqlThunderApplication {
 					}
 				}
 		);
-
 
 
 		String  fileName = "./configRepo.mv.db";
