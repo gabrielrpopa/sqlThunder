@@ -19,13 +19,24 @@ public class ScriptingReturnObject implements RestInterface {
 	private RowValue tableFooter;
 	private List<LogDetail> logDetailList;
 	private String isStreaming;  /*Y/N*/
+	private String requestId;
 	
 	public ScriptingReturnObject() {
 		this.setTableDefinition(new TableDefinition());
 		this.rowValueList = new ArrayList<>();
 		this.setTableFooter(new RowValue());
-		this.setLogDetailList(new ArrayList<LogDetail>());
-		this.setIsStreaming("Y"); 
+		this.setLogDetailList(new ArrayList<>());
+		this.setIsStreaming("Y");
+		this.setRequestId(null);
+	}
+
+	public ScriptingReturnObject(String requestId, String isSteaming) {
+		this.setTableDefinition(new TableDefinition());
+		this.rowValueList = new ArrayList<>();
+		this.setTableFooter(new RowValue());
+		this.setLogDetailList(new ArrayList<>());
+		this.setIsStreaming(isSteaming);
+		this.setRequestId(requestId);
 	}
 	
 	
@@ -67,6 +78,12 @@ public class ScriptingReturnObject implements RestInterface {
 	public void setIsStreaming(String isStreaming) {
 		this.isStreaming = isStreaming;
 	}
+	public String getRequestId() {
+		return requestId;
+	}
+	public void setRequestId(String requestId) {
+		this.requestId = requestId;
+	}
 
 	@Override
 	public String toString() {
@@ -93,6 +110,7 @@ public class ScriptingReturnObject implements RestInterface {
 			for(RowValue l: s.getPoolData().values()) {
 				ret.addPoolData(l); 
 			}
+			ret.setRequestId(s.getRequestId());
 		} catch(Exception ex) {
 			return null;
 		}

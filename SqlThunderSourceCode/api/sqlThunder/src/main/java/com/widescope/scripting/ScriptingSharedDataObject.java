@@ -15,11 +15,13 @@ public class ScriptingSharedDataObject {
 	private TableDefinition tableDefinition;
 	private Map<String, RowValue> poolData;
 	private RowValue tableFooter;
-	
+	private String requestId;
+
 	public ScriptingSharedDataObject() {
 		this.setTableDefinition(new TableDefinition());
 		this.poolData = new HashMap<>();
 		this.setTableFooter(new RowValue());
+		this.setRequestId(null);
 	}
 
 
@@ -52,6 +54,12 @@ public class ScriptingSharedDataObject {
 	}
 	public void setTableFooter(RowValue tableFooter) {
 		this.tableFooter = tableFooter;
+	}
+	public String getRequestId() {
+		return requestId;
+	}
+	public void setRequestId(String requestId) {
+		this.requestId = requestId;
 	}
 
 	@Override
