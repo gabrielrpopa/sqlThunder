@@ -18,6 +18,8 @@ public class RowValue {
 	}
 	public List<CellValue> getRow() { return row; }
 	public void setRow(List<CellValue> row) { this.row = row; }
+	public void addRow(List<CellValue> row) { this.row.addAll(row);}
+	public void addRow(CellValue c) { this.row.add(c);}
 
 	@Override
 	public String toString() {
