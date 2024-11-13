@@ -64,4 +64,11 @@ public class TableDefinition {
 		}
 	}
 
+	public void toTableDefinition(TableDefinition t) {
+		this.tableName = t.getTableName();
+		this.tableScript = t.getTableScript();
+		this.tableInsert = t.getTableInsert();
+		this.metadata = t.getMetadata();
+	}
+
 }
