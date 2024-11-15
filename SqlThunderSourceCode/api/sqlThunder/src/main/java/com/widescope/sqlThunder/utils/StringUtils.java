@@ -252,4 +252,13 @@ public class StringUtils {
 		return requestId;
 	}
 
+	public static String generateUniqueScriptName(final String scriptName) {
+		if(scriptName==null || scriptName.isBlank() || scriptName.isEmpty()) {
+			return "script_" + StaticUtils.getUUID();
+		}
+
+		return scriptName;
+	}
+
+
 }
