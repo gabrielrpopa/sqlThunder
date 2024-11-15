@@ -1387,48 +1387,14 @@ public class ScriptingController {
 		}
 	}
 	
-	
-	
-	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/scripting/script/streaming/adhoc:accept", method = RequestMethod.POST)
-	@Operation(summary = "Accept streams of table rows",	description= "...")
-	public void
-	acceptStream(	@RequestHeader(value="sessionId") final String sessionId,
-					@RequestHeader(value="requestId", defaultValue = "") String requestId,
-					/*type = "H" - header, "M" - middle, "F" = finished/done*/
-					@RequestHeader(value="type", required = false, defaultValue = "H") final String type,
-					@RequestBody final String rowOrHeader) {
 
-		requestId = StringUtils.generateRequestId(requestId);
-		try {
-			if(type.equalsIgnoreCase("H")) {
-				HeaderDef h = HeaderDef.toHeaderDef(rowOrHeader);
-                assert h != null;
-                StreamingStatic.initTableVal(sessionId, requestId, h.getColumns());
-			} else if(type.equalsIgnoreCase("D")) {
-				RowVal r = RowVal.toRowVal(rowOrHeader);
-				StreamingStatic.addTableValRow(sessionId, requestId, r, false);
-			} else if(type.equalsIgnoreCase("F")) {
-				RowVal r = RowVal.toRowVal(rowOrHeader);
-				StreamingStatic.addTableValRow(sessionId, requestId, r, true);
-			}
-		} catch(Exception ex){
-			AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-		} catch(Throwable ex){
-			AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-		}
-	}
-	
-	
-
-	
-	
 	
 	/*History */
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/history/script:get", method = RequestMethod.GET)
-	@Operation(summary = "Get the list of executed scripts",	description= "Get the history of executed scripts")
+	@Operation(	summary = "Get the list of executed scripts",
+				description= "Get the history of executed scripts")
 	public ResponseEntity<RestObject> 
 	getScriptHist(@RequestHeader(value="user") final String user,
 				  @RequestHeader(value="requestId", defaultValue = "") String requestId,
@@ -1467,17 +1433,11 @@ public class ScriptingController {
 			User u = authUtil.getUser(user);
 			long fromUserId = u.getId();
 			String mainFolder = appConstants.getScriptStoragePath();
-			HistScriptFileManagement.addExistingScriptToNewUser(fromUserId,
-																mainFolder,
-																type,
-																interpreterName,
-																Long.parseLong(toUserId),
-																scriptName,
-																shaHash);
+			HistScriptFileManagement.addExistingScriptToNewUser(fromUserId, mainFolder, type, interpreterName, Long.parseLong(toUserId), scriptName, shaHash);
 			return RestObject.retOKWithPayload(new GenericResponse("OK"), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 		} catch(Exception ex) {
 			return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-		} catch(Throwable ex)	{
+		} catch(Throwable ex) {
 			return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
 		} 
 	}
@@ -1497,32 +1457,24 @@ public class ScriptingController {
 			User u = authUtil.getUser(user);
 			long fromUserId = u.getId();
 			String separator = FileSystems.getDefault().getSeparator();
-			ScriptDetail scriptInfo = scriptingInternalDb.getScript(Integer.parseInt(scriptId));
-			String fromScriptVersionPath = appConstants.getScriptStoragePath() + separator + fromUserId + separator + scriptInfo.getScriptName();
+			ScriptDetail si = scriptingInternalDb.getScript(Integer.parseInt(scriptId));
+			String fromScriptVersionPath = appConstants.getScriptStoragePath() + separator + fromUserId + separator + si.getScriptName();
 			File from = new File(fromScriptVersionPath);
 			if(!from.exists()) {
-				return RestObject.retOKWithPayload(new GenericResponse("The Script Could not be found"), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
+				return RestObject.retOKWithPayload(new GenericResponse("The script Could not be found"), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 			}
 			
-			String toScriptVersionPath = appConstants.getScriptStoragePath() + separator + toUserId + separator + scriptInfo.getScriptName();
+			String toScriptVersionPath = appConstants.getScriptStoragePath() + separator + toUserId + separator + si.getScriptName();
 			File to = new File(toScriptVersionPath);
 			if(to.exists()) {
-				return RestObject.retOKWithPayload(new GenericResponse("The Script already exists to the user profile"), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
+				return RestObject.retOKWithPayload(new GenericResponse("The script already exists to user profile"), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 			} else {
 				FileUtilWrapper.copyFolder(fromScriptVersionPath, toScriptVersionPath);
 				if(!to.exists()) {
-					return RestObject.retOKWithPayload(new GenericResponse("The Script Could not be added to user profile"), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
+					return RestObject.retOKWithPayload(new GenericResponse("The script could not be added to user profile"), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 				} else {
-					scriptingInternalDb.scriptAdd(	Long.parseLong(toUserId) , 
-													scriptInfo.getScriptName(), 
-													scriptInfo.getMainFile(), 
-													scriptInfo.getParamString(), 
-													"", //predictFile 
-													"", // predictFunc 
-													Integer.parseInt(interpreterId),
-													scriptInfo.getScriptVersion());
-					
-					return RestObject.retOKWithPayload(new GenericResponse("The Script has been added to user profile"), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
+					scriptingInternalDb.scriptAdd(	Long.parseLong(toUserId) , si.getScriptName(), si.getMainFile(), si.getParamString(), "", "", Integer.parseInt(interpreterId), si.getScriptVersion());
+					return RestObject.retOKWithPayload(new GenericResponse("The script has been added to user profile"), requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 				}
 					
 			}
@@ -1569,7 +1521,7 @@ public class ScriptingController {
 	downloadScript(	@RequestHeader(value="user") final String user,
 					@RequestHeader(value="scriptId") final String scriptId) {
 
-		String separator = FileSystems.getDefault().getSeparator(); // or FileSystem.getSeparator()
+		String separator = FileSystems.getDefault().getSeparator();
 		User u = authUtil.getUser(user);
 		long userId = u.getId();
 
