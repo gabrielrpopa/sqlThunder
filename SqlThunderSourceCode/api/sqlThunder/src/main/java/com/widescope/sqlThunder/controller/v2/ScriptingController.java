@@ -33,6 +33,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.widescope.logging.AppLogger;
+import com.widescope.scripting.execution.ScriptExecThread;
+import com.widescope.scripting.execution.ScriptExecutionUtils;
 import com.widescope.sqlThunder.utils.security.SpringSecurityWrapper;
 import com.widescope.webSockets.userStreamingPortal.objects.payload.WebsocketPayload;
 import io.swagger.v3.oas.annotations.Operation;
@@ -92,7 +94,6 @@ import com.widescope.sqlThunder.config.AppConstants;
 import com.widescope.sqlThunder.config.configRepo.ConfigRepoDb;
 import com.widescope.sqlThunder.utils.FileCharacteristic;
 import com.widescope.sqlThunder.utils.FileUtilWrapper;
-import com.widescope.sqlThunder.utils.StaticUtils;
 import com.widescope.sqlThunder.utils.StringUtils;
 import com.widescope.sqlThunder.utils.compression.ZipDirectory;
 import com.widescope.sqlThunder.utils.restApiClient.RestApiScriptingClient;
@@ -118,10 +119,8 @@ public class ScriptingController {
 	
 	@Autowired
 	private AuthUtil authUtil;
-	
 
 	private static final String updateGlobalVars = "updateGlobalVars";
-
 
 	@PostConstruct
 	public void initialize() {
@@ -648,7 +647,7 @@ public class ScriptingController {
 	
 	
 	
-	////////////////////////////////////////////////////////////// Nodes ////////////////////////////////////////////////////////////////////////
+	/* Nodes Management Section*/
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/bridge:add", method = RequestMethod.PUT)
@@ -725,19 +724,22 @@ public class ScriptingController {
 			return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
 		}
 	}
-	
-	/////////////////////////////////// Execution////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+	/* Script Execution Section */
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/script/repo:run", method = RequestMethod.POST)
-	@Operation(summary = "Run/Execute Repo Script Version with a set of parameters",	description= "...")
+	@Operation(	summary = "Run/Execute Repo Script Version with a set of parameters",
+				description= "Web client or thick client request channel")
 	public ResponseEntity<RestObject> 
-	runRepoScript(@RequestHeader(value="user") final String user,
-				  @RequestHeader(value="session") final String session,
-				  @RequestHeader(value="requestId", defaultValue = "") String requestId,
-				  @RequestHeader(value="scriptId") final String scriptId,
-				  @RequestHeader(value="machineList") final String machineList, /*comma separated */
-				  @RequestBody final String scriptParameters) {
+	runRepoScriptViaClient(@RequestHeader(value="user") final String user,
+						  @RequestHeader(value="session") final String session,
+						  @RequestHeader(value="requestId", defaultValue = "") String requestId,
+						  @RequestHeader(value="scriptId") final String scriptId,
+						  @RequestHeader(value="machineList") final String machineList, /*comma separated */
+						  @RequestBody final String scriptParameters) {
+
 		requestId = StringUtils.generateRequestId(requestId);
 		if(machineList.isEmpty()) {
 			return RestObject.retOKWithPayload("Error ", requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -815,7 +817,7 @@ public class ScriptingController {
 						wsPayload = new WebsocketPayload(requestId, user, user, WebsocketMessageType.detailScript, scriptFooterOutput, ClusterDb.ownBaseUrl);
 						WebSocketsWrapper.sendSingleMessageToUserFromServer( wsPayload);
 					}
-					
+
 					FileUtilWrapper.deleteFolder(tmpPath);
 					ScriptingSharedData.removeRequestData(session, requestId);
 				} else {
@@ -845,12 +847,15 @@ public class ScriptingController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/script/repo/multiple:run", method = RequestMethod.POST)
-	@Operation(summary = "Run/Execute Repo Script Version with individual set of parameters",	description= "...")
+	@Operation(	summary = "Run/Execute Repo Script Version with individual set of parameters",
+				description= "Web client or thick client request channel")
 	public ResponseEntity<RestObject> 
-	runRepoScriptMultiple(	@RequestHeader(value="user") final String user,
-							@RequestHeader(value="session") final String session,
-							@RequestHeader(value="requestId", defaultValue = "") String requestId,
-							@RequestBody final ScriptParamRepoList scriptParameters) {
+	runRepoParameterizedScriptViaClient(@RequestHeader(value="user") final String user,
+										@RequestHeader(value="session") final String session,
+										@RequestHeader(value="requestId", defaultValue = "") String requestId,
+										@RequestHeader(value="machineList")  final String machineList, /*comma separated base Urls */
+										@RequestBody final ScriptParamRepoList scriptParameters) {
+
 		requestId = StringUtils.generateRequestId(requestId);
 		if(scriptParameters.getRequestId() == null || scriptParameters.getRequestId().trim().isEmpty()) {
 			scriptParameters.setRequestId(UUID.randomUUID().toString());
@@ -959,239 +964,98 @@ public class ScriptingController {
 
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/script/adhoc:run", method = RequestMethod.POST)
-	@Operation(summary = "Run/Execute Script Version via client",	description= "...")
+	@Operation(	summary = "Run/Execute ad-hoc script",
+				description= "Web client or thick client request channel")
 	public ResponseEntity<RestObject> 
 	runAdhocScriptViaClient(@RequestHeader(value="user") final String user,
 							@RequestHeader(value="session") final String session,
 							@RequestHeader(value="requestId", defaultValue = "") String requestId_,
 							@RequestHeader(value="scriptName") final String scriptName,
 							@RequestHeader(value="interpreterId") final String interpreterId,
-							@RequestHeader(value="machineList")  final String machineList, /*comma separated */
+							@RequestHeader(value="machineList")  final String machineList, /*comma separated base Urls */
 							@RequestBody String scriptContent) {
+
+
 		final String requestId = StringUtils.generateRequestId(requestId_);
 		ScriptingReturnObject scriptRet = new ScriptingReturnObject();
 		ScriptingSharedData.addEmptyEntryLog(session,requestId);
-
-
 		String auth = SpringSecurityWrapper.getUserAuthorization();
-		if(scriptContent.toLowerCase().contains(updateGlobalVars.toLowerCase())) {
-			scriptContent = ScriptingHelper.replaceScriptUserSession(user,
-																		session,
-																		auth,
-																		appConstants.getServerSslEnabled() ? "https":"http",
-																		appConstants.getServerPort(),
-																		requestId,
-																		scriptContent);
-		} else {
-			scriptContent = ScriptingHelper.addLibraryGlobalParam(	auth,
-																		user,
-																		session,
-																		appConstants.getAdmin(),
-																		appConstants.getAdminPasscode(),
-																		appConstants.getServerSslEnabled() ? "https":"http",
-																		appConstants.getServerPort()  );
-		}
-
-
-
-
-	
+		scriptContent = ScriptExecutionUtils.interpolateVars(user, session, auth, requestId, scriptContent, updateGlobalVars, appConstants);
+		List<String> mList = Stream.of(machineList.split(",", -1)).toList();
+		boolean isHttpSessionId = false;
 		try {
-			boolean isOwnHostExecution = false;
-			List<String> mList = Stream.of(machineList.split(",", -1)).toList();
-			for(String node: mList) {
-				if(node.equals(ClusterDb.ownBaseUrl)) {
-					isOwnHostExecution = true;
-				} else {
-					RestApiScriptingClient.runAdhocScriptViaNode(	node,
-																	user,
-																	session,
-																	appConstants.getUser(), 
-																	appConstants.getUserPasscode(),
-																	scriptName,
-																	Integer.parseInt(interpreterId) ,
-																	requestId,
-																	scriptContent
-																);
-				}
-			}
-			
-			
-			if(isOwnHostExecution) {
-				boolean isHttpSessionId = false;
-				try {
-					isHttpSessionId = WebSocketsWrapper.isUser(user);
-				} catch(Exception ignored) {}
-				
-				
-				if( user != null && !user.isEmpty() && !user.isBlank() && isHttpSessionId) {
-					String finalScriptContent = scriptContent;
-					new Thread(() -> {
-						try {
-							ScriptingHelper.runAdhocWithNotificationsToClient(	appConstants.getScriptTempPath(),
-																				scriptName,
-																				Integer.parseInt( interpreterId ),
-																				requestId,
-																				user,
-																				session,
-																				appConstants.getUser(), 
-																				appConstants.getUserPasscode(),
-																				finalScriptContent,
-																				ClusterDb.ownBaseUrl);
-						} catch (IOException e) {
-							AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-							WebsocketPayload wsPayload = new WebsocketPayload(requestId, user, user, WebsocketMessageType.detailScript, e.getMessage(), ClusterDb.ownBaseUrl);
-							WebSocketsWrapper.sendSingleMessageToUserFromServer( wsPayload);
-							ScriptFooterOutput scriptHeaderOutput = new ScriptFooterOutput(0);
-							wsPayload = new WebsocketPayload(requestId, user, user, WebsocketMessageType.detailScript, scriptHeaderOutput, ClusterDb.ownBaseUrl);
-							WebSocketsWrapper.sendSingleMessageToUserFromServer( wsPayload);
-						}
-					}).start();
+			isHttpSessionId = WebSocketsWrapper.isUser(user);
+		} catch(Exception ignored) {}
 
-					scriptRet.setIsStreaming("Y");
-					
-				} else {
-					scriptRet = ScriptingHelper.runAdhocWithRet(	appConstants.getScriptTempPath(),
-																	scriptName,
-																	Integer.parseInt( interpreterId ),
-																	requestId,
-																	session,
-																	user,
-																	scriptContent);
-					scriptRet.setIsStreaming("N");
-				}
+		final boolean isWebSocket = user != null && !user.isEmpty() && !user.isBlank() && isHttpSessionId;
+		if( ScriptExecutionUtils.isLocalNode(mList, ClusterDb.ownBaseUrl) ) { /*run locally*/
+			if(isWebSocket) {
+				scriptRet = ScriptExecutionUtils.execScriptAsync(appConstants, scriptName, interpreterId, requestId, user, session, scriptContent);
+			} else {
+				scriptRet = ScriptExecutionUtils.execScriptSync(appConstants, scriptName, interpreterId, requestId, user, session, scriptContent) ;
 			}
-			
-			if( ConfigRepoDb.configValues.get("save-adhoc").getConfigValue().compareTo("Y") == 0) {
-				User u = authUtil.getUser(user);
-				long userId = u.getId();
-				String mainFolder = appConstants.getScriptStoragePath();
-				InterpreterType interpreterType = scriptingInternalDb.interpreterByIdGet(Integer.parseInt( interpreterId ));
-				String iName = interpreterType.getInterpreterName();
-				String result = HistScriptFileManagement.addNewScript(mainFolder, "adhoc", iName, userId, scriptName, scriptContent, "");
-				if(!result.isEmpty()) {
-					WebsocketPayload wsPayload = new WebsocketPayload(requestId, user, user, WebsocketMessageType.detailScript, result, ClusterDb.ownBaseUrl);
-					WebSocketsWrapper.sendSingleMessageToUserFromServer( wsPayload);
-					LogDetail l = new LogDetail(WebsocketMessageType.detailScript,result);
-					scriptRet.getLogDetailList().add(l);
-				}
+		} else { /*run distributed*/
+			if(isWebSocket) {
+				scriptRet = ScriptExecThread.execParallelSync(mList, user, session, appConstants, scriptName, interpreterId, requestId, scriptContent) ;
+			} else {
+				scriptRet = ScriptExecThread.execParallelAsync(mList, user, session, appConstants, scriptName, interpreterId, requestId, scriptContent) ;
 			}
-			
-			return RestObject.retOKWithPayload(scriptRet,requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
-		} catch(Exception ex) {
-			return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-		} catch(Throwable ex)	{
-			return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-		} finally {
-			ScriptingSharedData.removeRequestData(session,requestId);
 		}
+
+		ScriptExecThread.saveAdhocScriptAsync(appConstants, scriptingInternalDb, interpreterId, authUtil, scriptName, scriptContent, user);
+		ScriptingSharedData.removeRequestData(session,requestId);
+		return RestObject.retOKWithPayload(scriptRet,requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 	}
-	
+
 
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/script/adhoc/node:run", method = RequestMethod.POST)
-	@Operation(summary = "Run/Execute Script Version via another node ",	description= "...")
+	@Operation(summary = "Run/Execute ad-hoc Script Version via cluster node. Script provided as single text file",	description= "Cluster node request channel")
 	public ResponseEntity<RestObjectShort> 
 	runAdhocScriptViaNode(@RequestHeader(value="user") final String user,
 						  @RequestHeader(value="session") final String session,
-						  @RequestHeader(value="requestId", defaultValue = "") String requestId_,
+						  @RequestHeader(value="requestId", defaultValue = "") String requestId,
 						  @RequestHeader(value="internalUser") final String internalUser,
 						  @RequestHeader(value="internalPassword") final String internalPassword,
 						  @RequestHeader(value="scriptName") final String scriptName,
 						  @RequestHeader(value="interpreterId") final String interpreterId,
-						  @RequestHeader(value="baseUrl", required = false) final String baseUrl,
-						  @RequestBody String scriptContent) {
-		final String requestId = StringUtils.generateRequestId(requestId_);
+						  @RequestHeader(value="senderBaseUrl", required = false) final String senderBaseUrl,
+						  @RequestBody String scriptContent,
+						  HttpServletRequest request) {
+
+		/* Request must come from a cluster node, such as the gate */
+		if(!ConfigRepoDb.isIpInAllowedClusterNodesList(request) ) {
+			return RestObjectShort.retAuthError(requestId);
+		}
+
 		if( !authUtil.isInternalUserAuthenticated(internalUser, internalPassword) )	{
 			return RestObjectShort.retAuthError(requestId);
 		}
 
 		ScriptingSharedData.addEmptyEntryLog(session,requestId);
-		String auth = SpringSecurityWrapper.getUserAuthorization();
-		if(scriptContent.toLowerCase().contains(updateGlobalVars.toLowerCase())) {
-			scriptContent = ScriptingHelper.replaceScriptUserSession(user,
-																	session,
-																	auth,
-																	appConstants.getServerSslEnabled() ? "https":"http",
-																	appConstants.getServerPort(),
-																	requestId,
-																	scriptContent);
-		} else {
-			scriptContent = ScriptingHelper.addLibraryGlobalParam(	auth,
-																	user,
-																	session,
-																	appConstants.getAdmin(),
-																	appConstants.getAdminPasscode(),
-																	appConstants.getServerSslEnabled() ? "https":"http",
-																	appConstants.getServerPort()  );
-		}
-
-
-		UserShort us = new UserShort(user, session, baseUrl);
+		UserShort us = new UserShort(user, session, senderBaseUrl);
 		InternalUserDb.loggedUsers.put(session, us);
-
 		try {
-
-			String finalScriptContent = scriptContent;
-			new Thread(() -> {
-				try {
-				
-					ScriptingHelper.runAdhocWithNotificationsToNode(appConstants.getScriptTempPath(),
-																	scriptName,
-																	Integer.parseInt( interpreterId ),
-																	requestId,
-																	user,
-																	session,
-																	appConstants.getUser(), 
-																	appConstants.getUserPasscode(),
-																	finalScriptContent,
-																	baseUrl);
-				} catch (IOException e) {
-					AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
-					ScriptFooterOutput scriptHeaderOutput = new ScriptFooterOutput(0);
-					RestApiScriptingClient.loopbackScriptStdin(	baseUrl, 
-																user, 
-																session, 
-																internalUser,
-																internalPassword,
-																requestId, 
-																WebsocketMessageType.detailScript, 
-																scriptHeaderOutput.toString());
-					
-					
-					
-					RestApiScriptingClient.loopbackScriptStdin(	baseUrl, 
-																user, 
-																session, 
-																internalUser,
-																internalPassword,
-																requestId, 
-																WebsocketMessageType.footerScript, 
-																scriptHeaderOutput.toString());
-					
-					
-				} finally {
-					InternalUserDb.loggedUsers.remove(session);
-				}
-				
-				
-			}).start();
-
-            return RestObjectShort.retOKWithPayload("OK",requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
-		} catch(Exception ex) {
-			return RestObjectShort.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-		} catch(Throwable ex)	{
-			return RestObjectShort.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+			ScriptingHelper.runAdhocWithNotificationsToNode(appConstants.getScriptTempPath(), scriptName, Integer.parseInt( interpreterId ), requestId, user, session, appConstants.getUser(), appConstants.getUserPasscode(), scriptContent, senderBaseUrl);
+		} catch (IOException e) {
+			AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
+			ScriptFooterOutput scriptHeaderOutput = new ScriptFooterOutput(0);
+			RestApiScriptingClient.loopbackScriptStdin(	senderBaseUrl, user, session, internalUser, internalPassword, requestId, WebsocketMessageType.detailScript, scriptHeaderOutput.toString());
+			RestApiScriptingClient.loopbackScriptStdin(	senderBaseUrl, user, session, internalUser, internalPassword, requestId, WebsocketMessageType.footerScript, scriptHeaderOutput.toString());
 		} finally {
+			InternalUserDb.loggedUsers.remove(session);
 			ScriptingSharedData.removeRequestData(session,requestId);
 		}
+		return RestObjectShort.retOKWithPayload("OK",requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
 	}
-	
-	
+
+
+
 
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/script/repo/multipart/node:run", method = RequestMethod.POST)
-	@Operation(summary = "Execute Repo Script Version via cluster gate node",	description= "...")
+	@Operation(	summary = "Run/Execute repo scripting project via cluster node. Script provided as zip file",
+				description= "Cluster node request channel")
 	public ResponseEntity<RestObjectShort> 
 	runRepoScriptViaNodeMultipart(@RequestHeader(value="user") final String user,
 								  @RequestHeader(value="session") final String session,
@@ -1270,13 +1134,45 @@ public class ScriptingController {
 			InternalUserDb.loggedUsers.remove(session);
 		}
 	}
-									
+
+
+
+	@CrossOrigin(origins = "*")
+	@RequestMapping(value = "/scripting/script/adhoc/node:sink", method = RequestMethod.POST)
+	@Operation(	summary = "Sink channel for incoming results processed by parallel node execution. Not for use via client ",
+				description= "Cluster node request channel")
+	public ResponseEntity<RestObjectShort>
+	sinkNodeResult(@RequestHeader(value="user") final String user,
+				   @RequestHeader(value="session") final String session,
+				   @RequestHeader(value="requestId", defaultValue = "") String requestId,
+				   @RequestHeader(value="internalUser") final String internalUser,
+				   @RequestHeader(value="internalPassword") final String internalPassword,
+				   @RequestHeader(value="scriptName") final String scriptName,
+				   @RequestHeader(value="interpreterId") final String interpreterId,
+				   @RequestHeader(value="baseUrl", required = false) final String baseUrl,
+				   @RequestBody ScriptingReturnObject retObject,
+				   HttpServletRequest request) {
+
+		ScriptingReturnObject scriptRet = new ScriptingReturnObject();
+
+		/* Request must come from a cluster node, such as the gate */
+		if(!ConfigRepoDb.isIpInAllowedClusterNodesList(request) ) {
+			return RestObjectShort.retAuthError(requestId);
+		}
+
+		if( !authUtil.isInternalUserAuthenticated(internalUser, internalPassword) )	{
+			return RestObjectShort.retAuthError(requestId);
+		}
+
+		return RestObjectShort.retOK(requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
+	}
 	
-	
+
 
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/loopback/data:header", method = RequestMethod.POST)
-	@Operation(summary = "Loopback output from executing scripts in String or json format",	description= "...")
+	@Operation(	summary = "Loopback output from executing scripts in String or JSON format",
+				description= "Push notification to web or thick client via web socket of the data header ")
 	public ResponseEntity<RestObjectShort>
 	loopbackScriptDataHeader(	@RequestHeader(value="user") final String user,
 								@RequestHeader(value="session") final String session,
@@ -1292,26 +1188,17 @@ public class ScriptingController {
 				AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
 			}
 		}
-		
-		
-		System.out.println("Header Data :" + tDefinition);
+
 		TableDefinition tableDefinition = TableDefinition.toTableDefinition(tDefinition);
 		try	{
 			if(isHttpSessionId) {
-				System.out.println("Header Data sent via Websockets:");
                 assert tableDefinition != null;
 				WebsocketPayload wsPayload = new WebsocketPayload(requestId, user, user, WebsocketMessageType.headerScriptData, tableDefinition, uShort.getBaseUrl());
                 WebSocketsWrapper.sendSingleMessageToUserFromServer( wsPayload);
 			}
 			else {
 				System.out.println("Header Data sent to " + uShort.getBaseUrl());
-				RestApiScriptingClient.loopbackScriptdataHeader(uShort.getBaseUrl(),
-																user,
-																session,
-																appConstants.getUser(),
-																appConstants.getUserPasscode(),
-																requestId,
-																tableDefinition);
+				RestApiScriptingClient.loopbackScriptdataHeader(uShort.getBaseUrl(), user, session, appConstants.getUser(), appConstants.getUserPasscode(), requestId, tableDefinition);
 			}
 
 			return RestObjectShort.retOKWithPayload("OK",requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -1327,7 +1214,8 @@ public class ScriptingController {
 
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/loopback/data:footer", method = RequestMethod.POST)
-	@Operation(summary = "Loopback output from executing scripts in String or json format",	description= "...")
+	@Operation(	summary = "Loopback output from executing scripts in String or json format",
+				description= "Push notification to web or thick client via web socket of the data footer ")
 	public ResponseEntity<RestObjectShort>
 	loopbackScriptDataFooter(	@RequestHeader(value="user") final String user,
 								@RequestHeader(value="session") final String session,
@@ -1371,7 +1259,8 @@ public class ScriptingController {
 
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/loopback/data:detail", method = RequestMethod.POST)
-	@Operation(summary = "Loopback output from executing scripts in String or json format",	description= "...")
+	@Operation(	summary = "Loopback output from executing scripts in String or json format",
+				description= "Push notification to web or thick client via web socket of the data row ")
 	public ResponseEntity<RestObjectShort>
 	loopbackScriptDataDetail(	@RequestHeader(value="user") final String user,
 								@RequestHeader(value="session") final String session,
@@ -1415,7 +1304,8 @@ public class ScriptingController {
 
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/loopback/data:details", method = RequestMethod.POST)
-	@Operation(summary = "Loopback output from executing scripts in String or json format",	description= "...")
+	@Operation(	summary = "Loopback output from executing scripts in String or json format",
+				description= "Push notification to web or thick client via web socket of multiple data rows (in bulk) ")
 	public ResponseEntity<RestObjectShort>
 	loopbackScriptDataDetails(	@RequestHeader(value="user") final String user,
 								@RequestHeader(value="session") final String session,
@@ -1453,12 +1343,13 @@ public class ScriptingController {
 
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/loopback/log:stdin", method = RequestMethod.POST)
-	@Operation(summary = "Loopback output from executing scripts in String or json format",	description= "...")
+	@Operation(	summary = "Loopback output from executing scripts in String or json format",
+				description= "Push notification to web or thick client via web socket of log lines ")
 	public ResponseEntity<RestObjectShort>
 	loopbackScriptStdin(@RequestHeader(value="user") final String user,
 						@RequestHeader(value="session") final String session,
 						@RequestHeader(value="requestId", defaultValue = "") String requestId, /*from script:run or repo:run*/
-						@RequestHeader(value="internalUser")final  String internalUser,
+						@RequestHeader(value="internalUser") final  String internalUser,
 						@RequestHeader(value="internalPassword") final String internalPassword,
 						@RequestHeader(value="baseUrl") final String baseUrl, /*source Url*/
 						@RequestHeader(value="websocketMessageType") final String websocketMessageType, /* hs/ds/fs */
@@ -1529,42 +1420,7 @@ public class ScriptingController {
 	}
 	
 	
-	@CrossOrigin(origins = "*")
-	@RequestMapping(value = "/scripting/script/streaming/adhoc:run", method = RequestMethod.POST)
-	@Operation(summary = "Run/Execute Script Version with Streaming",	description= "...")
-	public ResponseEntity<RestObject>
-	streamAdhocScript(@RequestHeader(value="user") final String user,
-					  @RequestHeader(value="session") final String session,
-					  @RequestHeader(value="requestId", defaultValue = "") String requestId,
-					  @RequestHeader(value="scriptName") final String scriptName,
-					  @RequestHeader(value="interpreterId") final String interpreterId,
-					  @RequestBody final String scriptContent,
-					  HttpServletRequest request) {
-		requestId = StringUtils.generateRequestId(requestId);
-		if(	!ConfigRepoDb.isIpInLocalList(request) 
-				&& !ConfigRepoDb.isExactIpAllowed(request)
-				&& !ConfigRepoDb.isIpInAllowedClusterNodesList(request)
-			) {
-			return new ResponseEntity<>(HttpStatusCode.valueOf(403));
-		}
 
-		try {
-			ScriptingHelper.runAdhocAndWait(appConstants.getScriptTempPath(),
-											scriptName,
-											Integer.parseInt( interpreterId ),
-											requestId,
-											session,
-											user,
-											scriptContent);
-			
-			TableVal ret = StreamingStatic.getTableVal(session, requestId);
-			return RestObject.retOKWithPayload(ret, requestId, Thread.currentThread().getStackTrace()[1].getMethodName());
-		} catch(Exception ex) {
-			return RestObject.retException(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-		} catch(Throwable ex)	{
-			return RestObject.retFatal(requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logThrowable(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
-		} 
-	}
 	
 	
 	
@@ -1572,7 +1428,7 @@ public class ScriptingController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/history/script:get", method = RequestMethod.GET)
-	@Operation(summary = "Get the List of executed scripts",	description= "...")
+	@Operation(summary = "Get the list of executed scripts",	description= "Get the history of executed scripts")
 	public ResponseEntity<RestObject> 
 	getScriptHist(@RequestHeader(value="user") final String user,
 				  @RequestHeader(value="requestId", defaultValue = "") String requestId,
@@ -1596,7 +1452,8 @@ public class ScriptingController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/history/adhoc/script:copy", method = RequestMethod.POST)
-	@Operation(summary = "Copy historical adhoc scripts",	description= "...")
+	@Operation(	summary = "Copy historical adhoc scripts",
+				description= "Copy ad-hoc scripts executed in the past to another user's profile")
 	public ResponseEntity<RestObject>
 	copyAdhocScriptHist(@RequestHeader(value="user") final String user,
 						@RequestHeader(value="requestId", defaultValue = "") String requestId,
@@ -1628,7 +1485,7 @@ public class ScriptingController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/history/repo/script:copy", method = RequestMethod.POST)
-	@Operation(summary = "Copy Repo Scripts to another user",	description= "...")
+	@Operation(summary = "Copy Repo Scripts to another user",	description= "Copy a script from your profile to another user's profile")
 	public ResponseEntity<RestObject> 
 	copyRepoScriptHist( @RequestHeader(value="user") final String user,
 					    @RequestHeader(value="requestId", defaultValue = "") String requestId,
@@ -1680,7 +1537,8 @@ public class ScriptingController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/history/script:remove", method = RequestMethod.DELETE)
-	@Operation(summary = "Delete script from your profile")
+	@Operation(	summary = "Delete script from user profile",
+				description= "Delete script from user profile. This is done by current user")
 	public ResponseEntity<RestObject> 
 	deleteScriptHist(	@RequestHeader(value="user") final String user,
 						@RequestHeader(value="requestId", defaultValue = "") String requestId,
@@ -1706,7 +1564,7 @@ public class ScriptingController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/script:download", method = RequestMethod.GET)
-	@Operation(summary = "Download script",	description= "...")
+	@Operation(summary = "Download script",	description= "Download script in a browser")
 	public ResponseEntity<Resource> 
 	downloadScript(	@RequestHeader(value="user") final String user,
 					@RequestHeader(value="scriptId") final String scriptId) {
