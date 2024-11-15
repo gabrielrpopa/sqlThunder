@@ -431,7 +431,7 @@ public class ScriptingHelper {
 					final String user,
 					final String content) throws IOException  {
 		String s = null;
-		ScriptingReturnObject scriptRet = ScriptingSharedData.getCollectedDataToUser(sessionId,requestId);
+		ScriptingReturnObject scriptRet;
 		List<LogDetail> logDetailList = new ArrayList<LogDetail>();
 		
 		try {
@@ -489,80 +489,16 @@ public class ScriptingHelper {
 		return scriptRet;
 	
 	}
-	
-	
-	public static void 
-	runAdhocAndWait(final String tmpFolder,
-					final String scriptName,
-					final int interpreterId,
-					final String requestId,
-					final String sessionId,
-					final String user,
-					final String content) throws IOException  {
-		
-		String s = "";
-		try {
-			
-			ScriptingInternalDb scriptingInternalDb = new ScriptingInternalDb();
-			InterpreterType interpreterType = scriptingInternalDb.interpreterByIdGet(interpreterId);
-			
-			if(interpreterType.getInterpreterName().toLowerCase().compareTo("WINDOWS BATCH") == 0) {
-				ProcessBuilder builder = new ProcessBuilder(interpreterType.getCommand(), "/c", "cd \"C:\\Program Files\\Microsoft SQL Server\" && dir");
-			        builder.redirectErrorStream(true);
-			        Process p = builder.start();
-			        BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			        String line;
-			        while (true) {
-			            line = r.readLine();
-			            if (line == null) { break; }
-			            System.out.println(line);
-			        }
-			        
-			        
-			} else {
-				String savedScriptName = scriptName + "_" + sessionId;
-				FileUtilWrapper.overwriteFile (tmpFolder,	savedScriptName + "." + interpreterType.getFileExtensions(), content);
-				String fullCommand = interpreterType.getCommand() + " " + tmpFolder + "\\" + savedScriptName + "." + interpreterType.getFileExtensions();
-				System.out.println(fullCommand);
-				
-				Process p = Runtime.getRuntime().exec(fullCommand);
-				BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
-				BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-				// read the output from the command
-				System.out.println("Standard Input:\n");
-	            while ((s = stdInput.readLine()) != null) {
-	                System.out.println(s);
-	               
-	            }
 
-	            // read any errors from the attempted command
-	            System.out.println("Standard error:\n");
-	            while ((s = stdError.readLine()) != null) {
-	                System.out.println(s);
-	               
-	            }
-			}
-		}
-		catch (Exception e) {
-			System.out.println(s);
-		} finally {
-			//ScriptingHelper.writeLogScriptExec(scriptVersionLogPath, user);
-		}
-	}
-	
-	
-	
-	
 	public static Map<String, String> stringToScriptParameterMap(final String str)	{
 		if(str == null || str.isBlank() || str.isEmpty() ) return new HashMap<String, String>();
 		
 		Map<String, String> ret = new HashMap<String, String>();
 		String[] pairs = str.split(",");
-		for (int i=0;i<pairs.length;i++) {
-		    String pair = pairs[i];
-		    String[] keyValue = pair.split(":");
-		    ret.put(keyValue[0], keyValue[1]);
-		}
+        for (String pair : pairs) {
+            String[] keyValue = pair.split(":");
+            ret.put(keyValue[0], keyValue[1]);
+        }
 		
 		return ret;
 	}
