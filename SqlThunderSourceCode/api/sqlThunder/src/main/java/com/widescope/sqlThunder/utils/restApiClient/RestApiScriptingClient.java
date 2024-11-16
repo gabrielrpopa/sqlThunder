@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Objects;
 
 import com.widescope.logging.AppLogger;
+import com.widescope.scripting.ScriptDetail;
+import com.widescope.sqlThunder.config.AppConstants;
 import com.widescope.sqlThunder.utils.security.SpringSecurityWrapper;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpEntity;
@@ -63,29 +65,27 @@ public class RestApiScriptingClient {
 	
 	
 	public static ScriptingReturnObject 
-	runRepoScriptViaNodeMultipart(	final String toBaseUrl,
-									final String user, 
-									final String session,
-									final String internalUser,
-									final String internalPassword,
-									final String mainFileName,
-									final int interpreterId,
-									final String requestId,
-									final String fileName,
-									final String filePath,
-									final String baseFolder	) {
+	runRepoScriptViaNodeMultipart(final String toBaseUrl,
+								  final String user,
+								  final String session,
+								  final AppConstants appC,
+								  final ScriptDetail scriptInfo,
+								  final String requestId,
+								  final String fileName,
+								  final String filePath,
+								  final String baseFolder	) {
 		String endPoint = toBaseUrl + "/scripting/script/repo/multipart/node:run";
 		
 		try {
-			
+
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 			headers.add("user", user);
 			headers.add("session", session);
-			headers.add("internalUser", internalUser);
-			headers.add("internalPassword", internalPassword);
-			headers.add("mainFileName", mainFileName);
-			headers.add("interpreterId", String.valueOf(interpreterId));
+			headers.add("internalUser", appC.getUser());
+			headers.add("internalPassword", appC.getUserPasscode());
+			headers.add("mainFileName", scriptInfo.getMainFile());
+			headers.add("interpreterId", String.valueOf(scriptInfo.getInterpreterId()));
 			headers.add("requestId", requestId);
 			headers.add("baseUrl", ClusterDb.ownBaseUrl);
 			headers.add("baseFolder", baseFolder);
