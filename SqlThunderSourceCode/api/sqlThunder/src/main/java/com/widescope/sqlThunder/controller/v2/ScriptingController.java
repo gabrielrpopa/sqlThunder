@@ -744,6 +744,7 @@ public class ScriptingController {
 
 
 	/* Script Execution Section */
+
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/scripting/script/repo:run", method = RequestMethod.POST)
 	@Operation(	summary = "Run/Execute Repo Script Version with a set of parameters",
@@ -778,7 +779,6 @@ public class ScriptingController {
 		try {
 			ScriptDetail scriptInfo = scriptingInternalDb.getScript(Integer.parseInt(scriptId));
 			Map<String, String> scriptParamObject = ScriptParamObject.convertStringListToMap(scriptParameters);
-			//String scriptVersionLogPath = appConstants.getScriptLogPath() + separator + scriptInfo.getScriptName();
 			String scriptVersionPath = appConstants.getScriptStoragePath() + separator + userId + separator + scriptInfo.getScriptName();
 			String scriptVersionMainFilePath = scriptVersionPath + separator + scriptInfo.getMainFile() ;
 			File pathMainFile = new File(scriptVersionMainFilePath);
@@ -801,18 +801,7 @@ public class ScriptingController {
 				if(node.equals(ClusterDb.ownBaseUrl)) {
 					isOwnHostExecution = true;
 				} else {
-					RestApiScriptingClient.runRepoScriptViaNodeMultipart(	node,
-																			user,
-																			session,
-																			appConstants.getUser(),
-																			appConstants.getUserPasscode(),
-																			scriptInfo.getMainFile(),
-																			scriptInfo.getInterpreterId(),
-																			requestId,
-																			zipFileName + ".zip",
-																			zipPath,
-																			folder
-																			);
+					RestApiScriptingClient.runRepoScriptViaNodeMultipart(node, user, session, appConstants, scriptInfo, requestId, zipFileName + ".zip", zipPath, folder);
 				}
 			}
 			
@@ -910,21 +899,7 @@ public class ScriptingController {
 					FileUtilWrapper.replaceStringInAllFilesFromFolder(tmpPath, node.getScriptParamList());
 					FileUtilWrapper.replaceStringInAllFilesFromFolder(tmpPath, user, session, requestId);
 					ZipDirectory.zip(tmpPath, zipPath);
-					System.out.print("File to be sent to cluster: " + zipPath);
-
-					RestApiScriptingClient.runRepoScriptViaNodeMultipart(	node.getNodeUrl(),
-																			user,
-																			session,
-																			appConstants.getUser(), 
-																			appConstants.getUserPasscode(),
-																			scriptInfo.getMainFile(),
-																			scriptInfo.getInterpreterId(),
-																			requestId,
-																			zipFileName + ".zip",
-																			zipPath,
-																			folder
-																			);
-					
+					RestApiScriptingClient.runRepoScriptViaNodeMultipart(node.getNodeUrl(), user, session, appConstants, scriptInfo, requestId, zipFileName + ".zip", zipPath, folder);
 					FileUtilWrapper.deleteFile(zipPath);
 					FileUtilWrapper.deleteDirectoryWithAllContent(tmpPath);
 				}
