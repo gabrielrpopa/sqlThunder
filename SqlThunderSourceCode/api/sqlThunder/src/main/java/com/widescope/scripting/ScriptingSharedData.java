@@ -35,89 +35,56 @@ public class ScriptingSharedData {
 	
 	public static void addEmptyEntryLog(	final String sessionId, 
 											final String requestId) {
-		if(sessionId != null && !scriptSharedPool.contains(sessionId))
-			scriptSharedPool.put(sessionId, new ConcurrentHashMap<>());
-		
+
+		scriptSharedPool.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 		scriptSharedPool.get(sessionId).put(requestId, new ScriptingSharedDataObject());
 	}
 	
 	public static void addLog(	final String sessionId, 
 								final String requestId, 
 								final RowValue line) {
-		if(sessionId != null && !scriptSharedPool.contains(sessionId)) {
-			if(requestId!= null && scriptSharedPool.get(sessionId)!= null && !scriptSharedPool.get(sessionId).contains(requestId)) {
-				scriptSharedPool.get(sessionId).get(requestId).addLogToPool(line);
-			}
-		}
-		
+		scriptSharedPool.get(sessionId).get(requestId).addLogToPool(line);
 	}
 	
 	public static void addLogs(	final String sessionId, 
 								final String requestId, 
 								final List<RowValue> lines) {
-		if(sessionId != null && !scriptSharedPool.contains(sessionId)) {
-			if(requestId!= null && scriptSharedPool.get(sessionId)!= null && !scriptSharedPool.get(sessionId).contains(requestId)) {
-				scriptSharedPool.get(sessionId).get(requestId).addLogsToPool(lines);
-			}
-		}
+		scriptSharedPool.get(sessionId).get(requestId).addLogsToPool(lines);
 	}
 	
 	
 	public static void addLogTableDefinition(	final String sessionId, 
-										final String requestId, 
-										final TableDefinition tableDefinition) {
-		if(sessionId!=null && !scriptSharedPool.contains(sessionId)) {
-			if(requestId!= null && scriptSharedPool.get(sessionId)!= null && !scriptSharedPool.get(sessionId).contains(requestId)) {
-				scriptSharedPool.get(sessionId).get(requestId).setTableDefinition(tableDefinition);
-			}
-		}
+												final String requestId,
+												final TableDefinition tableDefinition) {
+		scriptSharedPool.get(sessionId).get(requestId).setTableDefinition(tableDefinition);
 	}
 	
 	public static void addLogTableFooter(	final String sessionId, 
 											final String requestId, 
 											final RowValue rowValue) {
-		if(sessionId!=null && !scriptSharedPool.contains(sessionId)) {
-			if(requestId!= null && scriptSharedPool.get(sessionId)!= null && !scriptSharedPool.get(sessionId).contains(requestId)) {
-				scriptSharedPool.get(sessionId).get(requestId).setTableFooter(rowValue);
-			}
-		}
+		scriptSharedPool.get(sessionId).get(requestId).setTableFooter(rowValue);
 	}
 	
 	
 	public static void removeRequestData(	final String sessionId, 
 											final String requestId) {
-		if(sessionId!=null && !scriptSharedPool.contains(sessionId)) {
-			if(requestId!= null && scriptSharedPool.get(sessionId)!= null && !scriptSharedPool.get(sessionId).contains(requestId)) {
-				scriptSharedPool.get(sessionId).remove(requestId);
-			}
-		}
-		
-		if(sessionId!=null && !scriptUsedPool.contains(sessionId)) {
-			if(requestId!= null && scriptUsedPool.get(sessionId)!= null && !scriptUsedPool.get(sessionId).contains(requestId)) {
-				scriptUsedPool.get(sessionId).remove(requestId);	
-			}
-		} 
+		scriptSharedPool.get(sessionId).remove(requestId);
+		scriptUsedPool.get(sessionId).remove(requestId);
 	}
 	
 	public static void removeSessionData(final String sessionId) {
-		if(sessionId != null && scriptSharedPool.get(sessionId) != null ) {
-			scriptSharedPool.remove(sessionId);
-		}
-		
-		if(sessionId != null && scriptUsedPool.get(sessionId) != null ) {
-			scriptUsedPool.remove(sessionId);
-		}
-			
+		scriptSharedPool.remove(sessionId);
+		scriptUsedPool.remove(sessionId);
 	}
 	
 	public static ScriptingSharedDataObject getCollectedData(	final String sessionId, 
-															final String requestId) {
-		return scriptSharedPool	.get(sessionId).get(requestId);
+																final String requestId) {
+		return scriptSharedPool.get(sessionId).get(requestId);
 	}
 	
 	public static ScriptingReturnObject getCollectedDataToUser(	final String sessionId,
 																final String requestId) {
-		return ScriptingReturnObject.toScriptingReturnObject(scriptSharedPool	.get(sessionId).get(requestId));
+		return ScriptingReturnObject.toScriptingReturnObject(scriptSharedPool.get(sessionId).get(requestId));
 	}
 		
 	
@@ -129,15 +96,7 @@ public class ScriptingSharedData {
 	 */
 	public static Set<RowValue> extractLogs(final String sessionId, 
 											final String requestId) {
-		
-		if(sessionId != null && scriptUsedPool.contains(sessionId)) {
-			if(requestId!= null && scriptUsedPool.get(sessionId) != null && !scriptUsedPool.get(sessionId).contains(requestId)) {
-				return new HashSet<RowValue>();	
-			}
-		} else {
-			return new HashSet<RowValue>();	
-		}
-		
+
 		Set<String> newKeys = scriptSharedPool	.get(sessionId)
 												.get(requestId)
 												.getPoolData()
@@ -155,7 +114,6 @@ public class ScriptingSharedData {
 		
 		scriptUsedPool.get(sessionId).get(requestId).addAll(newKeys);
 		return ret;
-		
 	}
 	
 }
