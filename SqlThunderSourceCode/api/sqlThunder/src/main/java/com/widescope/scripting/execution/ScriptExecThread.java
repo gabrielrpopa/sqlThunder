@@ -27,7 +27,7 @@ public class ScriptExecThread implements Callable<ScriptingReturnObject>  {
     private final int interpreterId;
     private final String requestId;
     private final String scriptContent;
-    
+
     public ScriptExecThread(final String toBaseUrl,
                             final String user,
                             final String session,
@@ -49,68 +49,26 @@ public class ScriptExecThread implements Callable<ScriptingReturnObject>  {
 
     @Override
     public ScriptingReturnObject call() {
-        return RestApiScriptingClient.runAdhocScriptViaNode(toBaseUrl,
-                                                            user,
-                                                            session,
-                                                            appConstants.getUser(),
-                                                            appConstants.getUserPasscode(),
-                                                            scriptName,
-                                                            interpreterId,
-                                                            requestId,
-                                                            scriptContent);
-    }
-
-
-
-    public static ScriptingReturnObject
-    execParallelSync(final List<String> machineList,
-                     final String user,
-                     final String session,
-                     final AppConstants appConstants,
-                     final String scriptName,
-                     final String interpreterId,
-                     final String requestId,
-                     final String scriptContent) {
-        int iId = Integer.parseInt(interpreterId);
-        final String endPoint = "/scripting/script/adhoc/node:sink";
-        List<Future<ScriptingReturnObject>> list = new ArrayList<Future<ScriptingReturnObject>>();
-        ScriptingReturnObject scriptRet = new ScriptingReturnObject(requestId, "N");
-        ExecutorService executor = Executors.newFixedThreadPool(machineList.size());
-        for (String node: machineList) {
-            Callable<ScriptingReturnObject> task = new ScriptExecThread(node + endPoint, user, session, appConstants, scriptName, iId, requestId, scriptContent);
-            Future<ScriptingReturnObject> future = executor.submit(task);
-            list.add(future);
-        }
-        for(Future<ScriptingReturnObject> future : list){
-            try {
-                ScriptingReturnObject result = future.get();
-                scriptRet.concatScriptingReturnObject(result);
-            } catch (InterruptedException | ExecutionException e) {
-                AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.obj);
-            }
-        }
-        executor.shutdown();
-        return scriptRet;
+        return RestApiScriptingClient.runNodeScript1(toBaseUrl, user, session, appConstants.getUser(), appConstants.getUserPasscode(), scriptName, interpreterId, requestId, scriptContent);
     }
 
 
     public static ScriptingReturnObject
-    execParallelAsync(final List<String> machineList,
-                      final String user,
-                      final String session,
-                      final AppConstants appConstants,
-                      final String scriptName,
-                      final String interpreterId,
-                      final String requestId,
-                      final String scriptContent) {
+    execDistributed(final List<String> machineList,
+                    final String user,
+                    final String session,
+                    final AppConstants appConstants,
+                    final String scriptName,
+                    final String interpreterId,
+                    final String requestId,
+                    final String scriptContent) {
 
         int iId = Integer.parseInt(interpreterId);
-        final String endPoint = "/scripting/script/adhoc/node:sink";
         ScriptingReturnObject scriptRet = new ScriptingReturnObject();
         List<Future<ScriptingReturnObject>> list = new ArrayList<>();
         ExecutorService executor = Executors.newFixedThreadPool(machineList.size());
         for (String node: machineList) {
-            Callable<ScriptingReturnObject> task = new ScriptExecThread(node + endPoint, user, session, appConstants, scriptName, iId , requestId, scriptContent);
+            Callable<ScriptingReturnObject> task = new ScriptExecThread(node, user, session, appConstants, scriptName, iId , requestId, scriptContent);
             Future<ScriptingReturnObject> future = executor.submit(task);
             list.add(future);
         }
