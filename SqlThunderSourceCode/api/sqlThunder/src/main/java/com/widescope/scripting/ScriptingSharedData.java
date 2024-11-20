@@ -92,7 +92,7 @@ public class ScriptingSharedData {
 	 * Extract unsent logs, and whatever I sent I save as reference in scriptUsedPool
 	 * @param sessionId
 	 * @param requestId
-	 * @return
+	 * @return Set<RowValue>
 	 */
 	public static Set<RowValue> extractLogs(final String sessionId, 
 											final String requestId) {

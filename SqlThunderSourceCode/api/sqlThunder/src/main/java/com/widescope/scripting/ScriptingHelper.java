@@ -54,10 +54,14 @@ import com.widescope.webSockets.userStreamingPortal.objects.WebsocketMessageType
 
 public class ScriptingHelper {
 
-	public static List<LogDetail> 
-	runCommandWithReturn(final String filePath,
-		final String command)  {
-
+	/**
+	 * Description: Runs script or command and returns log to calling function
+	 * @param command for the shell
+	 * @return List<LogDetail>
+	 * Used by runClientScript1, runClientScript2
+	 */
+	public static List<LogDetail>
+	runAdhocScriptAndReturnLog(final String command)  {
 		List<LogDetail> ret = new ArrayList<>();
 		String s;
 
@@ -85,13 +89,19 @@ public class ScriptingHelper {
         }
 		return ret;
 	}
-	
-	
 
-	public static void 
-	runRepoWithNotifications(	final String user,
-								final String command, 
-								final String requestId) {
+
+	/**
+	 * Description: Runs Repo script and push log to calling user via websockets, assuming user is connected via websockets at all times
+	 * @param user
+	 * @param command
+	 * @param requestId
+	 * Used by runClientScript1, runClientScript2
+	 */
+	public static void
+	runRepoScriptAndPushLogWithNotificationToUser(final String user,
+												  final String command,
+												  final String requestId) {
 		String s;
 
 		int count = 0;
@@ -136,17 +146,32 @@ public class ScriptingHelper {
 		}
 	}
 
-	public static void 
-	runAdhocWithNotificationsToNode(	final String tmpFolder,
-										final String scriptName,
-										final int interpreterId,
-										final String requestId,
-										final String user,
-										final String session,
-										final String internalUser,
-										final String internalPassword,
-										final String content,
-										final String baseUrl) throws IOException  {
+
+	/**
+	 *
+	 * @param tmpFolder
+	 * @param scriptName
+	 * @param interpreterId
+	 * @param requestId
+	 * @param user
+	 * @param session
+	 * @param internalUser
+	 * @param internalPassword
+	 * @param content
+	 * @param baseUrl
+	 * @throws IOException
+	 */
+	public static void
+	runAdhocWithNotificationsToGate(final String tmpFolder,
+									final String scriptName,
+									final int interpreterId,
+									final String requestId,
+									final String user,
+									final String session,
+									final String internalUser,
+									final String internalPassword,
+									final String content,
+									final String baseUrl) throws IOException  {
 		String s = null;
 		int count = 0;
 		InterpreterType interpreterType = new InterpreterType();
@@ -166,14 +191,14 @@ public class ScriptingHelper {
 		        
 		        System.out.println("Standard Input:\n");
 				ScriptHeaderOutput scriptHeaderOutput = new ScriptHeaderOutput("Ad-Hoc");
-				
-				
-				RestApiScriptingClient.loopbackScriptStdin(	baseUrl, 
+
+
+				RestApiScriptingClient.loopbackScriptStdin(	baseUrl,
 															user, 
-															session, 
+															session,
 															internalUser,
 															internalPassword,
-															requestId, 
+															requestId,
 															WebsocketMessageType.headerScript, 
 															scriptHeaderOutput.toString());
 				
@@ -236,17 +261,17 @@ public class ScriptingHelper {
 	
 	}
 	
-	
-	public static void 
-	runAdhocWithNotificationsToNode(	final String folder,
-										final String mainFileName,
-										final int interpreterId,
-										final String requestId,
-										final String user,
-										final String session,
-										final String internalUser,
-										final String internalPassword,
-										final String baseUrl) throws IOException  {
+
+	public static void
+	runAdhocWithNotificationsToGate(final String folder,
+									final String mainFileName,
+									final int interpreterId,
+									final String requestId,
+									final String user,
+									final String session,
+									final String internalUser,
+									final String internalPassword,
+									final String baseUrl) throws IOException  {
 		String s = null;
 		int count = 0;
 		InterpreterType interpreterType;
@@ -337,10 +362,7 @@ public class ScriptingHelper {
 										final String requestId,
 										final String user,
 										final String session,
-										final String internalUser,
-										final String internalPassword,
-										final String content,
-										final String baseUrl) throws IOException  {
+										final String content) throws IOException  {
 		String s = null;
 		int count = 0;
 		InterpreterType interpreterType = new InterpreterType();
@@ -412,7 +434,6 @@ public class ScriptingHelper {
 			AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.obj);
 			count++;
 		} finally {
-			//ScriptingHelper.writeLogScriptExec(scriptVersionLogPath, user);
 			ScriptFooterOutput scriptfooterOutput = new ScriptFooterOutput(count);
 			WebsocketPayload wsPayload = new WebsocketPayload(requestId, user, user, WebsocketMessageType.footerScript, scriptfooterOutput, ClusterDb.ownBaseUrl);
 			WebSocketsWrapper.sendSingleMessageToUserFromServer( wsPayload);
@@ -428,7 +449,6 @@ public class ScriptingHelper {
 					final int interpreterId,
 					final String requestId,
 					final String sessionId,
-					final String user,
 					final String content) throws IOException  {
 		String s = null;
 		ScriptingReturnObject scriptRet;
@@ -440,7 +460,7 @@ public class ScriptingHelper {
 			InterpreterType interpreterType = scriptingInternalDb.interpreterByIdGet(interpreterId);
 			
 			if(interpreterType.getInterpreterName().toLowerCase().compareTo("WINDOWS BATCH") == 0) {
-				ProcessBuilder builder = new ProcessBuilder(interpreterType.getCommand(), "/c", "cd \"C:\\Program Files\\Microsoft SQL Server\" && dir");
+				ProcessBuilder builder = new ProcessBuilder(interpreterType.getCommand(), "/c", "cd \"C:\" && dir");
 			        builder.redirectErrorStream(true);
 			        Process p = builder.start();
 			        BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -449,7 +469,6 @@ public class ScriptingHelper {
 			            line = r.readLine();
 			            System.out.println(line);
 			            if (line == null) { break; }
-			            
 			            logDetailList.add(new LogDetail("stdin", line));
 			        }
 			        

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.widescope.logging.AppLogger;
 import com.widescope.rest.RestInterface;
 import com.widescope.rdbmsRepo.database.tableFormat.RowValue;
 import com.widescope.rdbmsRepo.database.tableFormat.TableDefinition;
@@ -115,6 +116,23 @@ public class ScriptingReturnObject implements RestInterface {
 			return null;
 		}
 		return ret;
+	}
+
+
+
+	public void concatScriptingReturnObject(ScriptingReturnObject s) {
+		try	{
+			if(tableDefinition.getTableName().compareToIgnoreCase("") == 0 || tableDefinition.getMetadata().isEmpty()) {
+				tableDefinition.toTableDefinition(s.getTableDefinition());
+			}
+			for(RowValue l: s.getPoolData()) {
+				addPoolData(l);
+			}
+			this.tableFooter.setRow(s.getTableFooter().getRow());
+			this.logDetailList.addAll(s.getLogDetailList());
+		} catch(Exception e) {
+			AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
+		}
 	}
 
 
