@@ -17,15 +17,7 @@
 
 package com.widescope.sqlThunder.utils;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -136,6 +128,21 @@ public class FileUtilWrapper {
 		org.apache.commons.io.FileUtils.writeByteArrayToFile(new File(fullFileName), content);
 	    return true;
 	}
+
+	/**
+	 * Write to a new file with silent error handling
+	 * @param fullFileName - full file path
+	 * @param content - content of the file in text format
+	 */
+	public static void
+	writeBufferedFile(final String fullFileName, final String content) {
+		try( FileWriter fw = new FileWriter(fullFileName, true);  BufferedWriter bw = new BufferedWriter(fw);  PrintWriter pw = new PrintWriter(bw)) {
+			pw.write(content + System.lineSeparator());
+		} catch (IOException ex) {
+			AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl);
+		}
+	}
+
 	
 	
 	
@@ -670,30 +677,26 @@ public class FileUtilWrapper {
 
 		String content = "";
 		try {
-			content = new String(Files.readAllBytes(path), charset);
+			content = Files.readString(path, charset);
 			for (Map.Entry<String,String> entry : params.entrySet()) {
 	            System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
 	            content = content.replaceAll(entry.getKey(), entry.getValue());
 			}
-			Files.write(path, content.getBytes(charset));
+			Files.writeString(path, content, charset);
 		} catch (IOException e) {
 			throw e;
 		}
 	}
 	
 	
-	public static void replaceStringInAllFilesFromFolder(String folderPath, Map<String, String> params) throws IOException {
+	public static void interpolateParamsInFiles(String folderPath, Map<String, String> params) throws IOException {
 		List<FileCharacteristic> filePathList = new ArrayList<>();
-		try {
-			filePathList = getFolderContentRecursively(folderPath);
-			for (int i = 0; i < filePathList.size(); i++) {
-				replaceStringInFile(filePathList.get(i).getCanonicalPath(), params );
-			}
-		} catch (IOException e) {
-			throw e;
-		}
-		
-	}
+        filePathList = getFolderContentRecursively(folderPath);
+        for (FileCharacteristic fileCharacteristic : filePathList) {
+            replaceStringInFile(fileCharacteristic.getCanonicalPath(), params);
+        }
+
+    }
 	
 	
 	
@@ -715,7 +718,7 @@ public class FileUtilWrapper {
 	}
 	
 	
-	public static void replaceStringInAllFilesFromFolder(String folderPath, List<ScriptParam> params) throws IOException {
+	public static void interpolateParams(String folderPath, List<ScriptParam> params) throws IOException {
 		List<FileCharacteristic> filePathList = new ArrayList<>();
 		try {
 			filePathList = getFolderContentRecursively(folderPath);
@@ -728,25 +731,25 @@ public class FileUtilWrapper {
 		
 	}
 	
-	public static void replaceStringInAllFilesFromFolder(String folderPath,
-														 String user,
-														 String session, String requestId) throws IOException {
+	public static void interpolateParams(String folderPath,
+										 String user,
+										 String session, String requestId) throws IOException {
 		Map<String, String> params = new HashMap<>();
 		params.put("@user@", user);
 		params.put("@session@", session);
 		params.put("@request@", requestId);
-		replaceStringInAllFilesFromFolder(folderPath, params);
+		interpolateParamsInFiles(folderPath, params);
 	}
 
-	public static void replaceStringInAllFilesFromFolder(String folderPath,
-														 String user,
-														 String session,
-														 String requestId,
-														 String internalAdmin,
-														 String internalAdminPasscode,
-														 String http,
-														 String host,
-														 String port
+	public static void interpolateParams(String folderPath,
+										 String user,
+										 String session,
+										 String requestId,
+										 String internalAdmin,
+										 String internalAdminPasscode,
+										 String http,
+										 String host,
+										 String port
 	) throws IOException {
 		Map<String, String> params = new HashMap<>();
 		params.put("@user@", user);
@@ -757,7 +760,7 @@ public class FileUtilWrapper {
 		params.put("@http@", http);
 		params.put("@host@", host);
 		params.put("@port@", port);
-		replaceStringInAllFilesFromFolder(folderPath, params);
+		interpolateParamsInFiles(folderPath, params);
 	}
 	
 	
