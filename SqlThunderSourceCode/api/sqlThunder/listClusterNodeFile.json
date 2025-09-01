@@ -1,0 +1,12 @@
+{
+  "list" : [ 
+			{
+				"host" : "http://192.168.0.175:9099/sqlThunder",
+				"type" : "EXECUTOR"
+			}, 
+			{
+				"host" : "http://192.168.0.119:9099/sqlThunder",
+				"type" : "EXECUTOR"
+			} 
+		]
+}
