@@ -21,7 +21,7 @@ import org.springframework.beans.factory.config.AbstractFactoryBean;
 
 
 
-public class DbConnectionFactory extends AbstractFactoryBean<DbConnectionInfo> {
+public class DbConnectionFactory_ extends AbstractFactoryBean<DbConnectionInfo> {
 	private DbConnectionInfo dbConnectionInfo;
 	public DbConnectionInfo getConnectionDetails()	{ return dbConnectionInfo;	}
 	public void setConnectionDetails(final DbConnectionInfo dbConnectionInfo)	{ this.dbConnectionInfo = dbConnectionInfo;}
@@ -33,3 +33,4 @@ public class DbConnectionFactory extends AbstractFactoryBean<DbConnectionInfo> {
 	@Override
 	public Class<DbConnectionInfo> getObjectType() { return DbConnectionInfo.class; }
 }
+
