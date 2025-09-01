@@ -1,7 +1,0 @@
-{
-    "baseUrl": "http://localhost:9099/sqlThunder",
-    "webSocketsUrl": "ws://localhost:9099/sqlThunder/websocket",
-    "sqlThunderHttp": [],
-    "security":"NATIVE",
-    "googleClientId":""
-}
