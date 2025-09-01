@@ -1,0 +1,43 @@
+package com.widescope.cluster.management.miscellaneous;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+
+public class ClusterNode {
+
+    private	String baseUrl;
+    public String getBaseUrl() { return baseUrl; }
+    public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+
+    private	String type;
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+
+
+    public ClusterNode(final String baseUrl, final String type) {
+        this.baseUrl = baseUrl;
+        this.type = type;
+    }
+
+
+
+    @Override
+    public String toString() {
+        return new Gson().toJson(this);
+    }
+
+
+    public static ClusterNode toClusterNode (String str) {
+        Gson gson = new Gson();
+        try	{
+            return gson.fromJson(str, ClusterNode.class);
+        }
+        catch(JsonSyntaxException ex) {
+            return null;
+        }
+
+    }
+
+}
