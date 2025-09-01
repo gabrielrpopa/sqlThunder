@@ -1,0 +1,156 @@
+/*
+ * Copyright 2022-present Infinite Loop Corporation Limited, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+package com.widescope.sqlThunder.controller.v2;
+
+
+import java.util.List;
+
+import com.widescope.logging.AppLogger;
+import com.widescope.sqlThunder.service.GeneralService;
+import com.widescope.sqlThunder.utils.DateTimeUtils;
+import com.widescope.sqlThunder.utils.StringUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.widescope.sqlThunder.rest.GenericResponse;
+import com.widescope.sqlThunder.rest.RestObject;
+import com.widescope.sqlThunder.config.AppConstants;
+import com.widescope.sqlThunder.rest.about.DatabaseEnvironment;
+import com.widescope.sqlThunder.rest.about.DatabaseEnvironmentList;
+import com.widescope.sqlThunder.rest.about.LogContent;
+import com.widescope.sqlThunder.rest.about.ServerEnvironment;
+import com.widescope.sqlThunder.utils.StaticUtils;
+
+
+
+
+@CrossOrigin
+@RestController
+@Schema(title = "Environment Information")
+public class EnvironmentController {
+
+
+	@Autowired
+	private AppConstants appConstants;
+	
+	@Autowired
+	private GeneralService generalService;
+
+	@PostConstruct
+	public void initialize() {
+		
+	}
+		
+	@RequestMapping(value = "/environment:about", method = RequestMethod.GET)
+	@Operation(summary = "About this API")
+	public ResponseEntity<RestObject> 
+	about(	@RequestHeader(value="requestId", defaultValue = "") String requestId) {
+		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		String appDesc = "Sql Thunder";
+		requestId = StringUtils.generateRequestId(requestId);
+		try	{
+			StaticUtils.getHostInfo();
+			List<DatabaseEnvironment> listOfDatabases = generalService.getAllAvailableDatabases();
+			DatabaseEnvironmentList databaseEnvironmentList = new DatabaseEnvironmentList(listOfDatabases);
+			ServerEnvironment target = new ServerEnvironment(	databaseEnvironmentList, 
+																null, 
+																null, 
+																appDesc, 
+																appConstants.getSpringProfilesActive(), 
+																null);
+			return RestObject.retOKWithPayload(target, requestId, methodName);
+		} catch(Exception ex) {
+			return RestObject.retException(new GenericResponse(ex.getMessage()), requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+		} 
+	}
+
+
+
+	@RequestMapping(value = "/client:ip", method = RequestMethod.GET)
+	@Operation(summary = "Get client IP Address")
+	public ResponseEntity<RestObject>
+	clientIpAddress(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					HttpServletRequest request) {
+		requestId = StringUtils.generateRequestId(requestId);
+		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		String ipAddress = request.getRemoteAddr();
+		return RestObject.retOKWithPayload(ipAddress, requestId, methodName);
+	}
+	
+	
+	
+	@CrossOrigin(origins = "*")
+	@RequestMapping(value = "/environment/log:query", method = RequestMethod.GET)
+	@Operation(summary = "Get the log")
+	public ResponseEntity<RestObject>
+	getLog( @RequestHeader(value="requestId", defaultValue = "") String requestId,
+			@RequestHeader(value="stringToSearch") final String stringToSearch) {
+		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
+		try	{
+			LogContent logContent = generalService.getLogContent(stringToSearch);
+			return RestObject.retOKWithPayload(logContent, requestId, methodName);
+		} catch(Exception ex) {
+			return RestObject.retException(new GenericResponse(ex.getMessage()), requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+		}
+	}
+
+	
+	
+	@CrossOrigin(origins = "*")
+	@RequestMapping(value = "/environment/be:version", method = RequestMethod.GET)
+	@Operation(summary = "Get the backend version")
+	public ResponseEntity<RestObject> 
+	getBEVersion(@RequestHeader(value="requestId", defaultValue = "") String requestId) {
+		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
+		try	{
+			return RestObject.retOKWithPayload(new GenericResponse("1.3.2"), requestId, methodName);
+		} catch(Exception ex) {
+			return RestObject.retException(new GenericResponse(ex.getMessage()), requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+		}
+	}
+
+
+
+	@CrossOrigin(origins = "*")
+	@RequestMapping(value = "/environment:mEpoch", method = RequestMethod.GET)
+	@Operation(summary = "Get the milliseconds since Epoch")
+	public ResponseEntity<RestObject>
+	getMillisecondsSinceEpoch(@RequestHeader(value="requestId", defaultValue = "") String requestId) {
+		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		requestId = StringUtils.generateRequestId(requestId);
+		try	{
+			long millisecondsSinceEpoch = DateTimeUtils.millisecondsSinceEpoch();
+			return RestObject.retOKWithPayload(new GenericResponse(millisecondsSinceEpoch), requestId, methodName);
+		} catch(Exception ex) {
+			return RestObject.retException(new GenericResponse(ex.getMessage()), requestId, Thread.currentThread().getStackTrace()[1].getMethodName(), AppLogger.logException(ex, Thread.currentThread().getStackTrace()[1], AppLogger.ctrl));
+		}
+	}
+
+	
+}
