@@ -1,5 +1,0 @@
-{
-	"sqlDbRefsList":[],
-	"mongoClusterList":["localMongoDb"],
-	"elasticClusterList":[]
-}
