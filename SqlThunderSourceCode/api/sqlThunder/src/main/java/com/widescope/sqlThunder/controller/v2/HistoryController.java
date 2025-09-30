@@ -270,7 +270,7 @@ public class HistoryController {
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/history/execution/group:add", method = RequestMethod.PUT)
 	@Operation(	summary = "Create Persistence Group for a certain repository",
-			description= "Create Persistence Group for a certain repository, such as Elacticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
+			description= "Create Persistence Group for a certain repository, such as Elasticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
 	public ResponseEntity<RestObject>
 	createArtifactGroup(@RequestHeader(value="requestId", defaultValue = "") String requestId,
 						@RequestHeader(value="groupName") final String groupName,
@@ -289,7 +289,7 @@ public class HistoryController {
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/history/execution/group:get", method = RequestMethod.GET)
 	@Operation(	summary = "Get Persistence Group for a certain repository",
-			description= "Get Persistence Group for a certain repository, such as Elacticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
+			description= "Get Persistence Group for a certain repository, such as Elasticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
 	public ResponseEntity<RestObject>
 	getArtifactGroup(@RequestHeader(value="requestId", defaultValue = "") String requestId,
 						@RequestHeader(value="groupName") final String groupName,
@@ -306,7 +306,7 @@ public class HistoryController {
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/history/execution/group:delete", method = RequestMethod.DELETE)
 	@Operation(	summary = "Delete Persistence Group for a certain repository",
-			description= "Delete Persistence Group for a certain repository, such as Elacticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
+			description= "Delete Persistence Group for a certain repository, such as Elasticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
 	public ResponseEntity<RestObject>
 	deleteArtifactGroup( @RequestHeader(value="requestId", defaultValue = "") String requestId,
 							@RequestHeader(value="groupId") final long groupId,
@@ -326,7 +326,7 @@ public class HistoryController {
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/history/execution/access:add", method = RequestMethod.PUT)
 	@Operation(	summary = "Add Object Access to a certain repository",
-			description= "Add Object Access to a certain repository, such as Elacticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
+			description= "Add Object Access to a certain repository, such as Elasticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
 	public ResponseEntity<RestObject>
 	addArtifactAccess(@RequestHeader(value="requestId", defaultValue = "") String requestId,
 					  @RequestHeader(value="repoName") final String repoName,
@@ -346,7 +346,7 @@ public class HistoryController {
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/history/execution/access:get", method = RequestMethod.GET)
 	@Operation(	summary = "Get Object Access for a certain repository",
-			description= "Get Object Access for a certain repository, such as Elacticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
+			description= "Get Object Access for a certain repository, such as Elasticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
 	public ResponseEntity<RestObject>
 	getArtifactAccessById(@RequestHeader(value="requestId", defaultValue = "") String requestId,
 						  @RequestHeader(value="objectId") final long objectId,
@@ -362,7 +362,7 @@ public class HistoryController {
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/history/execution/access/user:get", method = RequestMethod.GET)
 	@Operation(	summary = "Get a list of Object Access by user for a certain repository",
-			description= "Get a list of Object Access by user for a certain repository, such as Elacticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
+			description= "Get a list of Object Access by user for a certain repository, such as Elasticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
 	public ResponseEntity<RestObject>
 	getArtifactAccessByUserId(@RequestHeader(value="requestId", defaultValue = "") String requestId,
 							@RequestHeader(value="userId") final long userId,
@@ -379,7 +379,7 @@ public class HistoryController {
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/history/execution/access/object/user:get", method = RequestMethod.GET)
 	@Operation(	summary = "Get Object Access by user on a certain repository",
-			description= "Get Object Access by user on a certain repository, such as Elacticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
+			description= "Get Object Access by user on a certain repository, such as Elasticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
 	public ResponseEntity<RestObject>
 	getArtifactAccess(@RequestHeader(value="requestId", defaultValue = "") String requestId,
 					@RequestHeader(value="objectId") final long objectId,
@@ -397,7 +397,7 @@ public class HistoryController {
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/history/execution/access/object:delete", method = RequestMethod.DELETE)
 	@Operation(	summary = "Delete access to object to all users on a certain repository",
-			description= "Delete access to object to all users on a certain repository, such as Elacticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
+			description= "Delete access to object to all users on a certain repository, such as Elasticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
 	public ResponseEntity<RestObject>
 	deleteAccessByArtifactId(@RequestHeader(value="requestId", defaultValue = "") String requestId,
 							@RequestHeader(value="objectId") final long objectId,
@@ -414,7 +414,7 @@ public class HistoryController {
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/history/execution/access/object/user:delete", method = RequestMethod.DELETE)
 	@Operation(	summary = "Delete access to object to a user on a certain repository",
-			description= "Delete access to object to a user on a certain repository, such as Elacticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
+			description= "Delete access to object to a user on a certain repository, such as Elasticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
 	public ResponseEntity<RestObject>
 	deleteArtifactAccess( @RequestHeader(value="requestId", defaultValue = "") String requestId,
 						  @RequestHeader(value="objectId") final long objectId,
@@ -432,7 +432,7 @@ public class HistoryController {
 	@CrossOrigin(origins = "*")
 	@RequestMapping(value = "/history/execution/access/object:count", method = RequestMethod.GET)
 	@Operation(	summary = "Get Count Object Access on a certain repository",
-			description= "Get Count Object Access on a certain repository, such as Elacticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
+			description= "Get Count Object Access on a certain repository, such as Elasticsearch, MongoDb, Rdbms, Scripting or internal storage repository")
 	public ResponseEntity<RestObject>
 	countArtifactAccess(@RequestHeader(value="requestId", defaultValue = "") String requestId,
 						@RequestHeader(value="objectId") final long objectId,
