@@ -22,6 +22,7 @@ import com.widescope.scripting.db.ScriptExecutedRecordList;
 import com.widescope.scripting.db.ScriptExecutedRepoDb;
 import com.widescope.sqlThunder.rest.RestInterface;
 import com.widescope.sqlThunder.utils.FileUtilWrapper;
+import com.widescope.sqlThunder.utils.StringUtils;
 import com.widescope.sqlThunder.utils.user.AuthUtil;
 import com.widescope.sqlThunder.utils.user.User;
 import com.widescope.storage.internalRepo.*;
@@ -137,7 +138,10 @@ public class PersistenceWrap {
     }
 
 
-    public RestInterface saveExecution(RestInterface rec, Object o, String persist) {
+    public RestInterface saveExecution(RestInterface rec, Object o, String persist)  {
+        if(isStatementName(rec) ) {
+            rec = setNewStatementName(rec); /*rename it if exists, by adding a trailing string to original name*/
+        }
         if(rec instanceof MongoExecutedQuery) {
             return saveMongoExecution((MongoExecutedQuery)rec, o, persist);
         } else if(rec instanceof RdbmsExecutedQuery) {
@@ -151,8 +155,39 @@ public class PersistenceWrap {
         }
     }
 
+    public boolean isStatementName(RestInterface rec)  {
+        try {
+            if(rec instanceof MongoExecutedQuery) {
+                return execMongoDb.isStatementName(((MongoExecutedQuery)rec).getStatementName());
+            } else if(rec instanceof RdbmsExecutedQuery) {
+                return execRdbmsDb.isStatementName(((RdbmsExecutedQuery) rec).getStatementName());
+            } else if(rec instanceof ElasticExecutedQuery) {
+                return execElasticDb.isStatementName(((ElasticExecutedQuery) rec).getStatementName());
+            } else if(rec instanceof ScriptExecutedRecord) {
+                return execScriptDb.isScriptName(((ScriptExecutedRecord) rec).getScriptName());
+            } else {
+                return false;
+            }
+        } catch(Exception ex) {
+            return true;
+        }
+
+    }
 
 
+    public RestInterface setNewStatementName(RestInterface rec)  {
+        String newName = "-" + StringUtils.generateUniqueString(6);
+        if(rec instanceof MongoExecutedQuery) {
+            ((MongoExecutedQuery)rec).setStatementName(((MongoExecutedQuery)rec).getStatementName() + newName);
+        } else if(rec instanceof RdbmsExecutedQuery) {
+            ((RdbmsExecutedQuery)rec).setStatementName(((RdbmsExecutedQuery)rec).getStatementName() + newName);
+        } else if(rec instanceof ElasticExecutedQuery) {
+            ((ElasticExecutedQuery)rec).setStatementName(((ElasticExecutedQuery)rec).getStatementName() + newName);
+        } else if(rec instanceof ScriptExecutedRecord) {
+            ((ScriptExecutedRecord)rec).setScriptName(((ScriptExecutedRecord)rec).getScriptName() + newName);
+        }
+        return rec;
+    }
 
 
     /**
@@ -282,8 +317,10 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
             return null;
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return null;
         } else {
+            System.out.println("Not implemented");
             return null;
         }
     }
@@ -294,7 +331,6 @@ public class PersistenceWrap {
     createArtifactGroup(final String repoName,
                         final String groupName,
                         final String comment) throws Exception {
-
         if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.sqlRepo) == 0) {
             ExecutionGroup.addArtifactGroup(groupName, comment, execRdbmsDb.getJDBC_DRIVER(), execRdbmsDb.getDB_URL_DISK(), execRdbmsDb.getUSER(), execRdbmsDb.getPASS());
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.mongoRepo) == 0) {
@@ -306,9 +342,9 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
             ExecutionGroup.addArtifactGroup(groupName, comment, storageDb.getJDBC_DRIVER(), storageDb.getDB_URL_DISK(), storageDb.getUSER(), storageDb.getPASS());
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
-
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
         } else {
-
+            System.out.println("Not implemented");
         }
     }
 
@@ -326,9 +362,9 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
             ExecutionGroup.deleteArtifactGroup(groupId, storageDb.getJDBC_DRIVER(), storageDb.getDB_URL_DISK(), storageDb.getUSER(), storageDb.getPASS());
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
-
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
         } else {
-
+            System.out.println("Not implemented");
         }
     }
 
@@ -347,8 +383,10 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
             return ExecutionGroup.getArtifactGroups(txt, storageDb.getJDBC_DRIVER(), storageDb.getDB_URL_DISK(), storageDb.getUSER(), storageDb.getPASS());
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return null;
         } else {
+            System.out.println("Not implemented");
             return null;
         }
     }
@@ -368,8 +406,10 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
             return ExecutionGroup.getArtifactGroup(groupName, storageDb.getJDBC_DRIVER(), storageDb.getDB_URL_DISK(), storageDb.getUSER(), storageDb.getPASS());
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return null;
         } else {
+            System.out.println("Not implemented");
             return null;
         }
     }
@@ -403,9 +443,9 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
             ExecutionUserAccess.addArtifactAccess(objectId, userId, privilegeType, storageDb.getJDBC_DRIVER(), storageDb.getDB_URL_DISK(), storageDb.getUSER(), storageDb.getPASS());
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
-
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
         } else {
-
+            System.out.println("Not implemented");
         }
     }
 
@@ -425,8 +465,10 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
             return ExecutionUserAccess.getArtifactAccessById(objectId, storageDb.getJDBC_DRIVER(), storageDb.getDB_URL_DISK(), storageDb.getUSER(), storageDb.getPASS());
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return null;
         } else {
+            System.out.println("Not implemented");
             return null;
         }
     }
@@ -447,8 +489,10 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
             return ExecutionUserAccess.getArtifactAccessByUserId(userId, storageDb.getJDBC_DRIVER(), storageDb.getDB_URL_DISK(), storageDb.getUSER(), storageDb.getPASS());
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return null;
         } else {
+            System.out.println("Not implemented");
             return null;
         }
     }
@@ -470,8 +514,10 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
             return ExecutionUserAccess.getArtifactAccessByUser(objectId, userId, storageDb.getJDBC_DRIVER(), storageDb.getDB_URL_DISK(), storageDb.getUSER(), storageDb.getPASS());
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return null;
         } else {
+            System.out.println("Not implemented");
             return null;
         }
     }
@@ -491,9 +537,9 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
             ExecutionUserAccess.deleteAccessByArtifactId(objectId, storageDb.getJDBC_DRIVER(), storageDb.getDB_URL_DISK(), storageDb.getUSER(), storageDb.getPASS());
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
-
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
         } else {
-
+            System.out.println("Not implemented");
         }
     }
 
@@ -514,9 +560,9 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
             ExecutionUserAccess.deleteArtifactAccess(objectId, userId, storageDb.getJDBC_DRIVER(), storageDb.getDB_URL_DISK(), storageDb.getUSER(), storageDb.getPASS());
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
-
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
         } else {
-
+            System.out.println("Not implemented");
         }
     }
 
@@ -539,8 +585,10 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
             return ExecutionUserAccess.countArtifactAccess(objectId, storageDb.getJDBC_DRIVER(), storageDb.getDB_URL_DISK(), storageDb.getUSER(), storageDb.getPASS());
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return -1;
         } else {
+            System.out.println("Not implemented");
             return -1;
         }
     }
@@ -558,10 +606,13 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.scriptRepo) == 0) {
             return execScriptDb.getScriptByName(name).getScriptExecutedRecordList().isEmpty();
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
+            System.out.println(RepoStaticDesc.fileRepo + " is not implemented");
             return true;
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return true;
         } else {
+            System.out.println("Not implemented");
             return false;
         }
     }
@@ -583,8 +634,10 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
             return null;
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return null;
         } else {
+            System.out.println("Not implemented");
             return null;
         }
     }
@@ -603,9 +656,11 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.scriptRepo) == 0) {
             ExecutionUserAccess.addArtifactAccess(artifactId, u.getId(), PersistencePrivilege.pTypeAdmin, execScriptDb.getJDBC_DRIVER(), execScriptDb.getDB_URL_DISK(), execScriptDb.getUSER(), execScriptDb.getPASS());
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
-
+            System.out.println(RepoStaticDesc.fileRepo + " is not implemented");
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
-
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
+        } else {
+            System.out.println("Not implemented");
         }
     }
 
@@ -642,10 +697,13 @@ public class PersistenceWrap {
             }
             return ret;
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
+            System.out.println(RepoStaticDesc.fileRepo + " is not implemented");
             return null;
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return null;
         } else {
+            System.out.println("Not implemented");
             return null;
         }
 
@@ -666,10 +724,13 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.scriptRepo) == 0) {
             return execScriptDb.getAllExecutedScriptsByUser(u.getId());
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
+            System.out.println(RepoStaticDesc.fileRepo + " is not implemented");
             return null;
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return null;
         } else {
+            System.out.println("Not implemented");
             return null;
         }
     }
@@ -712,10 +773,13 @@ public class PersistenceWrap {
             }
             return new ScriptExecutedRecordList(lst);
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
+            System.out.println(RepoStaticDesc.fileRepo + " is not implemented");
             return null;
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return null;
         } else {
+            System.out.println("Not implemented");
             return null;
         }
     }
@@ -763,10 +827,13 @@ public class PersistenceWrap {
             }
             return new ScriptExecutedRecordList(lst);
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
+            System.out.println(RepoStaticDesc.fileRepo + " is not implemented");
             return null;
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return null;
         } else {
+            System.out.println("Not implemented");
             return null;
         }
     }
@@ -789,10 +856,13 @@ public class PersistenceWrap {
             String content = FileUtilWrapper.readFileToString(rec.getRepPath());
             return ScriptOutputDetail.toScriptOutputDetail(content);
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
+            System.out.println(RepoStaticDesc.fileRepo + " is not implemented");
             return null;
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return null;
         } else {
+            System.out.println("Not implemented");
             return null;
         }
     }
@@ -812,10 +882,13 @@ public class PersistenceWrap {
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.scriptRepo) == 0) {
             rec = execScriptDb.getScriptById(artifactId);
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
+            System.out.println(RepoStaticDesc.fileRepo + " is not implemented");
             return null;
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return null;
         } else {
+            System.out.println("Not implemented");
             return null;
         }
 
@@ -888,10 +961,13 @@ public class PersistenceWrap {
         } else if (repoName.trim().compareToIgnoreCase(RepoStaticDesc.scriptRepo) == 0) {
             return ScriptExecutedRecord.toScriptExecutedRecord(rec);
         } else if (repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
+            System.out.println(RepoStaticDesc.fileRepo + " is not implemented");
             return null;
         } else if (repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
+            System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return null;
         } else {
+            System.out.println("Not implemented");
             return null;
         }
     }
