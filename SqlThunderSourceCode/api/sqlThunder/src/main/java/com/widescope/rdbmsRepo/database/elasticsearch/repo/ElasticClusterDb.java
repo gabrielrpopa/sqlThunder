@@ -48,7 +48,7 @@ public class ElasticClusterDb {
 
 	// JDBC driver name and database URL 
 	private final String JDBC_DRIVER = "org.h2.Driver";   
-	private final String DB_URL_DISK = "jdbc:h2:file:./elasticRepo,MODE=PostgreSQL;AUTO_SERVER=TRUE";
+	private final String DB_URL_DISK = "jdbc:h2:file:./elasticRepo;MODE=PostgreSQL;AUTO_SERVER=TRUE";
 	
 	//  Database credentials 
 	private final String USER = "sa"; 
