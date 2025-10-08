@@ -124,12 +124,8 @@ public class ScriptExecutedRepoDb implements RepoHistoryInterface {
         ddlList.add(ScriptExecutedRepoDb.executionScriptTable_const2);
         ddlList.add(ScriptExecutedRepoDb.executionScriptTable_index2);
         ddlList.add(ScriptExecutedRepoDb.executionScriptTable_index3);
-
-        ddlList.add(ExecutionUserAccess.accessRefTable);
-        ddlList.add(ExecutionUserAccess.accessRefTableIndex1);
-        ddlList.add(ExecutionUserAccess.accessRefTableConst1);
-        ddlList.add(accessRefTableFk3);
-
+        ddlList.add(ScriptExecutedRepoDb.executionScriptTableFk3);
+        ddlList.add(ScriptExecutedRepoDb.accessRefTableFk3);
         return ddlList;
     }
 
@@ -172,6 +168,10 @@ public class ScriptExecutedRepoDb implements RepoHistoryInterface {
 
     public static final
     String executionScriptTable_index3 = "ALTER TABLE executionScriptTable ALTER COLUMN scriptName SET NOT NULL;";
+
+    public static
+    String executionScriptTableFk3 = "ALTER TABLE executionScriptTable ADD CONSTRAINT IF NOT EXISTS backupTableFk1 FOREIGN KEY ( groupId ) REFERENCES groupTable( groupId );";
+
 
     private
     static final
@@ -611,6 +611,20 @@ public class ScriptExecutedRepoDb implements RepoHistoryInterface {
     }
 
 
+    public boolean
+    isScriptName(final String statementName) throws Exception {
+        Class.forName(JDBC_DRIVER);
+        String select = selectStr + fromTable + " WHERE d.scriptName = ?" ;
+        try (Connection conn = DriverManager.getConnection(DB_URL_DISK, USER, PASS);
+             PreparedStatement preparedStatement = conn.prepareStatement(select))	{
+            preparedStatement.setString(1, "%" + statementName + "%");
+            return getScriptExecutedRecordListWithoutCnt(preparedStatement).getScriptExecutedRecordList().size() == 1;
+        } catch (SQLException e)	{
+            throw new Exception(AppLogger.logDb(e, Thread.currentThread().getStackTrace()[1]));
+        } catch (Exception e) {
+            throw new Exception(AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.db));
+        }
+    }
 
 
     public void
