@@ -145,8 +145,11 @@ public class RdbmsExecutedQueriesRepoDb implements RepoHistoryInterface {
 			ddlList.add(ExecutionGroup.groupTable);
 			ddlList.add(ExecutionGroup.groupTableIndex1);
 			ddlList.add(ExecutionGroup.createTestGroup);
+			ddlList.add(ExecutionGroup.createDefaultWebGroup);
 
-
+			ddlList.add(ExecutionUserAccess.accessRefTable);
+			ddlList.add(ExecutionUserAccess.accessRefTableIndex1);
+			ddlList.add(ExecutionUserAccess.accessRefTableConst1);
 
 			ddlList.add(RdbmsExecutedQueriesRepoDb.snapshotDbRef);
 			ddlList.add(RdbmsExecutedQueriesRepoDb.executedQueriesTable_index1);
@@ -154,11 +157,10 @@ public class RdbmsExecutedQueriesRepoDb implements RepoHistoryInterface {
 			ddlList.add(RdbmsExecutedQueriesRepoDb.executedQueriesTable_const2);
 			ddlList.add(RdbmsExecutedQueriesRepoDb.executedQueriesTable_const3);
 			ddlList.add(RdbmsExecutedQueriesRepoDb.executedQueriesTableFk1);
+			ddlList.add(RdbmsExecutedQueriesRepoDb.accessRefTableFk3);
 
-			ddlList.add(ExecutionUserAccess.accessRefTable);
-			ddlList.add(ExecutionUserAccess.accessRefTableIndex1);
-			ddlList.add(ExecutionUserAccess.accessRefTableConst1);
-			ddlList.add(accessRefTableFk3);
+
+
 
 			RdbmsExecutedQueriesRepoDb dataSnapshotDbRepo = new RdbmsExecutedQueriesRepoDb();
 			dataSnapshotDbRepo.createSchema(ddlList);
@@ -432,6 +434,21 @@ public class RdbmsExecutedQueriesRepoDb implements RepoHistoryInterface {
 		}
 	}
 
+	public boolean
+	isStatementName(final String statementName) throws Exception {
+		Class.forName(JDBC_DRIVER);
+		String select = selectStr + fromTable + " WHERE d.statementName = ?" ;
+		try (Connection conn = DriverManager.getConnection(DB_URL_DISK, USER, PASS);
+			 PreparedStatement preparedStatement = conn.prepareStatement(select))	{
+			preparedStatement.setString(1, "%" + statementName + "%");
+			return getRdbmsExecutedQueryListWithoutCnt(preparedStatement).getRdbmsExecutedQueryList().size() == 1;
+		} catch (SQLException e)	{
+			throw new Exception(AppLogger.logDb(e, Thread.currentThread().getStackTrace()[1]));
+		} catch (Exception e) {
+			throw new Exception(AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.db));
+		}
+	}
+
 	public RdbmsExecutedQueryList
 	getStatementsByName(final String statementName, final long userId) throws Exception {
 		Class.forName(JDBC_DRIVER);
@@ -631,7 +648,7 @@ public class RdbmsExecutedQueriesRepoDb implements RepoHistoryInterface {
 			preparedStatement.setString(3, query.getStatementName());
 			preparedStatement.setString(4, query.getStatementType());
 			preparedStatement.setString(5, query.getStatement());
-			preparedStatement.setString(6, query.getStatement());
+			preparedStatement.setString(6, query.getIsValid());
 			preparedStatement.setString(7, query.getJsonParam());
 			preparedStatement.setString(8, query.getDbType());
 			preparedStatement.setString(9, query.getSource());
