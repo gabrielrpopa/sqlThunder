@@ -1374,7 +1374,7 @@ public class MongoDbController {
 							@RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
 							@RequestHeader(value="comment", required = false, defaultValue = "") final String comment,
 							@RequestHeader(value="sqlName", defaultValue = "") String sqlName,
-							 @RequestHeader(value="groupId", required = false, defaultValue = "-1") long groupId
+							 @RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId /*Default WEB*/
 							) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -1411,7 +1411,8 @@ public class MongoDbController {
 							@RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
 							@RequestHeader(value="comment", required = false, defaultValue = "") final String comment,
 							@RequestHeader(value="sqlName", required = false, defaultValue = "") String sqlName,
-							@RequestHeader(value="groupId", required = false, defaultValue = "-1") long groupId) {
+							@RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId /*Default WEB*/
+	) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		requestId = StringUtils.generateRequestId(requestId);
 		try	{
@@ -1443,7 +1444,7 @@ public class MongoDbController {
 							 @RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
 							 @RequestHeader(value="comment", required = false) final String comment,
 							 @RequestHeader(value="sqlName") String sqlName,
-							 @RequestHeader(value="groupId", required = false, defaultValue = "-1") long groupId,
+							 @RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId, /*Default WEB*/
 							 @RequestBody final ComplexAndSearch command) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -1573,7 +1574,7 @@ public class MongoDbController {
 			   @RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
 			   @RequestHeader(value="comment", required = false, defaultValue = "") final String comment,
 			   @RequestHeader(value="statement") String statement,
-			   @RequestHeader(value="groupId", required = false, defaultValue = "-1") long groupId,
+			   @RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId, /*Default WEB*/
 			   @RequestBody final String parameters) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		requestId = StringUtils.generateRequestId(requestId);
@@ -1611,7 +1612,8 @@ public class MongoDbController {
 				@RequestHeader(value="comment", required = false, defaultValue = "") final String comment,
 				@RequestHeader(value="sqlName", required = false, defaultValue = "") String sqlName,
 				@RequestHeader(value="query") final String query,
-				@RequestHeader(value="groupId", required = false, defaultValue = "-1") long groupId) {
+				@RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId /*Default WEB*/
+	) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		requestId = StringUtils.generateRequestId(requestId);
 		try	{
@@ -1642,7 +1644,7 @@ public class MongoDbController {
 					 @RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
 					 @RequestHeader(value="comment", required = false, defaultValue = "") final String comment,
 					 @RequestHeader(value="sqlName", required = false, defaultValue = "") String sqlName,
-					 @RequestHeader(value="groupId", required = false, defaultValue = "-1") long groupId,
+					 @RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId, /*Default WEB*/
 					 @RequestBody final String query) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		requestId = StringUtils.generateRequestId(requestId);
@@ -1671,7 +1673,7 @@ public class MongoDbController {
 				@RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
 				@RequestHeader(value="comment", required = false, defaultValue = "") final String comment,
 				@RequestHeader(value="sqlName", required = false, defaultValue = "") String sqlName,
-				@RequestHeader(value="groupId", required = false, defaultValue = "-1") long groupId,
+				@RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId, /*Default WEB*/
 				@RequestBody final String query) {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -1700,7 +1702,7 @@ public class MongoDbController {
 								   @RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
 								   @RequestHeader(value="comment", required = false, defaultValue = "") final String comment,
 								   @RequestHeader(value="sqlName", required = false, defaultValue = "") String sqlName,
-								   @RequestHeader(value="groupId", required = false, defaultValue = "-1") long groupId,
+								   @RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId, /*Default WEB*/
 								   @RequestBody final ListMongoCompoundQuery listMongoCompoundQuery)  {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		requestId = StringUtils.generateRequestId(requestId);
@@ -1732,10 +1734,10 @@ public class MongoDbController {
 	@RequestMapping(value = "/mongo-repo/management/query:last", method = RequestMethod.GET)
 	@Operation(summary = "Get the last user statement")
 	public ResponseEntity<RestObject>
-	getLastMongoStmt(	@RequestHeader(value="requestId", defaultValue = "") String requestId,
-						@RequestHeader(value="user", defaultValue = "") String user,
-				 		@RequestHeader(value="groupId", defaultValue = "") long groupId,
-				 		@RequestHeader(value="source", defaultValue = "") String src /*A-ADHOC or R-REPO*/) {
+	getLastMongoStmt(@RequestHeader(value="requestId", defaultValue = "") String requestId,
+					 @RequestHeader(value="user", defaultValue = "") String user,
+					 @RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId, /*Default WEB*/
+					 @RequestHeader(value="source", defaultValue = "") String src /*A-ADHOC or R-REPO*/) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		requestId = StringUtils.generateRequestId(requestId);
 		try	{

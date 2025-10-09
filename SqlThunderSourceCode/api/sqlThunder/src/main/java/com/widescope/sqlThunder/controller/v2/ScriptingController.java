@@ -779,7 +779,7 @@ public class ScriptingController {
 						 @RequestHeader(value="group", defaultValue = "Y") String group,
 						 @RequestHeader(value="comment", defaultValue = "") String comment,
 						 @RequestHeader(value="machineList")  final String machineList, /* comma separated base Urls */
-						 @RequestHeader(value="groupId", required = false ,defaultValue = "-1")  final long groupId,
+						 @RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId, /*Default WEB*/
 						 @RequestBody final ScriptParamRepoList scriptParameters) {
 
 		requestId = StringUtils.generateRequestId(requestId);
@@ -825,7 +825,7 @@ public class ScriptingController {
 						 @RequestHeader(value="scriptName") String scriptName,
 						 @RequestHeader(value="interpreterId") final int interpreterId,
 						 @RequestHeader(value="machineList")  final String machineList,
-						 @RequestHeader(value="groupId", required = false ,defaultValue = "-1")  final long groupId,
+						 @RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId, /*Default WEB*/
 						 @RequestBody String scriptContent) {
 
 		requestId = StringUtils.generateRequestId(requestId);
@@ -880,7 +880,7 @@ public class ScriptingController {
 					   @RequestHeader(value="interpreter") final String interpreter,
 					   @RequestHeader(value="senderBaseUrl", required = false) final String senderBaseUrl,
 					   @RequestHeader(value="timeStamp") final long timeStamp,
-					   @RequestHeader(value="groupId", required = false, defaultValue = "-1")  final long groupId,
+					   @RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId, /*Default WEB*/
 					   @RequestBody String scriptContent,
 					   HttpServletRequest request) {
 

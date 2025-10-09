@@ -19,6 +19,7 @@ package com.widescope.sqlThunder.controller.v2;
 
 import com.widescope.logging.AppLogger;
 import com.widescope.persistence.PersistenceWrap;
+import com.widescope.rdbmsRepo.database.embeddedDb.repo.RdbmsExecutedQuery;
 import com.widescope.sqlThunder.rest.GenericResponse;
 import com.widescope.sqlThunder.rest.RestInterface;
 import com.widescope.sqlThunder.rest.RestObject;
@@ -33,6 +34,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 
@@ -83,7 +85,7 @@ public class HistoryController {
 	@Operation(	summary = "Check if artifact execution name exists already",
 				description= "Check if new script, statement or file name exists already. This is useful if the user wants to create a unique name for the execution in order to categorize it")
 	public Boolean
-	isExecutedName(@RequestHeader(value="name") final String name,
+	isExecutionName(@RequestHeader(value="name") final String name,
 				   @RequestHeader(value="repoName") final String repoName) {
 		try {
 			return pWrap.isExecutedName(repoName, name);

@@ -1285,7 +1285,7 @@ public class ElasticsearchController {
 				@RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
 				@RequestHeader(value="comment", required = false) final String comment,
 				@RequestHeader(value="queryName") String queryName,
-				@RequestHeader(value="groupId", required = false, defaultValue = "-1" ) long groupId,
+				@RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId, /*Default WEB*/
 				@RequestBody (required = false) final String httpPayload) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		requestId = StringUtils.generateRequestId(requestId);
@@ -1326,7 +1326,7 @@ public class ElasticsearchController {
 				@RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
 				@RequestHeader(value="comment", required = false) final String comment,
 				@RequestHeader(value="queryName") String queryName,
-				@RequestHeader(value="groupId", required = false, defaultValue = "-1" ) long groupId,
+				@RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId, /*Default WEB*/
 				@RequestBody final String sqlContent) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		try	{

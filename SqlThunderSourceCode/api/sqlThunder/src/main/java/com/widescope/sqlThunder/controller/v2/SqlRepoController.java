@@ -967,7 +967,7 @@ public class SqlRepoController {
 					@RequestHeader(value="sqlType", required = false, defaultValue = "") final String sqlType, /*DQL/DML/DDL*/
 					@RequestHeader(value="comment", required = false) final String comment,
 					@RequestHeader(value="sqlName") final String sqlName,
-					@RequestHeader(value="groupId", required = false,  defaultValue = "-1") final long groupId,
+					@RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId, /*Default WEB*/
 					@RequestBody final String sqlContent) {
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 		requestId = StringUtils.generateRequestId(requestId);
@@ -1113,7 +1113,7 @@ public class SqlRepoController {
 				   @RequestHeader(value="batchCount", required = false, defaultValue = "1") final long batchCount,
 				   @RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
 				   @RequestHeader(value="comment", required = false, defaultValue = "") final String comment,
-				   @RequestHeader(value="groupId", required = false,  defaultValue = "-1") final long groupId,
+				   @RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId, /*Default WEB*/
 				   @Valid @RequestBody final String jsonObjSqlParam)  {
 
 		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -1184,7 +1184,7 @@ public class SqlRepoController {
 						   @RequestHeader(value="comment", required = false, defaultValue = "") final String comment,
 						   @RequestHeader(value="dbIdList", required = false, defaultValue = "") final String dbIdList,  /*comma separated*/
 						   @RequestHeader(value="persist", required = false, defaultValue = "N") final String persist,
-						   @RequestHeader(value="groupId", required = false, defaultValue = "-1") final long groupId,
+						   @RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId, /*Default WEB*/
 						   @RequestHeader final HttpHeaders incomingHeaders,
 						   @RequestBody final String jsonObjSqlParam)  {
 		

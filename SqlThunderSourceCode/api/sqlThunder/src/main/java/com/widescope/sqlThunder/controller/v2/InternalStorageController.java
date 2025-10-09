@@ -60,7 +60,7 @@ public class InternalStorageController  {
 				 @RequestHeader(value="requestId", defaultValue = "") String requestId,
 				 @RequestHeader(value="machineName") final String machineName,
 				 @RequestHeader(value="storageType") final String storageType,
-				 @RequestHeader(value="groupId") final long groupId,
+				 @RequestHeader(value="groupId", required = false ,defaultValue = "2")  final long groupId, /*Default WEB*/
 				 @RequestHeader(value="source") final String source,
 				 @RequestHeader(value="fullPath") final String fullPath,
 				 @RequestBody final String comment) {
