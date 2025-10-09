@@ -114,6 +114,7 @@ public class ScriptExecutedRepoDb implements RepoHistoryInterface {
         ddlList.add(ExecutionGroup.groupTable);
         ddlList.add(ExecutionGroup.groupTableIndex1);
         ddlList.add(ExecutionGroup.createTestGroup);
+        ddlList.add(ExecutionGroup.createDefaultWebGroup);
 
         ddlList.add(ExecutionUserAccess.accessRefTable);
         ddlList.add(ExecutionUserAccess.accessRefTableIndex1);
