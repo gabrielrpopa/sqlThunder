@@ -119,6 +119,7 @@ public class InternalStorageRepoDb implements RepoHistoryInterface {
 		ddlList.add(ExecutionGroup.groupTable);
 		ddlList.add(ExecutionGroup.groupTableIndex1);
 		ddlList.add(ExecutionGroup.createTestGroup);
+		ddlList.add(ExecutionGroup.createDefaultWebGroup);
 
 		ddlList.add(InternalStorageRepoDb.backupTable);
 		ddlList.add(InternalStorageRepoDb.backupTableIndex1);
