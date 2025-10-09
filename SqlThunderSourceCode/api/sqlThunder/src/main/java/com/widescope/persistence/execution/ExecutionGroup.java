@@ -22,6 +22,8 @@ public class ExecutionGroup {
     String createTestGroup = "INSERT INTO groupTable (groupName, comment) VALUES ('TEST', 'This is the test default group')";
 
 
+    public static final
+    String createDefaultWebGroup = "INSERT INTO groupTable (groupName, comment) VALUES ('WEB', 'This is web execution default group')";
 
 
     public static void
