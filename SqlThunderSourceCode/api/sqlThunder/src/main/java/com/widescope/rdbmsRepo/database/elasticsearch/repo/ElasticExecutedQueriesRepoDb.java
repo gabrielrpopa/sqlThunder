@@ -144,17 +144,18 @@ public class ElasticExecutedQueriesRepoDb implements RepoHistoryInterface {
 		ddlList.add(ExecutionGroup.groupTable);
 		ddlList.add(ExecutionGroup.groupTableIndex1);
 		ddlList.add(ExecutionGroup.createTestGroup);
+		ddlList.add(ExecutionGroup.createDefaultWebGroup);
+
+		ddlList.add(ExecutionUserAccess.accessRefTable);
+		ddlList.add(ExecutionUserAccess.accessRefTableIndex1);
+		ddlList.add(ExecutionUserAccess.accessRefTableConst1);
 
 		ddlList.add(ElasticExecutedQueriesRepoDb.executedQueriesTable);
 		ddlList.add(ElasticExecutedQueriesRepoDb.mongoExecutedQueriesTable_const1);
 		ddlList.add(ElasticExecutedQueriesRepoDb.mongoExecutedQueriesTable_const2);
 		ddlList.add(ElasticExecutedQueriesRepoDb.executedQueriesTable_index1);
 		ddlList.add(ElasticExecutedQueriesRepoDb.executedQueriesTableFk3);
-
-		ddlList.add(ExecutionUserAccess.accessRefTable);
-		ddlList.add(ExecutionUserAccess.accessRefTableIndex1);
-		ddlList.add(ExecutionUserAccess.accessRefTableConst1);
-		ddlList.add(accessRefTableFk);
+		ddlList.add(ElasticExecutedQueriesRepoDb.accessRefTableFk);
 
 		return ddlList;
 	}
@@ -437,6 +438,24 @@ public class ElasticExecutedQueriesRepoDb implements RepoHistoryInterface {
 			throw new Exception(AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.db));
 		}
 	}
+
+
+
+	public boolean
+	isStatementName(final String statementName) throws Exception {
+		Class.forName(JDBC_DRIVER);
+		String select = selectStr + fromTable + " WHERE d.statementName = ?" ;
+		try (Connection conn = DriverManager.getConnection(DB_URL_DISK, USER, PASS);
+			 PreparedStatement preparedStatement = conn.prepareStatement(select))	{
+			preparedStatement.setString(1, "%" + statementName + "%");
+			return getElasticExecutedQueryListWithoutCnt(preparedStatement).getElasticExecutedQueryLst().size() == 1;
+		} catch (SQLException e)	{
+			throw new Exception(AppLogger.logDb(e, Thread.currentThread().getStackTrace()[1]));
+		} catch (Exception e) {
+			throw new Exception(AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.db));
+		}
+	}
+
 
 	public ElasticExecutedQueryList
 	getUserExecutedStatements(final long userId, final String statementName, final String src) throws Exception {
