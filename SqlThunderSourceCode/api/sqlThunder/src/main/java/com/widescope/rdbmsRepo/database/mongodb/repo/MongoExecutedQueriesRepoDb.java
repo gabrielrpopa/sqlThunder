@@ -145,16 +145,18 @@ public class MongoExecutedQueriesRepoDb implements RepoHistoryInterface {
 		ddlList.add(ExecutionGroup.groupTable);
 		ddlList.add(ExecutionGroup.groupTableIndex1);
 		ddlList.add(ExecutionGroup.createTestGroup);
+		ddlList.add(ExecutionGroup.createDefaultWebGroup);
+
+		ddlList.add(ExecutionUserAccess.accessRefTable);
+		ddlList.add(ExecutionUserAccess.accessRefTableIndex1);
+		ddlList.add(ExecutionUserAccess.accessRefTableConst1);
 
 		ddlList.add(MongoExecutedQueriesRepoDb.executedQueriesTable);
 		ddlList.add(MongoExecutedQueriesRepoDb.executedQueriesTable_index2);
 		ddlList.add(MongoExecutedQueriesRepoDb.mongoExecutedQueriesTable_const1);
 		ddlList.add(MongoExecutedQueriesRepoDb.mongoExecutedQueriesTable_const2);
-
-		ddlList.add(ExecutionUserAccess.accessRefTable);
-		ddlList.add(ExecutionUserAccess.accessRefTableIndex1);
-		ddlList.add(ExecutionUserAccess.accessRefTableConst1);
-		ddlList.add(accessRefTableFk);
+		ddlList.add(MongoExecutedQueriesRepoDb.executedQueriesTableFk1);
+		ddlList.add(MongoExecutedQueriesRepoDb.accessRefTableFk);
 
 		return ddlList;
 	}
@@ -198,6 +200,10 @@ public class MongoExecutedQueriesRepoDb implements RepoHistoryInterface {
 
 	public static final String
 	executedQueriesTable_index2 = "CREATE INDEX IF NOT EXISTS  idx_executedQueriesTable_2 ON executedQueriesTable(userId, timestamp);";
+
+	public static
+	String executedQueriesTableFk1 = "ALTER TABLE executedQueriesTable ADD CONSTRAINT IF NOT EXISTS backupTableFk1 FOREIGN KEY ( groupId ) REFERENCES groupTable( groupId );";
+
 
 	public static final
 	String accessRefTableFk = "ALTER TABLE accessRefTable ADD CONSTRAINT IF NOT EXISTS accessRefTableFk1 FOREIGN KEY ( objectId ) REFERENCES executedQueriesTable( id );";
@@ -414,6 +420,23 @@ public class MongoExecutedQueriesRepoDb implements RepoHistoryInterface {
 			 PreparedStatement preparedStatement = conn.prepareStatement(select))	{
 			preparedStatement.setString(1, statementName);
 			return getMongoExecutedRecordList(preparedStatement);
+		} catch (SQLException e)	{
+			throw new Exception(AppLogger.logDb(e, Thread.currentThread().getStackTrace()[1]));
+		} catch (Exception e) {
+			throw new Exception(AppLogger.logException(e, Thread.currentThread().getStackTrace()[1], AppLogger.db));
+		}
+	}
+
+
+
+	public boolean
+	isStatementName(final String statementName) throws Exception {
+		Class.forName(JDBC_DRIVER);
+		String select = selectStr + fromTable + " WHERE d.statementName = ?" ;
+		try (Connection conn = DriverManager.getConnection(DB_URL_DISK, USER, PASS);
+			 PreparedStatement preparedStatement = conn.prepareStatement(select))	{
+			preparedStatement.setString(1, "%" + statementName + "%");
+			return getMongoExecutedRecordListWithoutCnt(preparedStatement).getMongoExecutedQueryLst().size() == 1;
 		} catch (SQLException e)	{
 			throw new Exception(AppLogger.logDb(e, Thread.currentThread().getStackTrace()[1]));
 		} catch (Exception e) {
