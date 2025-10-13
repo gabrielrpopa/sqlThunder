@@ -371,17 +371,32 @@ public class PersistenceWrap {
 
     public RestInterface
     getArtifactGroups(final String repoName,
-                      final String txt) throws Exception {
+                      final String txtToSearch) throws Exception {
         if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.sqlRepo) == 0) {
-            return ExecutionGroup.getArtifactGroups(txt, execRdbmsDb.getJDBC_DRIVER(), execRdbmsDb.getDB_URL_DISK(), execRdbmsDb.getUSER(), execRdbmsDb.getPASS());
+            if(txtToSearch.trim().isEmpty())
+                return ExecutionGroup.getAllArtifactGroups(execRdbmsDb.getJDBC_DRIVER(), execRdbmsDb.getDB_URL_DISK(), execRdbmsDb.getUSER(), execRdbmsDb.getPASS());
+            else
+                return ExecutionGroup.getArtifactGroups(txtToSearch, execRdbmsDb.getJDBC_DRIVER(), execRdbmsDb.getDB_URL_DISK(), execRdbmsDb.getUSER(), execRdbmsDb.getPASS());
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.mongoRepo) == 0) {
-            return ExecutionGroup.getArtifactGroups(txt, execMongoDb.getJDBC_DRIVER(), execMongoDb.getDB_URL_DISK(), execMongoDb.getUSER(), execMongoDb.getPASS());
+            if(txtToSearch.trim().isEmpty())
+                return ExecutionGroup.getAllArtifactGroups(execMongoDb.getJDBC_DRIVER(), execMongoDb.getDB_URL_DISK(), execMongoDb.getUSER(), execMongoDb.getPASS());
+            else
+                return ExecutionGroup.getArtifactGroups(txtToSearch, execMongoDb.getJDBC_DRIVER(), execMongoDb.getDB_URL_DISK(), execMongoDb.getUSER(), execMongoDb.getPASS());
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.elasticRepo) == 0) {
-            return ExecutionGroup.getArtifactGroups(txt, execElasticDb.getJDBC_DRIVER(), execElasticDb.getDB_URL_DISK(), execElasticDb.getUSER(), execElasticDb.getPASS());
+            if(txtToSearch.trim().isEmpty())
+                return ExecutionGroup.getAllArtifactGroups(execElasticDb.getJDBC_DRIVER(), execElasticDb.getDB_URL_DISK(), execElasticDb.getUSER(), execElasticDb.getPASS());
+            else
+                return ExecutionGroup.getArtifactGroups(txtToSearch, execElasticDb.getJDBC_DRIVER(), execElasticDb.getDB_URL_DISK(), execElasticDb.getUSER(), execElasticDb.getPASS());
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.scriptRepo) == 0) {
-            return ExecutionGroup.getArtifactGroups(txt, execScriptDb.getJDBC_DRIVER(), execScriptDb.getDB_URL_DISK(), execScriptDb.getUSER(), execScriptDb.getPASS());
+            if(txtToSearch.trim().isEmpty())
+                return ExecutionGroup.getAllArtifactGroups(execScriptDb.getJDBC_DRIVER(), execScriptDb.getDB_URL_DISK(), execScriptDb.getUSER(), execScriptDb.getPASS());
+            else
+                return ExecutionGroup.getArtifactGroups(txtToSearch, execScriptDb.getJDBC_DRIVER(), execScriptDb.getDB_URL_DISK(), execScriptDb.getUSER(), execScriptDb.getPASS());
         } else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.fileRepo) == 0) {
-            return ExecutionGroup.getArtifactGroups(txt, storageDb.getJDBC_DRIVER(), storageDb.getDB_URL_DISK(), storageDb.getUSER(), storageDb.getPASS());
+            if(txtToSearch.trim().isEmpty())
+                return ExecutionGroup.getAllArtifactGroups(storageDb.getJDBC_DRIVER(), storageDb.getDB_URL_DISK(), storageDb.getUSER(), storageDb.getPASS());
+            else
+                return ExecutionGroup.getArtifactGroups(txtToSearch, storageDb.getJDBC_DRIVER(), storageDb.getDB_URL_DISK(), storageDb.getUSER(), storageDb.getPASS());
         }  else if(repoName.trim().compareToIgnoreCase(RepoStaticDesc.exchangeRepo) == 0) {
             System.out.println(RepoStaticDesc.exchangeRepo + " is not implemented");
             return null;
